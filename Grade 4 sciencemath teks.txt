@@ -1,0 +1,135 @@
+Grade 4 Math Knowledge and skills.
+revised June 2024
+8
+(1) Mathematical process standards. The student uses mathematical processes to acquire and demonstrate mathematical understanding. The student is expected to:
+(A) apply mathematics to problems arising in everyday life, society, and the workplace;
+(B) use a problem-solving model that incorporates analyzing given information, formulating a plan or strategy, determining a solution, justifying the solution, and evaluating the problem-solving process and the reasonableness of the solution;
+(C) select tools, including real objects, manipulatives, paper and pencil, and technology as appropriate, and techniques, including mental math, estimation, and number sense as appropriate, to solve problems;
+(D) communicate mathematical ideas, reasoning, and their implications using multiple representations, including symbols, diagrams, graphs, and language as appropriate;
+(E) create and use representations to organize, record, and communicate mathematical ideas;
+(F) analyze mathematical relationships to connect and communicate mathematical ideas; and
+(G) display, explain, and justify mathematical ideas and arguments using precise mathematical language in written or oral communication.
+(2) Number and operations. The student applies mathematical process standards to represent, compare, and order whole numbers and decimals and understand relationships related to place value. The student is expected to:
+(A) interpret the value of each place-value position as 10 times the position to the right and as one-tenth of the value of the place to its left;
+(B) represent the value of the digit in whole numbers through 1,000,000,000 and decimals to the hundredths using expanded notation and numerals;
+(C) compare and order whole numbers to 1,000,000,000 and represent comparisons using the symbols >, <, or =;
+(D) round whole numbers to a given place value through the hundred thousands place;
+(E) represent decimals, including tenths and hundredths, using concrete and visual models and money;
+(F) compare and order decimals using concrete and visual models to the hundredths;
+(G) relate decimals to fractions that name tenths and hundredths; and
+(H) determine the corresponding decimal to the tenths or hundredths place of a specified point on a number line.
+(3) Number and operations. The student applies mathematical process standards to represent and generate fractions to solve problems. The student is expected to:
+(A) represent a fraction a/b as a sum of fractions 1/b, where a and b are whole numbers and b > 0, including when a > b;
+(B) decompose a fraction in more than one way into a sum of fractions with the same denominator using concrete and pictorial models and recording results with symbolic representations;
+(C) determine if two given fractions are equivalent using a variety of methods;
+(D) compare two fractions with different numerators and different denominators and represent the comparison using the symbols >, =, or <;
+revised June 2024
+9
+(E) represent and solve addition and subtraction of fractions with equal denominators using objects and pictorial models that build to the number line and properties of operations;
+(F) evaluate the reasonableness of sums and differences of fractions using benchmark fractions 0, 1/4, 1/2, 3/4, and 1, referring to the same whole; and
+(G) represent fractions and decimals to the tenths or hundredths as distances from zero on a number line.
+(4) Number and operations. The student applies mathematical process standards to develop and use strategies and methods for whole number computations and decimal sums and differences in order to solve problems with efficiency and accuracy. The student is expected to:
+(A) add and subtract whole numbers and decimals to the hundredths place using the standard algorithm;
+(B) determine products of a number and 10 or 100 using properties of operations and place value understandings;
+(C) represent the product of 2 two-digit numbers using arrays, area models, or equations, including perfect squares through 15 by 15;
+(D) use strategies and algorithms, including the standard algorithm, to multiply up to a four-digit number by a one-digit number and to multiply a two-digit number by a two-digit number. Strategies may include mental math, partial products, and the commutative, associative, and distributive properties;
+(E) represent the quotient of up to a four-digit whole number divided by a one-digit whole number using arrays, area models, or equations;
+(F) use strategies and algorithms, including the standard algorithm, to divide up to a four-digit dividend by a one-digit divisor;
+(G) round to the nearest 10, 100, or 1,000 or use compatible numbers to estimate solutions involving whole numbers; and
+(H) solve with fluency one- and two-step problems involving multiplication and division, including interpreting remainders.
+(5) Algebraic reasoning. The student applies mathematical process standards to develop concepts of expressions and equations. The student is expected to:
+(A) represent multi-step problems involving the four operations with whole numbers using strip diagrams and equations with a letter standing for the unknown quantity;
+(B) represent problems using an input-output table and numerical expressions to generate a number pattern that follows a given rule representing the relationship of the values in the resulting sequence and their position in the sequence;
+(C) use models to determine the formulas for the perimeter of a rectangle (l + w + l + w or 2l + 2w), including the special form for perimeter of a square (4s) and the area of a rectangle (l x w); and
+(D) solve problems related to perimeter and area of rectangles where dimensions are whole numbers.
+(6) Geometry and measurement. The student applies mathematical process standards to analyze geometric attributes in order to develop generalizations about their properties. The student is expected to:
+revised June 2024
+10
+(A) identify points, lines, line segments, rays, angles, and perpendicular and parallel lines;
+(B) identify and draw one or more lines of symmetry, if they exist, for a two-dimensional figure;
+(C) apply knowledge of right angles to identify acute, right, and obtuse triangles; and
+(D) classify two-dimensional figures based on the presence or absence of parallel or perpendicular lines or the presence or absence of angles of a specified size.
+(7) Geometry and measurement. The student applies mathematical process standards to solve problems involving angles less than or equal to 180 degrees. The student is expected to:
+(A) illustrate the measure of an angle as the part of a circle whose center is at the vertex of the angle that is "cut out" by the rays of the angle. Angle measures are limited to whole numbers;
+(B) illustrate degrees as the units used to measure an angle, where 1/360 of any circle is one degree and an angle that "cuts" n/360 out of any circle whose center is at the angle's vertex has a measure of n degrees. Angle measures are limited to whole numbers;
+(C) determine the approximate measures of angles in degrees to the nearest whole number using a protractor;
+(D) draw an angle with a given measure; and
+(E) determine the measure of an unknown angle formed by two non-overlapping adjacent angles given one or both angle measures.
+(8) Geometry and measurement. The student applies mathematical process standards to select appropriate customary and metric units, strategies, and tools to solve problems involving measurement. The student is expected to:
+(A) identify relative sizes of measurement units within the customary and metric systems;
+(B) convert measurements within the same measurement system, customary or metric, from a smaller unit into a larger unit or a larger unit into a smaller unit when given other equivalent measures represented in a table; and
+(C) solve problems that deal with measurements of length, intervals of time, liquid volumes, mass, and money using addition, subtraction, multiplication, or division as appropriate..
+(9) Data analysis. The student applies mathematical process standards to solve problems by collecting, organizing, displaying, and interpreting data. The student is expected to:
+(A) represent data on a frequency table, dot plot, or stem-and-leaf plot marked with whole numbers and fractions; and
+(B) solve one- and two-step problems using data in whole number, decimal, and fraction form in a frequency table, dot plot, or stem-and-leaf plot.
+(10) Personal financial literacy. The student applies mathematical process standards to manage one's financial resources effectively for lifetime financial security. The student is expected to:
+(A) distinguish between fixed and variable expenses;
+(B) calculate profit in a given situation;
+(C) compare the advantages and disadvantages of various savings options;
+(D) describe how to allocate a weekly allowance among spending; saving, including for college; and sharing; and
+revised June 2024
+11
+(E) describe the basic purpose of financial institutions, including keeping money safe, borrowing money, and lending.
+
+Grade 4 Science Knowledge and skills.
+(1) Scientific and engineering practices. The student asks questions, identifies problems, and plans and safely conducts classroom, laboratory, and field investigations to answer questions, explain phenomena, or design solutions using appropriate tools and models. The student is expected to:
+(A) ask questions and define problems based on observations or information from text, phenomena, models, or investigations;
+revised June 2024
+13
+(B) use scientific practices to plan and conduct descriptive investigations and use engineering practices to design solutions to problems;
+(C) demonstrate safe practices and the use of safety equipment during classroom and field investigations as outlined in Texas Education Agency-approved safety standards;
+(D) use tools, including hand lenses; metric rulers; Celsius thermometers; calculators; laser pointers; mirrors; digital scales; balances; graduated cylinders; beakers; hot plates; meter sticks; magnets; notebooks; timing devices; sieves; materials for building circuits; materials to support observation of habitats of organisms such as terrariums, aquariums, and collecting nets; and materials to support digital data collection such as computers, tablets, and cameras, to observe, measure, test, and analyze information;
+(E) collect observations and measurements as evidence;
+(F) construct appropriate graphic organizers used to collect data, including tables, bar graphs, line graphs, tree maps, concept maps, Venn diagrams, flow charts or sequence maps, and input-output tables that show cause and effect; and
+(G) develop and use models to represent phenomena, objects, and processes or design a prototype for a solution to a problem.
+(2) Scientific and engineering practices. The student analyzes and interprets data to derive meaning, identify features and patterns, and discover relationships or correlations to develop evidence-based arguments or evaluate designs. The student is expected to:
+(A) identify advantages and limitations of models such as their size, scale, properties, and materials;
+(B) analyze data by identifying any significant features, patterns, or sources of error;
+(C) use mathematical calculations to compare patterns and relationships; and
+(D) evaluate a design or object using criteria.
+(3) Scientific and engineering practices. The student develops evidence-based explanations and communicates findings, conclusions, and proposed solutions. The student is expected to:
+(A) develop explanations and propose solutions supported by data and models;
+(B) communicate explanations and solutions individually and collaboratively in a variety of settings and formats; and
+(C) listen actively to others' explanations to identify relevant evidence and engage respectfully in scientific discussion.
+(4) Scientific and engineering practices. The student knows the contributions of scientists and recognizes the importance of scientific research and innovation for society. The student is expected to:
+(A) explain how scientific discoveries and innovative solutions to problems impact science and society; and
+(B) research and explore resources such as museums, libraries, professional organizations, private companies, online platforms, and mentors employed in a science, technology, engineering, and mathematics (STEM) field to investigate STEM careers.
+(5) Recurring themes and concepts. The student understands that recurring themes and concepts provide a framework for making connections across disciplines. The student is expected to:
+(A) identify and use patterns to explain scientific phenomena or to design solutions;
+revised June 2024
+14
+(B) identify and investigate cause-and-effect relationships to explain scientific phenomena or analyze problems;
+(C) use scale, proportion, and quantity to describe, compare, or model different systems;
+(D) examine and model the parts of a system and their interdependence in the function of the system;
+(E) investigate how energy flows and matter cycles through systems and how matter is conserved;
+(F) explain the relationship between the structure and function of objects, organisms, and systems; and
+(G) explain how factors or conditions impact stability and change in objects, organisms, and systems.
+(6) Matter and energy. The student knows that matter has measurable physical properties that determine how matter is identified, classified, changed, and used. The student is expected to:
+(A) classify and describe matter using observable physical properties, including temperature, mass, magnetism, relative density (the ability to sink or float in water), and physical state (solid, liquid, gas);
+(B) investigate and compare a variety of mixtures, including solutions that are composed of liquids in liquids and solids in liquids; and
+(C) demonstrate that matter is conserved when mixtures such as soil and water or oil and water are formed.
+(7) Force, motion, and energy. The student knows the nature of forces and the patterns of their interactions. The student is expected to plan and conduct descriptive investigations to explore the patterns of forces such as gravity, friction, or magnetism in contact or at a distance on an object.
+(8) Force, motion, and energy. The student knows that energy is everywhere and can be observed in cycles, patterns, and systems. The student is expected to:
+(A) investigate and identify the transfer of energy by objects in motion, waves in water, and sound;
+(B) identify conductors and insulators of thermal and electrical energy; and
+(C) demonstrate and describe how electrical energy travels in a closed path that can produce light and thermal energy.
+(9) Earth and space. The student recognizes patterns among the Sun, Earth, and Moon system and their effects. The student is expected to:
+(A) collect and analyze data to identify sequences and predict patterns of change in seasons such as change in temperature and length of daylight; and
+(B) collect and analyze data to identify sequences and predict patterns of change in the observable appearance of the Moon from Earth.
+(10) Earth and space. The student knows that there are processes on Earth that create patterns of change. The student is expected to:
+(A) describe and illustrate the continuous movement of water above and on the surface of Earth through the water cycle and explain the role of the Sun as a major source of energy in this process;
+revised June 2024
+15
+(B) model and describe slow changes to Earth's surface caused by weathering, erosion, and deposition from water, wind, and ice; and
+(C) differentiate between weather and climate.
+(11) Earth and space. The student understands how natural resources are important and can be managed. The student is expected to:
+(A) identify and explain advantages and disadvantages of using Earth's renewable and nonrenewable natural resources such as wind, water, sunlight, plants, animals, coal, oil, and natural gas;
+(B) explain the critical role of energy resources to modern life and how conservation, disposal, and recycling of natural resources impact the environment; and
+(C) determine the physical properties of rocks that allow Earth's natural resources to be stored there.
+(12) Organisms and environments. The student describes patterns, cycles, systems, and relationships within environments. The student is expected to:
+(A) investigate and explain how most producers can make their own food using sunlight, water, and carbon dioxide through the cycling of matter;
+(B) describe the cycling of matter and flow of energy through food webs, including the roles of the Sun, producers, consumers, and decomposers; and
+(C) identify and describe past environments based on fossil evidence, including common Texas fossils.
+(13) Organisms and environments. The student knows that organisms undergo similar life processes and have structures that function to help them survive within their environments. The student is expected to:
+(A) explore and explain how structures and functions of plants such as waxy leaves and deep roots enable them to survive in their environment; and
+(B) differentiate between inherited and acquired physical traits of organisms.

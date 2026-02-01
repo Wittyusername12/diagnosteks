@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS OS - S.H.I.E.L.D. Mainframe Breach Protocol</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Augmented UI -->
+  <link rel="stylesheet" href="https://unpkg.com/augmented-ui@2/augmented-ui.min.css">
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Main Application Container -->
+  <div id="app">
+
+    <!-- Header Bar -->
+    <header class="header-bar">
+      <div class="header-left">
+        <span class="jarvis-logo">JARVIS<span class="os-label">_OS</span></span>
+        <span class="status-indicator">
+          <span class="status-dot"></span>
+          SYSTEMS ONLINE
+        </span>
+      </div>
+      <div class="header-center">
+        <span class="mission-title">S.H.I.E.L.D. MAINFRAME BREACH PROTOCOL</span>
+      </div>
+      <div class="header-right">
+        <span class="clock" id="clock">00:00:00</span>
+        <span class="date" id="date">JAN 01, 2026</span>
+      </div>
+    </header>
+
+    <!-- Main Content Area with Sidebars -->
+    <div class="main-container">
+
+      <!-- Left Sidebar -->
+      <aside class="sidebar sidebar-left">
+        <!-- System Diagnostics Panel -->
+        <div class="hud-panel" data-augmented-ui="tl-clip br-clip border">
+          <div class="panel-header">
+            <span class="panel-icon">&#9670;</span>
+            SYSTEM DIAGNOSTICS
+          </div>
+          <div class="panel-content">
+            <div class="stat-row">
+              <span class="stat-label">CPU LOAD</span>
+              <div class="stat-bar">
+                <div class="stat-fill" style="width: 67%"></div>
+              </div>
+              <span class="stat-value">67%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">MEMORY</span>
+              <div class="stat-bar">
+                <div class="stat-fill" style="width: 45%"></div>
+              </div>
+              <span class="stat-value">45%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">NETWORK</span>
+              <div class="stat-bar">
+                <div class="stat-fill" style="width: 89%"></div>
+              </div>
+              <span class="stat-value">89%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">ENCRYPTION</span>
+              <div class="stat-bar">
+                <div class="stat-fill stat-fill-max" style="width: 100%"></div>
+              </div>
+              <span class="stat-value stat-max">MAX</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Threat Analysis Panel -->
+        <div class="hud-panel" data-augmented-ui="tl-clip br-clip border">
+          <div class="panel-header">
+            <span class="panel-icon">&#9650;</span>
+            THREAT ANALYSIS
+          </div>
+          <div class="panel-content">
+            <div class="threat-row">
+              <span class="threat-label">THREAT LEVEL:</span>
+              <span class="threat-value threat-mid">MIDNIGHT</span>
+            </div>
+            <div class="threat-row">
+              <span class="threat-label">FURY STATUS:</span>
+              <span class="threat-value threat-warning">WATCHING</span>
+            </div>
+            <div class="threat-row">
+              <span class="threat-label">WIDOW STATUS:</span>
+              <span class="threat-value threat-ally">ALLIED</span>
+            </div>
+            <div class="threat-row">
+              <span class="threat-label">DETECTION:</span>
+              <span class="threat-value">32%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mission Log Panel -->
+        <div class="hud-panel mission-log-panel" data-augmented-ui="tl-clip br-clip border">
+          <div class="panel-header">
+            <span class="panel-icon">&#9662;</span>
+            MISSION LOG
+          </div>
+          <div class="panel-content" id="mission-log-content">
+            <!-- Log entries will be added dynamically -->
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Content Area -->
+      <main class="content-area">
+
+        <!-- Screen 1: Grade Selection -->
+        <section id="screen-grade-select" class="screen active">
+          <div class="screen-content">
+            <h1 class="screen-title">SELECT CLEARANCE LEVEL</h1>
+
+            <div class="grade-buttons">
+              <button class="grade-btn" data-grade="1">
+                <span class="grade-number">1</span>
+                <span class="grade-label">LEVEL 1</span>
+              </button>
+              <button class="grade-btn" data-grade="2">
+                <span class="grade-number">2</span>
+                <span class="grade-label">LEVEL 2</span>
+              </button>
+              <button class="grade-btn" data-grade="3">
+                <span class="grade-number">3</span>
+                <span class="grade-label">LEVEL 3</span>
+              </button>
+              <button class="grade-btn" data-grade="4">
+                <span class="grade-number">4</span>
+                <span class="grade-label">LEVEL 4</span>
+              </button>
+              <button class="grade-btn" data-grade="5">
+                <span class="grade-number">5</span>
+                <span class="grade-label">LEVEL 5</span>
+              </button>
+            </div>
+
+            <div class="mission-options" id="mission-options" style="display: none;">
+              <p class="resume-text">Previous mission detected. Resume?</p>
+              <div class="mission-buttons">
+                <button class="action-btn primary" id="btn-resume-mission">RESUME MISSION</button>
+                <button class="action-btn" id="btn-new-mission">NEW MISSION</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Screen 2: TEKS Selection -->
+        <section id="screen-teks-select" class="screen">
+          <div class="screen-content">
+            <h1 class="screen-title">CONFIGURE MISSION PARAMETERS</h1>
+
+            <div class="teks-columns">
+              <!-- Math TEKS Column -->
+              <div class="teks-column">
+                <div class="teks-header">
+                  <span class="teks-title">MATH PROTOCOLS</span>
+                  <div class="teks-actions">
+                    <button class="teks-action-btn" data-action="select-all" data-type="math">[ALL]</button>
+                    <button class="teks-action-btn" data-action="clear" data-type="math">[CLEAR]</button>
+                  </div>
+                </div>
+                <div class="teks-list" id="math-teks-list">
+                  <!-- Math TEKS checkboxes will be populated dynamically -->
+                </div>
+              </div>
+
+              <!-- Science TEKS Column -->
+              <div class="teks-column">
+                <div class="teks-header">
+                  <span class="teks-title">SCIENCE PROTOCOLS</span>
+                  <div class="teks-actions">
+                    <button class="teks-action-btn" data-action="select-all" data-type="science">[ALL]</button>
+                    <button class="teks-action-btn" data-action="clear" data-type="science">[CLEAR]</button>
+                  </div>
+                </div>
+                <div class="teks-list" id="science-teks-list">
+                  <!-- Science TEKS checkboxes will be populated dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <div class="screen-actions">
+              <button class="action-btn" id="btn-back-to-grade">&lt; BACK</button>
+              <button class="action-btn primary" id="btn-generate-mission">GENERATE MISSION</button>
+            </div>
+
+            <p class="validation-message" id="teks-validation-message"></p>
+          </div>
+        </section>
+
+        <!-- Screen 3: Mission Configured -->
+        <section id="screen-mission-configured" class="screen">
+          <div class="screen-content">
+            <h1 class="screen-title">MISSION CONFIGURED</h1>
+
+            <div class="mission-summary" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+              <div class="summary-row">
+                <span class="summary-label">OPERATIVE LEVEL:</span>
+                <span class="summary-value" id="summary-grade">GRADE 3</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">MATH PROTOCOLS:</span>
+                <span class="summary-value" id="summary-math-count">3 selected</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">SCIENCE PROTOCOLS:</span>
+                <span class="summary-value" id="summary-science-count">3 selected</span>
+              </div>
+
+              <div class="summary-section">
+                <span class="summary-section-title">MATH ACTIVE:</span>
+                <div class="teks-tags" id="summary-math-tags">
+                  <!-- Math TEKS tags will be populated dynamically -->
+                </div>
+              </div>
+
+              <div class="summary-section">
+                <span class="summary-section-title">SCIENCE ACTIVE:</span>
+                <div class="teks-tags" id="summary-science-tags">
+                  <!-- Science TEKS tags will be populated dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <div class="screen-actions">
+              <button class="action-btn" id="btn-reconfigure">&lt; RECONFIGURE</button>
+              <button class="action-btn primary" id="btn-begin-mission">BEGIN MISSION</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Screen 4: Firewall Gameplay -->
+        <section id="screen-firewall" class="screen">
+          <div class="screen-content firewall-content">
+            <div class="firewall-header">
+              <span class="firewall-icon">&#9671;</span>
+              <span class="firewall-title">FIREWALL <span id="current-firewall">1</span>/10</span>
+            </div>
+
+            <div class="problem-container" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+              <div class="problem-bracket left-bracket">[</div>
+              <div class="problem-content">
+                <p class="problem-narrative" id="problem-narrative">
+                  Jarvis is calculating the number of Iron Man suit parts.
+                </p>
+                <p class="problem-expression" id="problem-expression">
+                  35 + 27 = ?
+                </p>
+              </div>
+              <div class="problem-bracket right-bracket">]</div>
+            </div>
+
+            <div class="answer-section">
+              <input type="text" class="answer-input" id="answer-input" placeholder="ENTER DECRYPTION KEY" autocomplete="off">
+              <button class="action-btn primary" id="btn-decrypt">DECRYPT</button>
+            </div>
+
+            <div class="jarvis-dialogue" data-augmented-ui="tl-clip br-clip border">
+              <div class="dialogue-header">
+                <span class="dialogue-icon">&#9679;</span>
+                <span class="dialogue-name">JARVIS</span>
+              </div>
+              <div class="dialogue-content" id="jarvis-dialogue">
+                "Decryption key required. TEKS 3.3H - easy difficulty, recruits."
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Screen 5: Nick Fury Science Interruption -->
+        <section id="screen-fury" class="screen">
+          <div class="fury-container">
+            <!-- Fury Header -->
+            <div class="fury-header">
+              <span class="shield-title">S.H.I.E.L.D.</span>
+              <span class="classified-badge">CLASSIFIED</span>
+            </div>
+
+            <!-- Fury Content Area (Red Theme) -->
+            <div class="fury-content">
+              <!-- Fury Avatar -->
+              <div class="fury-avatar">
+                <span class="fury-initials">NF</span>
+              </div>
+
+              <!-- Fury Quote -->
+              <div class="fury-quote" data-augmented-ui="tl-clip br-clip border">
+                <p id="fury-quote-text">
+                  "Looks like someone's been busy. I'm Nick Fury, and I've got a little security measure for your recruits."
+                </p>
+              </div>
+
+              <!-- Loading Text -->
+              <div class="fury-loading">
+                <span>LOADING SECURITY PROTOCOL...</span>
+              </div>
+
+              <!-- Question Area (populated by Phase 2) -->
+              <div class="fury-question" id="fury-question">
+                <!-- Question text will be added dynamically -->
+              </div>
+
+              <!-- Answer Options -->
+              <div class="fury-options" id="fury-options">
+                <button class="fury-option" data-option="A">
+                  <span class="option-letter">A</span>
+                  <span class="option-text">To make food</span>
+                </button>
+                <button class="fury-option" data-option="B">
+                  <span class="option-letter">B</span>
+                  <span class="option-text">To absorb water and nutrients</span>
+                </button>
+                <button class="fury-option" data-option="C">
+                  <span class="option-letter">C</span>
+                  <span class="option-text">To attract bees</span>
+                </button>
+                <button class="fury-option" data-option="D">
+                  <span class="option-letter">D</span>
+                  <span class="option-text">To produce flowers</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Right Sidebar -->
+      <aside class="sidebar sidebar-right">
+        <!-- Firewall Status Panel -->
+        <div class="hud-panel" data-augmented-ui="tr-clip bl-clip border">
+          <div class="panel-header">
+            <span class="panel-icon">&#9632;</span>
+            FIREWALL STATUS
+          </div>
+          <div class="panel-content">
+            <div class="firewall-grid" id="firewall-grid">
+              <div class="firewall-cell" data-firewall="1">01</div>
+              <div class="firewall-cell" data-firewall="2">02</div>
+              <div class="firewall-cell" data-firewall="3">03</div>
+              <div class="firewall-cell" data-firewall="4">04</div>
+              <div class="firewall-cell" data-firewall="5">05</div>
+              <div class="firewall-cell" data-firewall="6">06</div>
+              <div class="firewall-cell" data-firewall="7">07</div>
+              <div class="firewall-cell" data-firewall="8">08</div>
+              <div class="firewall-cell" data-firewall="9">09</div>
+              <div class="firewall-cell" data-firewall="10">10</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audio Systems Panel -->
+        <div class="hud-panel" data-augmented-ui="tr-clip bl-clip border">
+          <div class="panel-header">
+            <span class="panel-icon">&#9679;</span>
+            AUDIO SYSTEMS
+          </div>
+          <div class="panel-content">
+            <div class="volume-row">
+              <span class="volume-label">AMBIENT</span>
+              <input type="range" class="volume-slider" id="volume-ambient" min="0" max="100" value="50">
+            </div>
+            <div class="volume-row">
+              <span class="volume-label">EFFECTS</span>
+              <input type="range" class="volume-slider" id="volume-effects" min="0" max="100" value="70">
+            </div>
+            <div class="volume-row">
+              <span class="volume-label">VOICE</span>
+              <input type="range" class="volume-slider" id="volume-voice" min="0" max="100" value="100">
+            </div>
+            <div class="mic-status">
+              <span class="mic-icon">&#9094;</span>
+              <span class="mic-label">MIC: STANDBY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="hud-panel" data-augmented-ui="tr-clip bl-clip border">
+          <div class="panel-header">
+            <span class="panel-icon">&#9679;</span>
+            CONTROLS
+          </div>
+          <div class="panel-content">
+            <div class="control-row">
+              <span class="control-key">SPACE</span>
+              <span class="control-action">Advance</span>
+            </div>
+            <div class="control-row">
+              <span class="control-key">H</span>
+              <span class="control-action">Hint</span>
+            </div>
+            <div class="control-row">
+              <span class="control-key">M</span>
+              <span class="control-action">Mic Toggle</span>
+            </div>
+            <div class="control-row">
+              <span class="control-key">P</span>
+              <span class="control-action">Pause</span>
+            </div>
+            <div class="control-row">
+              <span class="control-key">R</span>
+              <span class="control-action">Resume</span>
+            </div>
+            <div class="control-row">
+              <span class="control-key">ENTER</span>
+              <span class="control-action">Submit</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mission Objectives Panel (shown during firewall) -->
+        <div class="hud-panel mission-objectives-panel" data-augmented-ui="tr-clip bl-clip border" id="mission-objectives-panel" style="display: none;">
+          <div class="panel-header">
+            <span class="panel-icon">&#9632;</span>
+            MISSION OBJECTIVES
+          </div>
+          <div class="panel-content" id="mission-objectives">
+            <!-- TEKS progress will be populated dynamically -->
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- Footer Bar -->
+    <footer class="footer-bar">
+      <div class="footer-left">
+        <span class="hacking-label">[HACKING MAINFRAME]</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="footer-center">
+        <span class="firewall-count" id="firewall-count">[0/10 FIREWALLS]</span>
+      </div>
+      <div class="footer-right">
+        <span class="stark-label">STARK INDUSTRIES</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- App Scripts -->
+  <script src="js/app.js"></script>
+</body>
+</html>

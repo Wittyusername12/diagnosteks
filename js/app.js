@@ -876,6 +876,9 @@ const App = {
     });
 
     // Volume sliders
+    // NOTE: Volume sliders save preferences to localStorage.
+    // Actual audio control wiring happens in Phase 3 when
+    // sound-manager.js is integrated.
     this.elements.volumeAmbient?.addEventListener('input', (e) => {
       this.state.settings.ambientVolume = parseInt(e.target.value);
       this.saveSettings();
@@ -927,7 +930,7 @@ const App = {
           }
           break;
         case 'KeyF':
-          // For testing: show Fury screen
+          // Teacher override - manually trigger Fury science screen (useful for classroom flexibility)
           if (e.ctrlKey) {
             e.preventDefault();
             this.showFuryScreen();

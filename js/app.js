@@ -570,8 +570,12 @@ const App = {
     item.appendChild(label);
 
     // Click handler for the whole item
+    // IMPORTANT: Don't manually toggle if click was on:
+    // - The checkbox itself (native behavior handles it)
+    // - The label or its children (label's for attribute handles it)
+    // Only manually toggle if clicking on the item div padding/margin area
     item.addEventListener('click', (e) => {
-      if (e.target !== checkbox) {
+      if (e.target !== checkbox && e.target !== label && !label.contains(e.target)) {
         checkbox.checked = !checkbox.checked;
       }
       this.updateTeksSelection();

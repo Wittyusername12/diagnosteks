@@ -178,7 +178,8 @@ class AnimationController {
 
     // Get elements
     const dialogueBox = document.querySelector('.jarvis-dialogue');
-    const centerContent = document.querySelector('.content-area');
+    const dialogueContent = document.getElementById('jarvis-dialogue');
+    const problemContainer = document.querySelector('.problem-container');
     const answerInput = document.getElementById('answer-input');
 
     // Sequence:
@@ -192,22 +193,33 @@ class AnimationController {
       }, 0);
     }
 
-    // 2. Scramble "ACCESS GRANTED" text
-    if (dialogueBox) {
+    // 2. Scramble "ACCESS GRANTED" text (target inner content element)
+    if (dialogueContent) {
       timeline.add(() => {
-        this.scrambleText(dialogueBox, '"Access granted. Firewall breached. Well done, recruits."');
+        this.scrambleText(dialogueContent, '"Access granted. Firewall breached. Well done, recruits."');
       }, 0.1);
     }
 
-    // 3. Pulse the center content
-    if (centerContent) {
-      timeline.to(centerContent, {
+    // 3. Pulse the problem container and flash its border green
+    if (problemContainer) {
+      timeline.to(problemContainer, {
+        borderColor: HUD_CONFIG.colors.green,
+        boxShadow: `0 0 30px ${HUD_CONFIG.colors.green}`,
         scale: 1.02,
         duration: 0.2,
         yoyo: true,
         repeat: 1,
         ease: HUD_CONFIG.easing.bounce
-      }, 0.2);
+      }, 0);
+
+      // Return problem container to normal
+      timeline.to(problemContainer, {
+        borderColor: HUD_CONFIG.colors.cyan,
+        boxShadow: 'none',
+        scale: 1,
+        duration: 0.5,
+        ease: HUD_CONFIG.easing.smooth
+      }, '+=0.3');
     }
 
     // 4. Return input to normal
@@ -242,10 +254,12 @@ class AnimationController {
     });
 
     const dialogueBox = document.querySelector('.jarvis-dialogue');
+    const dialogueContent = document.getElementById('jarvis-dialogue');
+    const problemContainer = document.querySelector('.problem-container');
     const answerInput = document.getElementById('answer-input');
 
     // Sequence:
-    // 1. Flash input red
+    // 1. Flash input and problem container red
     if (answerInput) {
       timeline.to(answerInput, {
         borderColor: HUD_CONFIG.colors.red,
@@ -255,10 +269,19 @@ class AnimationController {
       }, 0);
     }
 
-    // 2. Update dialogue text
-    if (dialogueBox) {
+    if (problemContainer) {
+      timeline.to(problemContainer, {
+        borderColor: HUD_CONFIG.colors.red,
+        boxShadow: `0 0 20px ${HUD_CONFIG.colors.red}`,
+        duration: 0.1,
+        ease: HUD_CONFIG.easing.sharp
+      }, 0);
+    }
+
+    // 2. Update dialogue text (target inner content, not wrapper)
+    if (dialogueContent) {
       timeline.add(() => {
-        dialogueBox.textContent = '"Incorrect. Access denied. Try again, recruits."';
+        dialogueContent.textContent = '"Incorrect. Access denied. Try again, recruits."';
       }, 0);
     }
 
@@ -286,6 +309,15 @@ class AnimationController {
       timeline.set(answerInput, { x: 0 });
     }
 
+    if (problemContainer) {
+      timeline.to(problemContainer, {
+        borderColor: HUD_CONFIG.colors.cyan,
+        boxShadow: 'none',
+        duration: 0.3,
+        ease: HUD_CONFIG.easing.smooth
+      }, '-=0.3');
+    }
+
     this.currentTimeline = timeline;
     console.log('[GSAP] Playing wrong sequence');
   }
@@ -297,7 +329,7 @@ class AnimationController {
   playFuryAlert(onComplete) {
     this.lockInput();
 
-    const panels = document.querySelectorAll('.hud-panel, .sidebar, .content-area');
+    const panels = document.querySelectorAll('.hud-panel, .sidebar, .problem-container, .jarvis-dialogue');
     const timeline = gsap.timeline({
       onComplete: () => {
         if (onComplete) onComplete();

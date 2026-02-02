@@ -162,19 +162,24 @@ class AnimationController {
 
   /**
    * Play correct answer celebration sequence
+   * Uses boxShadow and filter instead of borderColor (augmented-ui conflict)
    * @param {function} onComplete - Callback when animation finishes
    */
   playCorrectSequence(onComplete) {
-    // DIAGNOSTIC TEST - Remove after debugging
-    gsap.to('body', {
-      backgroundColor: '#00ff00',
-      duration: 0.3,
-      yoyo: true,
-      repeat: 1,
-      onComplete: () => console.log('[GSAP] DIAGNOSTIC: Green body flash completed')
-    });
-
     this.lockInput();
+
+    // Get elements (all confirmed to exist in index.html)
+    const dialogueBox = document.querySelector('.jarvis-dialogue');
+    const dialogueContent = document.getElementById('jarvis-dialogue');
+    const problemContainer = document.querySelector('.problem-container');
+    const answerInput = document.getElementById('answer-input');
+
+    // Debug logging - verify elements found
+    console.log('[GSAP] playCorrectSequence - Elements found:');
+    console.log('  .jarvis-dialogue:', dialogueBox ? 'YES' : 'NO');
+    console.log('  #jarvis-dialogue:', dialogueContent ? 'YES' : 'NO');
+    console.log('  .problem-container:', problemContainer ? 'YES' : 'NO');
+    console.log('  #answer-input:', answerInput ? 'YES' : 'NO');
 
     const timeline = gsap.timeline({
       onComplete: () => {
@@ -185,84 +190,90 @@ class AnimationController {
       }
     });
 
-    // Get elements
-    const dialogueBox = document.querySelector('.jarvis-dialogue');
-    const dialogueContent = document.getElementById('jarvis-dialogue');
-    const problemContainer = document.querySelector('.problem-container');
-    const answerInput = document.getElementById('answer-input');
+    // Build array of elements to animate (filter nulls)
+    const glowTargets = [dialogueBox, problemContainer].filter(el => el);
 
-    // Sequence:
-    // 1. Flash input/dialogue green
-    if (answerInput) {
-      timeline.to(answerInput, {
-        borderColor: HUD_CONFIG.colors.green,
-        boxShadow: `0 0 30px ${HUD_CONFIG.colors.green}`,
-        duration: HUD_CONFIG.timing.correctFlash,
+    // GREEN SUCCESS ANIMATION
+    // Use boxShadow + filter (augmented-ui doesn't control these)
+    if (glowTargets.length > 0) {
+      // 1. Flash green glow
+      timeline.to(glowTargets, {
+        boxShadow: '0 0 30px #00ff00, inset 0 0 20px rgba(0, 255, 0, 0.3)',
+        filter: 'brightness(1.3)',
+        duration: 0.2,
         ease: HUD_CONFIG.easing.sharp
       }, 0);
+
+      // 2. Slight scale pulse
+      timeline.to(glowTargets, {
+        scale: 1.02,
+        duration: 0.15,
+        yoyo: true,
+        repeat: 1,
+        ease: HUD_CONFIG.easing.bounce
+      }, 0);
+
+      // 3. Return to normal
+      timeline.to(glowTargets, {
+        boxShadow: 'none',
+        filter: 'brightness(1)',
+        scale: 1,
+        duration: 0.4,
+        ease: HUD_CONFIG.easing.smooth
+      }, '+=0.3');
     }
 
-    // 2. Scramble "ACCESS GRANTED" text (target inner content element)
+    // Glow the input field too
+    if (answerInput) {
+      timeline.to(answerInput, {
+        boxShadow: '0 0 20px #00ff00',
+        filter: 'brightness(1.2)',
+        duration: 0.2,
+        ease: HUD_CONFIG.easing.sharp
+      }, 0);
+
+      timeline.to(answerInput, {
+        boxShadow: 'none',
+        filter: 'brightness(1)',
+        duration: 0.4,
+        ease: HUD_CONFIG.easing.smooth
+      }, '+=0.3');
+    }
+
+    // Scramble "ACCESS GRANTED" text
     if (dialogueContent) {
       timeline.add(() => {
         this.scrambleText(dialogueContent, '"Access granted. Firewall breached. Well done, recruits."');
       }, 0.1);
     }
 
-    // 3. Pulse the problem container and flash its border green
-    if (problemContainer) {
-      timeline.to(problemContainer, {
-        borderColor: HUD_CONFIG.colors.green,
-        boxShadow: `0 0 30px ${HUD_CONFIG.colors.green}`,
-        scale: 1.02,
-        duration: 0.2,
-        yoyo: true,
-        repeat: 1,
-        ease: HUD_CONFIG.easing.bounce
-      }, 0);
-
-      // Return problem container to normal
-      timeline.to(problemContainer, {
-        borderColor: HUD_CONFIG.colors.cyan,
-        boxShadow: 'none',
-        scale: 1,
-        duration: 0.5,
-        ease: HUD_CONFIG.easing.smooth
-      }, '+=0.3');
-    }
-
-    // 4. Return input to normal
-    if (answerInput) {
-      timeline.to(answerInput, {
-        borderColor: HUD_CONFIG.colors.cyan,
-        boxShadow: 'none',
-        duration: 0.5,
-        ease: HUD_CONFIG.easing.smooth
-      }, '+=0.3');
-    }
-
-    // 5. Add delay before callback
+    // Add delay before callback (transition to next firewall)
     timeline.to({}, { duration: HUD_CONFIG.timing.transitionDelay });
 
     this.currentTimeline = timeline;
-    console.log('[GSAP] Playing correct sequence');
+    console.log('[GSAP] Playing correct sequence - animating', glowTargets.length, 'panels');
   }
 
   /**
    * Play wrong answer shake/rejection sequence
+   * Uses boxShadow and filter instead of borderColor (augmented-ui conflict)
    * @param {function} onComplete - Callback when animation finishes
    */
   playWrongSequence(onComplete) {
-    // DIAGNOSTIC TEST - Remove after debugging
-    gsap.to('body', {
-      backgroundColor: '#ff0000',
-      duration: 0.3,
-      yoyo: true,
-      repeat: 1,
-      onComplete: () => console.log('[GSAP] DIAGNOSTIC: Red body flash completed')
-    });
-
     this.lockInput();
+
+    // Get elements (all confirmed to exist in index.html)
+    const dialogueBox = document.querySelector('.jarvis-dialogue');
+    const dialogueContent = document.getElementById('jarvis-dialogue');
+    const problemContainer = document.querySelector('.problem-container');
+    const answerInput = document.getElementById('answer-input');
+
+    // Debug logging - verify elements found
+    console.log('[GSAP] playWrongSequence - Elements found:');
+    console.log('  .jarvis-dialogue:', dialogueBox ? 'YES' : 'NO');
+    console.log('  #jarvis-dialogue:', dialogueContent ? 'YES' : 'NO');
+    console.log('  .problem-container:', problemContainer ? 'YES' : 'NO');
+    console.log('  #answer-input:', answerInput ? 'YES' : 'NO');
 
     const timeline = gsap.timeline({
       onComplete: () => {
@@ -271,83 +282,89 @@ class AnimationController {
       }
     });
 
-    const dialogueBox = document.querySelector('.jarvis-dialogue');
-    const dialogueContent = document.getElementById('jarvis-dialogue');
-    const problemContainer = document.querySelector('.problem-container');
-    const answerInput = document.getElementById('answer-input');
+    // Build array of elements to animate (filter nulls)
+    const glowTargets = [dialogueBox, problemContainer].filter(el => el);
 
-    // Sequence:
-    // 1. Flash input and problem container red
-    if (answerInput) {
-      timeline.to(answerInput, {
-        borderColor: HUD_CONFIG.colors.red,
-        boxShadow: `0 0 20px ${HUD_CONFIG.colors.red}`,
-        duration: 0.1,
+    // RED FAILURE ANIMATION
+    // Use boxShadow + filter (augmented-ui doesn't control these)
+    if (glowTargets.length > 0) {
+      // 1. Flash red glow
+      timeline.to(glowTargets, {
+        boxShadow: '0 0 30px #ff0000, inset 0 0 20px rgba(255, 0, 0, 0.3)',
+        filter: 'brightness(1.3)',
+        duration: 0.15,
         ease: HUD_CONFIG.easing.sharp
       }, 0);
+
+      // 2. Return to normal
+      timeline.to(glowTargets, {
+        boxShadow: 'none',
+        filter: 'brightness(1)',
+        duration: 0.2,
+        ease: HUD_CONFIG.easing.smooth
+      }, '+=0.3');
     }
 
-    if (problemContainer) {
-      timeline.to(problemContainer, {
-        borderColor: HUD_CONFIG.colors.red,
-        boxShadow: `0 0 20px ${HUD_CONFIG.colors.red}`,
-        duration: 0.1,
-        ease: HUD_CONFIG.easing.sharp
-      }, 0);
-    }
-
-    // 2. Update dialogue text (target inner content, not wrapper)
+    // Update dialogue text
     if (dialogueContent) {
       timeline.add(() => {
         dialogueContent.textContent = '"Incorrect. Access denied. Try again, recruits."';
       }, 0);
     }
 
-    // 3. Shake the input field
+    // Glow and shake the input field
     if (answerInput) {
+      // Red glow on input
+      timeline.to(answerInput, {
+        boxShadow: '0 0 20px #ff0000',
+        filter: 'brightness(1.2)',
+        duration: 0.1,
+        ease: HUD_CONFIG.easing.sharp
+      }, 0);
+
+      // Shake the input left-right
       timeline.to(answerInput, {
         x: -10,
         duration: 0.05,
         repeat: 5,
         yoyo: true,
-        ease: 'none'
+        ease: 'power2.inOut'
       }, 0.1);
-    }
 
-    // 4. Return to normal
-    if (answerInput) {
+      // Return to normal
       timeline.to(answerInput, {
-        borderColor: HUD_CONFIG.colors.cyan,
         boxShadow: 'none',
-        duration: 0.3,
+        filter: 'brightness(1)',
+        x: 0,
+        duration: 0.2,
         ease: HUD_CONFIG.easing.smooth
-      }, '+=0.2');
-
-      // Reset input position
-      timeline.set(answerInput, { x: 0 });
-    }
-
-    if (problemContainer) {
-      timeline.to(problemContainer, {
-        borderColor: HUD_CONFIG.colors.cyan,
-        boxShadow: 'none',
-        duration: 0.3,
-        ease: HUD_CONFIG.easing.smooth
-      }, '-=0.3');
+      }, '+=0.1');
     }
 
     this.currentTimeline = timeline;
-    console.log('[GSAP] Playing wrong sequence');
+    console.log('[GSAP] Playing wrong sequence - animating', glowTargets.length, 'panels');
   }
 
   /**
    * Play Fury alert sequence (red border pulses before Fury appears)
+   * Uses boxShadow instead of borderColor (augmented-ui conflict)
    * @param {function} onComplete - Callback when pulses finish
    */
   playFuryAlert(onComplete) {
     this.lockInput();
 
-    const panels = document.querySelectorAll('.hud-panel, .sidebar, .problem-container, .jarvis-dialogue');
+    // Target ALL panels including header and footer (per project brief lines 584-600)
+    const panels = document.querySelectorAll(
+      '.hud-panel, .sidebar, .problem-container, .jarvis-dialogue, .header-bar, .footer-bar'
+    );
+
+    // Debug logging - show what we found
+    console.log('[GSAP] playFuryAlert - Elements found:', panels.length);
+    panels.forEach((panel, i) => {
+      const classes = panel.className.split(' ').filter(c => c).join('.');
+      console.log(`  Panel ${i}: .${classes}`);
+    });
+
     const timeline = gsap.timeline({
       onComplete: () => {
         if (onComplete) onComplete();
@@ -358,11 +375,12 @@ class AnimationController {
     // Add fury-alert-active class to body
     document.body.classList.add('fury-alert-active');
 
-    // Pulse all panels red
+    // Pulse all panels with red glow (4 pulses over ~2 seconds)
+    // Use boxShadow + filter instead of borderColor (augmented-ui conflict)
     panels.forEach(panel => {
       timeline.to(panel, {
-        borderColor: HUD_CONFIG.colors.red,
-        boxShadow: `0 0 20px ${HUD_CONFIG.colors.red}`,
+        boxShadow: '0 0 25px #ff3333, inset 0 0 15px rgba(255, 51, 51, 0.2)',
+        filter: 'brightness(1.2)',
         duration: HUD_CONFIG.timing.furyAlertPulse / 2,
         repeat: HUD_CONFIG.timing.furyAlertCount * 2 - 1,
         yoyo: true,
@@ -370,13 +388,17 @@ class AnimationController {
       }, 0);
     });
 
-    // Remove class when done
+    // Remove class and reset panels when done
     timeline.add(() => {
       document.body.classList.remove('fury-alert-active');
+      // Ensure all panels return to normal
+      panels.forEach(panel => {
+        gsap.set(panel, { boxShadow: 'none', filter: 'brightness(1)' });
+      });
     });
 
     this.currentTimeline = timeline;
-    console.log('[GSAP] Playing Fury alert sequence');
+    console.log('[GSAP] Playing Fury alert sequence - pulsing', panels.length, 'elements');
   }
 
   /**

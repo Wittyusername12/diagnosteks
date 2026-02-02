@@ -373,7 +373,9 @@ const App = {
     missionStartTime: null,
     isComplete: false,
     currentProblem: null,
-    currentScienceQuestion: null
+    currentScienceQuestion: null,
+    currentFirewallAttempted: false,  // Tracks if current firewall had a wrong answer
+    currentScienceAttempted: false    // Tracks if current science question had a wrong answer
   },
 
   // Screen references (populated on init)
@@ -547,11 +549,11 @@ const App = {
     checkbox.className = 'teks-checkbox';
     checkbox.dataset.code = teks.code;
     checkbox.dataset.type = type;
-    checkbox.id = `teks-${teks.code}`;
+    checkbox.id = `${type}-teks-${teks.code}`;  // Unique ID with type prefix
 
     const label = document.createElement('label');
     label.className = 'teks-label';
-    label.htmlFor = `teks-${teks.code}`;
+    label.htmlFor = `${type}-teks-${teks.code}`;  // Match the unique ID
 
     const code = document.createElement('span');
     code.className = 'teks-code';
@@ -738,7 +740,9 @@ const App = {
       missionStartTime: Date.now(),
       isComplete: false,
       currentProblem: null,
-      currentScienceQuestion: null
+      currentScienceQuestion: null,
+      currentFirewallAttempted: false,
+      currentScienceAttempted: false
     };
 
     this.state.missionInProgress = true;
@@ -764,6 +768,7 @@ const App = {
   loadFirewall(firewallNumber) {
     this.missionState.currentFirewall = firewallNumber;
     this.state.currentFirewall = firewallNumber;
+    this.missionState.currentFirewallAttempted = false;  // Reset for new firewall
 
     // All firewalls (1-10) are math problems
     // Science questions appear AFTER completing firewalls 3, 6, 9
@@ -828,10 +833,15 @@ const App = {
    * Handle a correct answer - update UI and advance
    */
   handleCorrectAnswer() {
-    this.missionState.mathCorrect++;
     const currentFW = this.missionState.currentFirewall;
 
-    this.updateMissionLog(`[OK] Firewall ${currentFW} breached`);
+    // Only increment score if this is a first-attempt correct answer
+    if (!this.missionState.currentFirewallAttempted) {
+      this.missionState.mathCorrect++;
+      this.updateMissionLog(`[OK] Firewall ${currentFW} breached (first attempt)`);
+    } else {
+      this.updateMissionLog(`[OK] Firewall ${currentFW} breached (retry - no score)`);
+    }
 
     // Visual feedback
     this.elements.answerInput.classList.add('correct');
@@ -872,6 +882,7 @@ const App = {
    */
   handleWrongAnswer() {
     this.missionState.wrongAttempts++;
+    this.missionState.currentFirewallAttempted = true;  // Mark that this firewall had a wrong attempt
 
     this.updateMissionLog(`[FAIL] Incorrect attempt on firewall ${this.missionState.currentFirewall}`);
 
@@ -901,6 +912,7 @@ const App = {
     }
 
     this.missionState.currentScienceQuestion = question;
+    this.missionState.currentScienceAttempted = false;  // Reset for new science question
 
     // Update Fury screen content
     this.elements.furyQuestion.textContent = question.question;
@@ -948,10 +960,15 @@ const App = {
    * @param {HTMLElement} buttonElement - The clicked button element
    */
   handleCorrectScienceAnswer(buttonElement) {
-    this.missionState.scienceCorrect++;
     const currentFW = this.missionState.currentFirewall;
 
-    this.updateMissionLog(`[FURY] Security verification passed`);
+    // Only increment score if this is a first-attempt correct answer
+    if (!this.missionState.currentScienceAttempted) {
+      this.missionState.scienceCorrect++;
+      this.updateMissionLog(`[FURY] Security verification passed (first attempt)`);
+    } else {
+      this.updateMissionLog(`[FURY] Security verification passed (retry - no score)`);
+    }
 
     // Visual feedback
     buttonElement.classList.add('correct');
@@ -983,6 +1000,7 @@ const App = {
    */
   handleWrongScienceAnswer(buttonElement) {
     this.missionState.wrongAttempts++;
+    this.missionState.currentScienceAttempted = true;  // Mark that this science question had a wrong attempt
 
     this.updateMissionLog(`[FURY] Security verification failed`);
 
@@ -1056,7 +1074,9 @@ const App = {
       missionStartTime: null,
       isComplete: false,
       currentProblem: null,
-      currentScienceQuestion: null
+      currentScienceQuestion: null,
+      currentFirewallAttempted: false,
+      currentScienceAttempted: false
     };
 
     this.state.currentFirewall = 0;

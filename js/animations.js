@@ -165,6 +165,15 @@ class AnimationController {
    * @param {function} onComplete - Callback when animation finishes
    */
   playCorrectSequence(onComplete) {
+    // DIAGNOSTIC TEST - Remove after debugging
+    gsap.to('body', {
+      backgroundColor: '#00ff00',
+      duration: 0.3,
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => console.log('[GSAP] DIAGNOSTIC: Green body flash completed')
+    });
+
     this.lockInput();
 
     const timeline = gsap.timeline({
@@ -244,6 +253,15 @@ class AnimationController {
    * @param {function} onComplete - Callback when animation finishes
    */
   playWrongSequence(onComplete) {
+    // DIAGNOSTIC TEST - Remove after debugging
+    gsap.to('body', {
+      backgroundColor: '#ff0000',
+      duration: 0.3,
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => console.log('[GSAP] DIAGNOSTIC: Red body flash completed')
+    });
+
     this.lockInput();
 
     const timeline = gsap.timeline({

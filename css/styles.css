@@ -1154,6 +1154,138 @@ body {
 }
 
 /* ============================================
+   SCREEN 6: VICTORY
+   ============================================ */
+.victory-content {
+  gap: 25px;
+}
+
+.victory-icon {
+  font-size: 4rem;
+  color: var(--success-green);
+  text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.victory-title {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  color: var(--success-green);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+}
+
+.victory-message {
+  background: var(--bg-panel);
+  border: 2px solid var(--success-green);
+  padding: 30px 50px;
+  text-align: center;
+  --aug-border-bg: var(--success-green);
+  --aug-tl: 15px;
+  --aug-tr: 15px;
+  --aug-br: 15px;
+  --aug-bl: 15px;
+}
+
+.victory-status {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--success-green);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 10px;
+}
+
+.victory-detail {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.victory-scores {
+  display: flex;
+  gap: 30px;
+  margin: 20px 0;
+}
+
+.score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--primary-cyan-dim);
+  padding: 20px 30px;
+}
+
+.score-label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.score-value {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  color: var(--primary-cyan);
+}
+
+.score-total {
+  color: var(--success-green);
+  font-size: 2.5rem;
+}
+
+.victory-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: center;
+}
+
+.stat-line {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.stat-line span {
+  color: var(--primary-cyan);
+  font-family: var(--font-mono);
+}
+
+/* Answer feedback animations */
+.answer-input.correct {
+  border-color: var(--success-green);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.answer-input.incorrect {
+  border-color: var(--error-red);
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Fury option feedback */
+.fury-option.correct {
+  background: rgba(0, 255, 136, 0.2);
+  border-color: var(--success-green);
+}
+
+.fury-option.incorrect {
+  background: rgba(255, 68, 68, 0.2);
+  border-color: var(--error-red);
+}
+
+/* ============================================
    FOOTER BAR
    ============================================ */
 .footer-bar {

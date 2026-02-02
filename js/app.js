@@ -1,6 +1,6 @@
 /**
- * IRON MAN STEM MISSION - Phase 1
- * Navigation and Screen Management
+ * IRON MAN STEM MISSION - Phase 2
+ * Navigation, Screen Management, and Gameplay Loop
  *
  * This module handles:
  * - Screen navigation
@@ -9,6 +9,8 @@
  * - Settings persistence
  * - Clock/date display
  * - Mission log updates
+ * - Gameplay loop with math firewalls and science questions
+ * - Score tracking and victory screen
  */
 
 // ============================================
@@ -360,6 +362,20 @@ const App = {
     }
   },
 
+  // Mission gameplay state (Phase 2)
+  missionState: {
+    currentFirewall: 1,
+    mathCorrect: 0,
+    mathTotal: 7,
+    scienceCorrect: 0,
+    scienceTotal: 3,
+    wrongAttempts: 0,
+    missionStartTime: null,
+    isComplete: false,
+    currentProblem: null,
+    currentScienceQuestion: null
+  },
+
   // Screen references (populated on init)
   screens: {},
 
@@ -393,7 +409,8 @@ const App = {
       'teks-select': document.getElementById('screen-teks-select'),
       'mission-configured': document.getElementById('screen-mission-configured'),
       'firewall': document.getElementById('screen-firewall'),
-      'fury': document.getElementById('screen-fury')
+      'fury': document.getElementById('screen-fury'),
+      'victory': document.getElementById('screen-victory')
     };
 
     // Other elements
@@ -421,7 +438,26 @@ const App = {
       // Volume sliders
       volumeAmbient: document.getElementById('volume-ambient'),
       volumeEffects: document.getElementById('volume-effects'),
-      volumeVoice: document.getElementById('volume-voice')
+      volumeVoice: document.getElementById('volume-voice'),
+
+      // Firewall gameplay elements
+      answerInput: document.getElementById('answer-input'),
+      problemNarrative: document.getElementById('problem-narrative'),
+      problemExpression: document.getElementById('problem-expression'),
+      jarvisDialogue: document.getElementById('jarvis-dialogue'),
+      currentFirewallDisplay: document.getElementById('current-firewall'),
+
+      // Fury screen elements
+      furyQuoteText: document.getElementById('fury-quote-text'),
+      furyQuestion: document.getElementById('fury-question'),
+      furyOptions: document.getElementById('fury-options'),
+
+      // Victory screen elements
+      victoryMathScore: document.getElementById('victory-math-score'),
+      victoryScienceScore: document.getElementById('victory-science-score'),
+      victoryTotalScore: document.getElementById('victory-total-score'),
+      victoryDuration: document.getElementById('victory-duration'),
+      victoryWrongAttempts: document.getElementById('victory-wrong-attempts')
     };
   },
 
@@ -616,16 +652,8 @@ const App = {
   },
 
   beginMission() {
-    this.state.missionInProgress = true;
-    this.state.currentFirewall = 1;
-    this.saveMissionState();
-    this.updateMissionLog('[INIT] Mission commenced');
-    this.updateMissionLog('[FW] Accessing firewall 1');
-
-    // Populate mission objectives
-    this.populateMissionObjectives();
-
-    this.showScreen('firewall');
+    // Phase 2: Use startMission for full gameplay loop
+    this.startMission();
   },
 
   populateMissionObjectives() {
@@ -689,6 +717,370 @@ const App = {
   showFuryScreen() {
     this.updateMissionLog('[INT] Nick Fury intercepted');
     this.showScreen('fury');
+  },
+
+  // ============================================
+  // PHASE 2: GAMEPLAY LOGIC
+  // ============================================
+
+  /**
+   * Start a new mission - initialize all gameplay state
+   */
+  startMission() {
+    // Reset mission state
+    this.missionState = {
+      currentFirewall: 1,
+      mathCorrect: 0,
+      mathTotal: 7,
+      scienceCorrect: 0,
+      scienceTotal: 3,
+      wrongAttempts: 0,
+      missionStartTime: Date.now(),
+      isComplete: false,
+      currentProblem: null,
+      currentScienceQuestion: null
+    };
+
+    this.state.missionInProgress = true;
+    this.state.currentFirewall = 1;
+    this.saveMissionState();
+
+    this.updateMissionLog('[INIT] Mission commenced');
+    this.updateMissionLog('[FW] Accessing firewall 1');
+
+    // Populate mission objectives
+    this.populateMissionObjectives();
+
+    // Load first firewall
+    this.loadFirewall(1);
+
+    this.showScreen('firewall');
+  },
+
+  /**
+   * Load a specific firewall (math problem or transition to Fury)
+   * @param {number} firewallNumber - The firewall number (1-10)
+   */
+  loadFirewall(firewallNumber) {
+    this.missionState.currentFirewall = firewallNumber;
+    this.state.currentFirewall = firewallNumber;
+
+    // Check if this is a Fury firewall (3, 6, 9)
+    if (isFuryFirewall(firewallNumber)) {
+      // Fury firewalls show science questions
+      this.showFuryQuestion(firewallNumber);
+      return;
+    }
+
+    // Get the math problem for this firewall
+    const problem = getMathProblem(firewallNumber);
+    if (!problem) {
+      console.error(`No problem found for firewall ${firewallNumber}`);
+      return;
+    }
+
+    this.missionState.currentProblem = problem;
+
+    // Update UI
+    this.elements.currentFirewallDisplay.textContent = firewallNumber;
+    this.elements.problemNarrative.textContent = problem.narrative;
+    this.elements.problemExpression.textContent = problem.expression;
+    this.elements.jarvisDialogue.textContent = `"Decryption key required. ${problem.teks} protocol active."`;
+
+    // Clear answer input
+    this.elements.answerInput.value = '';
+    this.elements.answerInput.classList.remove('correct', 'incorrect');
+    this.elements.answerInput.focus();
+
+    // Update firewall grid and progress
+    this.updateFirewallGrid();
+    this.updateProgress();
+
+    this.updateMissionLog(`[FW] Firewall ${firewallNumber} - ${problem.operation}`);
+  },
+
+  /**
+   * Check the user's answer for the current math problem
+   */
+  checkAnswer() {
+    if (!this.missionState.currentProblem) {
+      return;
+    }
+
+    const userInput = this.elements.answerInput.value.trim();
+    const userAnswer = parseFloat(userInput);
+
+    if (isNaN(userAnswer)) {
+      this.elements.jarvisDialogue.textContent = '"Invalid input. Enter a numeric decryption key."';
+      this.elements.answerInput.classList.add('incorrect');
+      setTimeout(() => {
+        this.elements.answerInput.classList.remove('incorrect');
+      }, 500);
+      return;
+    }
+
+    const correctAnswer = this.missionState.currentProblem.correctAnswer;
+
+    if (userAnswer === correctAnswer) {
+      this.handleCorrectAnswer();
+    } else {
+      this.handleWrongAnswer();
+    }
+  },
+
+  /**
+   * Handle a correct answer - update UI and advance
+   */
+  handleCorrectAnswer() {
+    this.missionState.mathCorrect++;
+    const currentFW = this.missionState.currentFirewall;
+
+    this.updateMissionLog(`[OK] Firewall ${currentFW} breached`);
+
+    // Visual feedback
+    this.elements.answerInput.classList.add('correct');
+    this.elements.jarvisDialogue.textContent = '"Access granted. Firewall breached. Well done, recruits."';
+
+    // Mark firewall as breached in grid
+    const cell = this.elements.firewallGrid.querySelector(`[data-firewall="${currentFW}"]`);
+    if (cell) {
+      cell.classList.remove('active');
+      cell.classList.add('breached');
+    }
+
+    // Update progress
+    this.updateProgress();
+
+    // Advance after delay
+    setTimeout(() => {
+      this.elements.answerInput.classList.remove('correct');
+
+      // Check if mission complete
+      if (currentFW >= 10) {
+        this.showVictoryScreen();
+        return;
+      }
+
+      // Check if next firewall is a Fury interruption
+      const nextFW = currentFW + 1;
+      if (isFuryFirewall(nextFW)) {
+        this.showFuryQuestion(nextFW);
+      } else {
+        this.loadFirewall(nextFW);
+      }
+    }, 1500);
+  },
+
+  /**
+   * Handle a wrong answer - show feedback, stay on current firewall
+   */
+  handleWrongAnswer() {
+    this.missionState.wrongAttempts++;
+
+    this.updateMissionLog(`[FAIL] Incorrect attempt on firewall ${this.missionState.currentFirewall}`);
+
+    // Visual feedback - shake animation
+    this.elements.answerInput.classList.add('incorrect');
+    this.elements.jarvisDialogue.textContent = '"Incorrect. Access denied. Try again, recruits."';
+
+    // Clear the incorrect class after animation
+    setTimeout(() => {
+      this.elements.answerInput.classList.remove('incorrect');
+      this.elements.answerInput.value = '';
+      this.elements.answerInput.focus();
+    }, 500);
+  },
+
+  /**
+   * Show Nick Fury's science question
+   * @param {number} afterFirewall - The firewall number (3, 6, or 9)
+   */
+  showFuryQuestion(afterFirewall) {
+    const question = getScienceQuestion(afterFirewall);
+    if (!question) {
+      console.error(`No science question found for firewall ${afterFirewall}`);
+      // Skip to next math firewall
+      this.loadFirewall(afterFirewall + 1);
+      return;
+    }
+
+    this.missionState.currentScienceQuestion = question;
+
+    // Update Fury screen content
+    this.elements.furyQuestion.textContent = question.question;
+
+    // Update answer options
+    const optionButtons = this.elements.furyOptions.querySelectorAll('.fury-option');
+    optionButtons.forEach((btn, index) => {
+      if (question.options[index]) {
+        const opt = question.options[index];
+        btn.dataset.option = opt.letter;
+        btn.querySelector('.option-letter').textContent = opt.letter;
+        btn.querySelector('.option-text').textContent = opt.text;
+        btn.classList.remove('correct', 'incorrect');
+        btn.style.display = 'flex';
+      } else {
+        btn.style.display = 'none';
+      }
+    });
+
+    this.updateMissionLog(`[FURY] Security protocol initiated`);
+    this.showScreen('fury');
+  },
+
+  /**
+   * Check the user's answer for the science question
+   * @param {string} letter - The selected option letter (A, B, C, or D)
+   * @param {HTMLElement} buttonElement - The clicked button element
+   */
+  checkScienceAnswer(letter, buttonElement) {
+    if (!this.missionState.currentScienceQuestion) {
+      return;
+    }
+
+    const correctAnswer = this.missionState.currentScienceQuestion.correctAnswer;
+
+    if (letter === correctAnswer) {
+      this.handleCorrectScienceAnswer(buttonElement);
+    } else {
+      this.handleWrongScienceAnswer(buttonElement);
+    }
+  },
+
+  /**
+   * Handle correct science answer
+   * @param {HTMLElement} buttonElement - The clicked button element
+   */
+  handleCorrectScienceAnswer(buttonElement) {
+    this.missionState.scienceCorrect++;
+    const currentFW = this.missionState.currentFirewall;
+
+    this.updateMissionLog(`[FURY] Security verification passed`);
+
+    // Visual feedback
+    buttonElement.classList.add('correct');
+
+    // Update Fury quote to show success
+    this.elements.furyQuoteText.textContent = '"Security verified. You may proceed, but I\'ll be watching."';
+
+    // Advance after delay
+    setTimeout(() => {
+      buttonElement.classList.remove('correct');
+
+      // Reset Fury quote for next time
+      this.elements.furyQuoteText.textContent = '"Looks like someone\'s been busy. I\'m Nick Fury, and I\'ve got a little security measure for your recruits."';
+
+      // Move to next firewall
+      const nextFW = currentFW + 1;
+      if (nextFW > 10) {
+        this.showVictoryScreen();
+      } else {
+        this.loadFirewall(nextFW);
+        this.showScreen('firewall');
+      }
+    }, 1500);
+  },
+
+  /**
+   * Handle wrong science answer
+   * @param {HTMLElement} buttonElement - The clicked button element
+   */
+  handleWrongScienceAnswer(buttonElement) {
+    this.missionState.wrongAttempts++;
+
+    this.updateMissionLog(`[FURY] Security verification failed`);
+
+    // Visual feedback
+    buttonElement.classList.add('incorrect');
+
+    // Update Fury quote
+    this.elements.furyQuoteText.textContent = '"Incorrect. Try again. I don\'t have all day."';
+
+    // Clear incorrect class after animation
+    setTimeout(() => {
+      buttonElement.classList.remove('incorrect');
+    }, 500);
+  },
+
+  /**
+   * Show the victory screen with final scores
+   */
+  showVictoryScreen() {
+    this.missionState.isComplete = true;
+    this.state.missionInProgress = false;
+
+    // Clear saved mission state
+    localStorage.removeItem('ironman-mission-state');
+
+    // Calculate duration
+    const duration = Date.now() - this.missionState.missionStartTime;
+    const minutes = Math.floor(duration / 60000);
+    const seconds = Math.floor((duration % 60000) / 1000);
+    const durationStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    // Calculate total score
+    const totalCorrect = this.missionState.mathCorrect + this.missionState.scienceCorrect;
+    const totalPossible = this.missionState.mathTotal + this.missionState.scienceTotal;
+
+    // Update victory screen
+    this.elements.victoryMathScore.textContent = `${this.missionState.mathCorrect}/${this.missionState.mathTotal}`;
+    this.elements.victoryScienceScore.textContent = `${this.missionState.scienceCorrect}/${this.missionState.scienceTotal}`;
+    this.elements.victoryTotalScore.textContent = `${totalCorrect}/${totalPossible}`;
+    this.elements.victoryDuration.textContent = durationStr;
+    this.elements.victoryWrongAttempts.textContent = this.missionState.wrongAttempts;
+
+    this.updateMissionLog('[VICTORY] Mission complete - Arc reactor schematics retrieved');
+
+    // Update progress to 100%
+    this.elements.progressFill.style.width = '100%';
+    this.elements.firewallCount.textContent = '[10/10 FIREWALLS]';
+
+    // Mark all firewalls as breached
+    const cells = this.elements.firewallGrid.querySelectorAll('.firewall-cell');
+    cells.forEach(cell => {
+      cell.classList.remove('active');
+      cell.classList.add('breached');
+    });
+
+    this.showScreen('victory');
+  },
+
+  /**
+   * Reset and start a new mission from victory screen
+   */
+  resetMission() {
+    // Reset all state
+    this.missionState = {
+      currentFirewall: 1,
+      mathCorrect: 0,
+      mathTotal: 7,
+      scienceCorrect: 0,
+      scienceTotal: 3,
+      wrongAttempts: 0,
+      missionStartTime: null,
+      isComplete: false,
+      currentProblem: null,
+      currentScienceQuestion: null
+    };
+
+    this.state.currentFirewall = 0;
+    this.state.missionInProgress = false;
+
+    // Reset firewall grid
+    const cells = this.elements.firewallGrid.querySelectorAll('.firewall-cell');
+    cells.forEach(cell => {
+      cell.classList.remove('active', 'breached');
+    });
+
+    // Reset progress
+    this.elements.progressFill.style.width = '0%';
+    this.elements.firewallCount.textContent = '[0/10 FIREWALLS]';
+
+    // Hide mission options
+    this.elements.missionOptions.style.display = 'none';
+
+    this.updateMissionLog('[RESET] Mission reset - Ready for new mission');
+    this.showScreen('grade-select');
   },
 
   // ============================================
@@ -859,20 +1251,22 @@ const App = {
       this.newMission();
     });
 
-    // Decrypt button (Phase 1: just for navigation testing)
+    // Decrypt button - Phase 2: Check answer
     document.getElementById('btn-decrypt')?.addEventListener('click', () => {
-      // For Phase 1, just log the action
-      this.updateMissionLog('[DEC] Decryption attempted');
+      this.checkAnswer();
     });
 
-    // Fury options (Phase 1: navigation testing)
+    // Fury options - Phase 2: Check science answer
     document.querySelectorAll('.fury-option').forEach(btn => {
       btn.addEventListener('click', () => {
         const option = btn.dataset.option;
-        this.updateMissionLog(`[ANS] Option ${option} selected`);
-        // For Phase 1, return to firewall screen
-        this.showScreen('firewall');
+        this.checkScienceAnswer(option, btn);
       });
+    });
+
+    // Victory screen - New mission button
+    document.getElementById('btn-new-mission-victory')?.addEventListener('click', () => {
+      this.resetMission();
     });
 
     // Volume sliders
@@ -924,9 +1318,9 @@ const App = {
           this.updateMissionLog('[KEY] R pressed - Resume');
           break;
         case 'Enter':
-          // Submit (Phase 2)
+          // Submit answer on firewall screen
           if (this.state.currentScreen === 'firewall') {
-            this.updateMissionLog('[KEY] Enter pressed - Submit');
+            this.checkAnswer();
           }
           break;
         case 'KeyF':

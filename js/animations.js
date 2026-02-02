@@ -176,11 +176,18 @@ class AnimationController {
       }
     });
 
-    // Get elements
+    // Get elements with logging for debugging
     const dialogueBox = document.querySelector('.jarvis-dialogue');
     const dialogueContent = document.getElementById('jarvis-dialogue');
     const problemContainer = document.querySelector('.problem-container');
     const answerInput = document.getElementById('answer-input');
+
+    // Debug logging - verify selectors found elements
+    console.log('[GSAP] playCorrectSequence targeting:');
+    console.log('  - .jarvis-dialogue:', dialogueBox ? 'FOUND' : 'NOT FOUND');
+    console.log('  - #jarvis-dialogue:', dialogueContent ? 'FOUND' : 'NOT FOUND');
+    console.log('  - .problem-container:', problemContainer ? 'FOUND' : 'NOT FOUND');
+    console.log('  - #answer-input:', answerInput ? 'FOUND' : 'NOT FOUND');
 
     // Sequence:
     // 1. Flash input/dialogue green
@@ -253,10 +260,18 @@ class AnimationController {
       }
     });
 
+    // Get elements with logging for debugging
     const dialogueBox = document.querySelector('.jarvis-dialogue');
     const dialogueContent = document.getElementById('jarvis-dialogue');
     const problemContainer = document.querySelector('.problem-container');
     const answerInput = document.getElementById('answer-input');
+
+    // Debug logging - verify selectors found elements
+    console.log('[GSAP] playWrongSequence targeting:');
+    console.log('  - .jarvis-dialogue:', dialogueBox ? 'FOUND' : 'NOT FOUND');
+    console.log('  - #jarvis-dialogue:', dialogueContent ? 'FOUND' : 'NOT FOUND');
+    console.log('  - .problem-container:', problemContainer ? 'FOUND' : 'NOT FOUND');
+    console.log('  - #answer-input:', answerInput ? 'FOUND' : 'NOT FOUND');
 
     // Sequence:
     // 1. Flash input and problem container red
@@ -329,7 +344,20 @@ class AnimationController {
   playFuryAlert(onComplete) {
     this.lockInput();
 
-    const panels = document.querySelectorAll('.hud-panel, .sidebar, .problem-container, .jarvis-dialogue');
+    // Target ALL panels per project brief lines 584-600:
+    // Left sidebar, right sidebar, top bar, bottom bar, center content
+    const panels = document.querySelectorAll(
+      '.hud-panel, .sidebar, .problem-container, .jarvis-dialogue, .header-bar, .footer-bar'
+    );
+
+    // Debug logging - verify what elements we found
+    console.log('[GSAP] playFuryAlert targeting:');
+    console.log('  - Total panels found:', panels.length);
+    panels.forEach((panel, i) => {
+      const classes = panel.className.split(' ').filter(c => c).join('.');
+      console.log(`  - Panel ${i}: .${classes}`);
+    });
+
     const timeline = gsap.timeline({
       onComplete: () => {
         if (onComplete) onComplete();
@@ -340,7 +368,7 @@ class AnimationController {
     // Add fury-alert-active class to body
     document.body.classList.add('fury-alert-active');
 
-    // Pulse all panels red
+    // Pulse all panels red (4 pulses over ~2 seconds per brief)
     panels.forEach(panel => {
       timeline.to(panel, {
         borderColor: HUD_CONFIG.colors.red,
@@ -358,7 +386,7 @@ class AnimationController {
     });
 
     this.currentTimeline = timeline;
-    console.log('[GSAP] Playing Fury alert sequence');
+    console.log('[GSAP] Playing Fury alert sequence - flashing', panels.length, 'elements');
   }
 
   /**

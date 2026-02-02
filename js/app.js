@@ -366,7 +366,7 @@ const App = {
   missionState: {
     currentFirewall: 1,
     mathCorrect: 0,
-    mathTotal: 7,
+    mathTotal: 10,
     scienceCorrect: 0,
     scienceTotal: 3,
     wrongAttempts: 0,
@@ -731,7 +731,7 @@ const App = {
     this.missionState = {
       currentFirewall: 1,
       mathCorrect: 0,
-      mathTotal: 7,
+      mathTotal: 10,
       scienceCorrect: 0,
       scienceTotal: 3,
       wrongAttempts: 0,
@@ -765,12 +765,8 @@ const App = {
     this.missionState.currentFirewall = firewallNumber;
     this.state.currentFirewall = firewallNumber;
 
-    // Check if this is a Fury firewall (3, 6, 9)
-    if (isFuryFirewall(firewallNumber)) {
-      // Fury firewalls show science questions
-      this.showFuryQuestion(firewallNumber);
-      return;
-    }
+    // All firewalls (1-10) are math problems
+    // Science questions appear AFTER completing firewalls 3, 6, 9
 
     // Get the math problem for this firewall
     const problem = getMathProblem(firewallNumber);
@@ -855,18 +851,18 @@ const App = {
     setTimeout(() => {
       this.elements.answerInput.classList.remove('correct');
 
-      // Check if mission complete
+      // Check if mission complete (after firewall 10)
       if (currentFW >= 10) {
         this.showVictoryScreen();
         return;
       }
 
-      // Check if next firewall is a Fury interruption
-      const nextFW = currentFW + 1;
-      if (isFuryFirewall(nextFW)) {
-        this.showFuryQuestion(nextFW);
+      // Check if we just COMPLETED firewall 3, 6, or 9 - trigger Fury science question
+      if (shouldShowFuryAfter(currentFW)) {
+        this.showFuryQuestion(currentFW);
       } else {
-        this.loadFirewall(nextFW);
+        // Advance to next firewall
+        this.loadFirewall(currentFW + 1);
       }
     }, 1500);
   },
@@ -1053,7 +1049,7 @@ const App = {
     this.missionState = {
       currentFirewall: 1,
       mathCorrect: 0,
-      mathTotal: 7,
+      mathTotal: 10,
       scienceCorrect: 0,
       scienceTotal: 3,
       wrongAttempts: 0,

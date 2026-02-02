@@ -337,6 +337,40 @@
           </div>
         </section>
 
+        <!-- Screen 6: Victory -->
+        <section id="screen-victory" class="screen">
+          <div class="screen-content victory-content">
+            <div class="victory-icon">&#9733;</div>
+            <h1 class="victory-title">MISSION COMPLETE</h1>
+            <div class="victory-message" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+              <p class="victory-status">ACCESS GRANTED</p>
+              <p class="victory-detail">ARC REACTOR SCHEMATICS RETRIEVED</p>
+            </div>
+
+            <div class="victory-scores">
+              <div class="score-box">
+                <span class="score-label">MATH FIREWALLS</span>
+                <span class="score-value" id="victory-math-score">0/7</span>
+              </div>
+              <div class="score-box">
+                <span class="score-label">SCIENCE SECURITY</span>
+                <span class="score-value" id="victory-science-score">0/3</span>
+              </div>
+              <div class="score-box">
+                <span class="score-label">TOTAL SCORE</span>
+                <span class="score-value score-total" id="victory-total-score">0/10</span>
+              </div>
+            </div>
+
+            <div class="victory-stats">
+              <p class="stat-line">Mission Duration: <span id="victory-duration">00:00</span></p>
+              <p class="stat-line">Wrong Attempts: <span id="victory-wrong-attempts">0</span></p>
+            </div>
+
+            <button class="action-btn primary" id="btn-new-mission-victory">NEW MISSION</button>
+          </div>
+        </section>
+
       </main>
 
       <!-- Right Sidebar -->
@@ -456,6 +490,7 @@
   </div>
 
   <!-- App Scripts -->
+  <script src="js/test-problems.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

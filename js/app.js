@@ -808,6 +808,11 @@ const App = {
    * Check the user's answer for the current math problem
    */
   checkAnswer() {
+    // Prevent answer submission during animations
+    if (typeof animator !== 'undefined' && animator.isAnimating) {
+      return;
+    }
+
     if (!this.missionState.currentProblem) {
       return;
     }
@@ -847,10 +852,6 @@ const App = {
       this.updateMissionLog(`[OK] Firewall ${currentFW} breached (retry - no score)`);
     }
 
-    // Visual feedback
-    this.elements.answerInput.classList.add('correct');
-    this.elements.jarvisDialogue.textContent = '"Access granted. Firewall breached. Well done, recruits."';
-
     // Mark firewall as breached in grid
     const cell = this.elements.firewallGrid.querySelector(`[data-firewall="${currentFW}"]`);
     if (cell) {
@@ -861,10 +862,8 @@ const App = {
     // Update progress
     this.updateProgress();
 
-    // Advance after delay
-    setTimeout(() => {
-      this.elements.answerInput.classList.remove('correct');
-
+    // Play GSAP animation sequence, then advance
+    animator.playCorrectSequence(() => {
       // Check if mission complete (after firewall 10)
       if (currentFW >= 10) {
         this.showVictoryScreen();
@@ -878,7 +877,7 @@ const App = {
         // Advance to next firewall
         this.loadFirewall(currentFW + 1);
       }
-    }, 1500);
+    });
   },
 
   /**
@@ -890,16 +889,10 @@ const App = {
 
     this.updateMissionLog(`[FAIL] Incorrect attempt on firewall ${this.missionState.currentFirewall}`);
 
-    // Visual feedback - shake animation
-    this.elements.answerInput.classList.add('incorrect');
-    this.elements.jarvisDialogue.textContent = '"Incorrect. Access denied. Try again, recruits."';
-
-    // Clear the incorrect class after animation
-    setTimeout(() => {
-      this.elements.answerInput.classList.remove('incorrect');
-      this.elements.answerInput.value = '';
-      this.elements.answerInput.focus();
-    }, 500);
+    // Play GSAP wrong answer animation (input is automatically unlocked after)
+    animator.playWrongSequence(() => {
+      // Student can try again - input already cleared and focused by animator
+    });
   },
 
   /**
@@ -918,26 +911,31 @@ const App = {
     this.missionState.currentScienceQuestion = question;
     this.missionState.currentScienceAttempted = false;  // Reset for new science question
 
-    // Update Fury screen content
-    this.elements.furyQuestion.textContent = question.question;
-
-    // Update answer options
-    const optionButtons = this.elements.furyOptions.querySelectorAll('.fury-option');
-    optionButtons.forEach((btn, index) => {
-      if (question.options[index]) {
-        const opt = question.options[index];
-        btn.dataset.option = opt.letter;
-        btn.querySelector('.option-letter').textContent = opt.letter;
-        btn.querySelector('.option-text').textContent = opt.text;
-        btn.classList.remove('correct', 'incorrect');
-        btn.style.display = 'flex';
-      } else {
-        btn.style.display = 'none';
-      }
-    });
-
     this.updateMissionLog(`[FURY] Security protocol initiated`);
-    this.showScreen('fury');
+
+    // Play Fury alert animation (red pulses), then show Fury screen
+    animator.playFuryAlert(() => {
+      // Update Fury screen content
+      this.elements.furyQuestion.textContent = question.question;
+
+      // Update answer options
+      const optionButtons = this.elements.furyOptions.querySelectorAll('.fury-option');
+      optionButtons.forEach((btn, index) => {
+        if (question.options[index]) {
+          const opt = question.options[index];
+          btn.dataset.option = opt.letter;
+          btn.querySelector('.option-letter').textContent = opt.letter;
+          btn.querySelector('.option-text').textContent = opt.text;
+          btn.classList.remove('correct', 'incorrect');
+          btn.style.display = 'flex';
+        } else {
+          btn.style.display = 'none';
+        }
+      });
+
+      this.showScreen('fury');
+      animator.unlockInput();  // Allow clicking Fury answer options
+    });
   },
 
   /**
@@ -946,6 +944,11 @@ const App = {
    * @param {HTMLElement} buttonElement - The clicked button element
    */
   checkScienceAnswer(letter, buttonElement) {
+    // Prevent answer submission during animations
+    if (typeof animator !== 'undefined' && animator.isAnimating) {
+      return;
+    }
+
     if (!this.missionState.currentScienceQuestion) {
       return;
     }

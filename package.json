@@ -1,0 +1,14 @@
+{
+  "name": "ironman-stem-mission",
+  "version": "1.0.0",
+  "description": "Iron Man STEM classroom mission app",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build step - vanilla JS project'"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "gsap": "^3.12.5"
+  }
+}

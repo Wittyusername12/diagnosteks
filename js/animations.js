@@ -177,8 +177,8 @@ class AnimationController {
     });
 
     // Get elements
-    const dialogueBox = document.getElementById('jarvis-dialogue');
-    const centerContent = document.querySelector('.center-content');
+    const dialogueBox = document.querySelector('.jarvis-dialogue');
+    const centerContent = document.querySelector('.content-area');
     const answerInput = document.getElementById('answer-input');
 
     // Sequence:
@@ -241,7 +241,7 @@ class AnimationController {
       }
     });
 
-    const dialogueBox = document.getElementById('jarvis-dialogue');
+    const dialogueBox = document.querySelector('.jarvis-dialogue');
     const answerInput = document.getElementById('answer-input');
 
     // Sequence:
@@ -297,7 +297,7 @@ class AnimationController {
   playFuryAlert(onComplete) {
     this.lockInput();
 
-    const panels = document.querySelectorAll('.hud-panel, .sidebar, .center-content');
+    const panels = document.querySelectorAll('.hud-panel, .sidebar, .content-area');
     const timeline = gsap.timeline({
       onComplete: () => {
         if (onComplete) onComplete();

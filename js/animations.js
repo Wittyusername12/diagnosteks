@@ -50,7 +50,7 @@ const HUD_CONFIG = {
  *
  * Usage:
  *   const animator = new AnimationController();
- *   animator.playCorrectSequence(element, () => { /* callback */ });
+ *   animator.playCorrectSequence(element, onCompleteCallback);
  */
 class AnimationController {
   constructor() {

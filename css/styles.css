@@ -1503,7 +1503,7 @@ body {
 
 /* Ensure animations are smooth */
 .jarvis-dialogue,
-.content-area,
+.problem-container,
 .firewall-grid,
 #answer-input {
   will-change: transform, opacity, border-color, box-shadow;

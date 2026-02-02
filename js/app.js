@@ -555,6 +555,9 @@ const App = {
     label.className = 'teks-label';
     label.htmlFor = `${type}-teks-${teks.code}`;  // Match the unique ID
 
+    // DEBUG: Log checkbox creation to verify unique IDs
+    console.log('[TEKS CREATE]', type, teks.code, '→ ID:', checkbox.id, '→ FOR:', label.htmlFor);
+
     const code = document.createElement('span');
     code.className = 'teks-code';
     code.textContent = teks.code;
@@ -575,13 +578,32 @@ const App = {
     // - The label or its children (label's for attribute handles it)
     // Only manually toggle if clicking on the item div padding/margin area
     item.addEventListener('click', (e) => {
+      console.log('[TEKS DEBUG] Item clicked:', {
+        itemType: type,
+        teksCode: teks.code,
+        checkboxId: checkbox.id,
+        labelFor: label.htmlFor,
+        eventTarget: e.target.tagName,
+        eventTargetClass: e.target.className,
+        checkboxCheckedBefore: checkbox.checked
+      });
+
       if (e.target !== checkbox && e.target !== label && !label.contains(e.target)) {
         checkbox.checked = !checkbox.checked;
+        console.log('[TEKS DEBUG] Manual toggle performed, now:', checkbox.checked);
       }
       this.updateTeksSelection();
+
+      console.log('[TEKS DEBUG] After updateTeksSelection:', {
+        checkboxCheckedAfter: checkbox.checked
+      });
     });
 
     checkbox.addEventListener('change', () => {
+      console.log('[TEKS DEBUG] Checkbox change event:', {
+        checkboxId: checkbox.id,
+        checkedState: checkbox.checked
+      });
       this.updateTeksSelection();
     });
 

@@ -6,8 +6,11 @@
  * In Phase 4, these will be replaced by AI-generated problems.
  *
  * Structure:
- * - 7 math problems for firewalls 1, 2, 4, 5, 7, 8, 10
- * - 3 science questions for Fury interruptions after firewalls 3, 6, 9
+ * - 10 math problems (one for each firewall 1-10)
+ * - 3 science questions for Fury interruptions AFTER completing firewalls 3, 6, 9
+ *
+ * Flow: Math 1 → Math 2 → Math 3 → Fury 1 → Math 4 → Math 5 → Math 6 → Fury 2 →
+ *       Math 7 → Math 8 → Math 9 → Fury 3 → Math 10 → Victory
  */
 
 const TEST_PROBLEMS = {
@@ -15,7 +18,7 @@ const TEST_PROBLEMS = {
     {
       id: 'fw-1',
       firewallNumber: 1,
-      narrative: 'Jarvis is calculating suit power requirements.',
+      narrative: 'Initializing breach sequence. Calculate power requirements.',
       expression: '35 + 27 = ?',
       correctAnswer: 62,
       operation: 'ADD',
@@ -33,19 +36,59 @@ const TEST_PROBLEMS = {
       teks: '3.4A'
     },
     {
+      id: 'fw-3',
+      firewallNumber: 3,
+      narrative: 'Bypassing security node. Compute access code.',
+      expression: '6 × 7 = ?',
+      correctAnswer: 42,
+      operation: 'MULTIPLY',
+      operands: [6, 7],
+      teks: '3.4F'
+    },
+    {
       id: 'fw-4',
       firewallNumber: 4,
-      narrative: 'Computing repulsor beam trajectory.',
-      expression: '7 × 8 = ?',
-      correctAnswer: 56,
-      operation: 'MULTIPLY',
-      operands: [7, 8],
-      teks: '3.4F'
+      narrative: 'Decoding Stark Industries manifest.',
+      expression: '96 ÷ 8 = ?',
+      correctAnswer: 12,
+      operation: 'DIVIDE',
+      operands: [96, 8],
+      teks: '3.4J'
     },
     {
       id: 'fw-5',
       firewallNumber: 5,
-      narrative: 'Halfway through the mainframe. Calculating shield frequency.',
+      narrative: 'Halfway through. Calculating shield frequency.',
+      expression: '156 + 78 = ?',
+      correctAnswer: 234,
+      operation: 'ADD',
+      operands: [156, 78],
+      teks: '3.4A'
+    },
+    {
+      id: 'fw-6',
+      firewallNumber: 6,
+      narrative: 'Penetrating inner firewall. Solve encryption key.',
+      expression: '243 - 158 = ?',
+      correctAnswer: 85,
+      operation: 'SUBTRACT',
+      operands: [243, 158],
+      teks: '3.4A'
+    },
+    {
+      id: 'fw-7',
+      firewallNumber: 7,
+      narrative: 'Approaching core systems. Compute trajectory.',
+      expression: '9 × 8 = ?',
+      correctAnswer: 72,
+      operation: 'MULTIPLY',
+      operands: [9, 8],
+      teks: '3.4F'
+    },
+    {
+      id: 'fw-8',
+      firewallNumber: 8,
+      narrative: 'Almost there. Divide the security hash.',
       expression: '144 ÷ 12 = ?',
       correctAnswer: 12,
       operation: 'DIVIDE',
@@ -53,23 +96,13 @@ const TEST_PROBLEMS = {
       teks: '3.4J'
     },
     {
-      id: 'fw-7',
-      firewallNumber: 7,
-      narrative: 'Decoding Stark Industries inventory count.',
-      expression: '156 + 289 = ?',
-      correctAnswer: 445,
+      id: 'fw-9',
+      firewallNumber: 9,
+      narrative: 'Final security layer. Calculate override code.',
+      expression: '467 + 285 = ?',
+      correctAnswer: 752,
       operation: 'ADD',
-      operands: [156, 289],
-      teks: '3.4A'
-    },
-    {
-      id: 'fw-8',
-      firewallNumber: 8,
-      narrative: 'Almost there. Compute the security hash.',
-      expression: '503 - 267 = ?',
-      correctAnswer: 236,
-      operation: 'SUBTRACT',
-      operands: [503, 267],
+      operands: [467, 285],
       teks: '3.4A'
     },
     {
@@ -130,13 +163,9 @@ const TEST_PROBLEMS = {
 /**
  * Get math problem for a specific firewall number
  * @param {number} firewallNumber - The firewall number (1-10)
- * @returns {object|null} The math problem or null if this is a Fury firewall
+ * @returns {object|null} The math problem or null if not found
  */
 function getMathProblem(firewallNumber) {
-  // Firewalls 3, 6, 9 are Fury science questions
-  if ([3, 6, 9].includes(firewallNumber)) {
-    return null;
-  }
   return TEST_PROBLEMS.math.find(p => p.firewallNumber === firewallNumber) || null;
 }
 
@@ -150,11 +179,11 @@ function getScienceQuestion(afterFirewall) {
 }
 
 /**
- * Check if a firewall triggers a Fury science question
- * @param {number} firewallNumber - The firewall number just completed
- * @returns {boolean} True if Fury should appear
+ * Check if completing a firewall triggers a Fury science question
+ * @param {number} firewallNumber - The firewall number just COMPLETED
+ * @returns {boolean} True if Fury should appear after this firewall
  */
-function isFuryFirewall(firewallNumber) {
+function shouldShowFuryAfter(firewallNumber) {
   return [3, 6, 9].includes(firewallNumber);
 }
 
@@ -162,4 +191,4 @@ function isFuryFirewall(firewallNumber) {
 window.TEST_PROBLEMS = TEST_PROBLEMS;
 window.getMathProblem = getMathProblem;
 window.getScienceQuestion = getScienceQuestion;
-window.isFuryFirewall = isFuryFirewall;
+window.shouldShowFuryAfter = shouldShowFuryAfter;

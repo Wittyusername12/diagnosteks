@@ -165,15 +165,6 @@ class AnimationController {
    * @param {function} onComplete - Callback when animation finishes
    */
   playCorrectSequence(onComplete) {
-    // DIAGNOSTIC TEST - Remove after debugging
-    gsap.to('body', {
-      backgroundColor: '#00ff00',
-      duration: 0.3,
-      yoyo: true,
-      repeat: 1,
-      onComplete: () => console.log('[GSAP] DIAGNOSTIC: Green body flash completed')
-    });
-
     this.lockInput();
 
     const timeline = gsap.timeline({
@@ -209,11 +200,27 @@ class AnimationController {
       }, 0);
     }
 
-    // 2. Scramble "ACCESS GRANTED" text (target inner content element)
+    // 2. ScrambleText effect - hacker-style text reveal for "ACCESS GRANTED"
     if (dialogueContent) {
-      timeline.add(() => {
-        this.scrambleText(dialogueContent, '"Access granted. Firewall breached. Well done, recruits."');
-      }, 0.1);
+      console.log('[GSAP] Playing ScrambleText effect');
+      if (typeof ScrambleTextPlugin !== 'undefined') {
+        // Use GSAP ScrambleTextPlugin for authentic hacker-style text scramble
+        timeline.to(dialogueContent, {
+          duration: 1.2,
+          scrambleText: {
+            text: '"ACCESS GRANTED. Firewall breached."',
+            chars: '01!<>-_\\/[]{}=+*^?#',
+            speed: 0.3
+          },
+          ease: 'none'
+        }, 0);
+      } else {
+        // Fallback if ScrambleTextPlugin not loaded
+        console.warn('[GSAP] ScrambleTextPlugin not available, using fallback');
+        timeline.add(() => {
+          this.scrambleText(dialogueContent, '"ACCESS GRANTED. Firewall breached."');
+        }, 0.1);
+      }
     }
 
     // 3. Pulse the problem container and flash its border green

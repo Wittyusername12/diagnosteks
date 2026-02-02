@@ -1483,3 +1483,28 @@ body {
     font-size: 0.6rem;
   }
 }
+
+/* ============================================
+   GSAP Animation States
+   ============================================ */
+
+/* Input locked during animations */
+.input-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Fury Alert Active State */
+.fury-alert-active .hud-panel,
+.fury-alert-active .sidebar {
+  transition: none; /* Let GSAP handle it */
+}
+
+/* Ensure animations are smooth */
+#jarvis-dialogue,
+.center-content,
+.firewall-grid,
+#answer-input {
+  will-change: transform, opacity, border-color, box-shadow;
+}

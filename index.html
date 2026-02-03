@@ -492,6 +492,15 @@
 
   </div>
 
+  <!-- Full-screen transition overlay (Phase 2.5A Core Feedback Loop) -->
+  <!-- Hidden by default. FirewallSequence class shows/hides via GSAP. -->
+  <!-- One of 8 random animations plays inside on each correct answer. -->
+  <div class="im-transition-overlay" id="transition-overlay">
+    <div class="im-transition-content" id="transition-content">
+      <!-- Transition animations are injected here dynamically by FirewallSequence -->
+    </div>
+  </div>
+
   <!-- GSAP Core -->
   <script src="node_modules/gsap/dist/gsap.min.js"></script>
 

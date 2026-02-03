@@ -1,0 +1,230 @@
+/* ============================================
+   IRON MAN STEM MISSION - ANIMATION CSS FOUNDATION
+   Phase 2.5A: Namespaced CSS Structure
+
+   Reference: Iron_Man_STEM_Mission_Project_Brief_v3.md
+   - "Set up module structure with namespaced CSS"
+   - Class families: .im-reactor-*, .im-panel-*, .im-glitch-*
+
+   NOTE: This is the SKELETON foundation. Full implementations
+   are added in subsequent phases.
+   ============================================ */
+
+/* ============================================
+   CSS CUSTOM PROPERTIES (--im-* namespace)
+   Avoids conflicts with existing --hud-* and --primary-* in styles.css
+   ============================================ */
+:root {
+  /* Primary colors - mirrors HUD_CONFIG.colors */
+  --im-cyan: #00d4ff;
+  --im-cyan-dim: #0099cc;
+  --im-cyan-glow: rgba(0, 212, 255, 0.3);
+
+  /* Dark backgrounds */
+  --im-dark: #0a0a0a;
+  --im-panel-bg: #0d1117;
+
+  /* Fury/SHIELD red */
+  --im-fury-red: #ff3333;
+  --im-fury-red-dim: #cc0000;
+  --im-fury-red-glow: rgba(255, 51, 51, 0.3);
+
+  /* Feedback colors */
+  --im-correct-green: #00ff00;
+  --im-wrong-red: #ff3333;
+  --im-warning-amber: #ffcc00;
+
+  /* Black Widow */
+  --im-widow-green: #00ff88;
+
+  /* Animation-specific variables */
+  --im-glow-size-sm: 10px;
+  --im-glow-size-md: 20px;
+  --im-glow-size-lg: 30px;
+
+  --im-blur-sm: 2px;
+  --im-blur-md: 5px;
+  --im-blur-lg: 10px;
+
+  --im-duration-fast: 0.15s;
+  --im-duration-normal: 0.3s;
+  --im-duration-slow: 0.5s;
+  --im-duration-dramatic: 1s;
+}
+
+/* ============================================
+   ARC REACTOR COMPONENT CLASSES (.im-reactor-*)
+   Reference: Brief Section "Visual Resource Tiers, Tier 2"
+   Full visual implementation in future phase (Batch 2 / Item 5)
+   ============================================ */
+
+/* Container for the arc reactor assembly */
+.im-reactor-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Central glowing core of the reactor */
+.im-reactor-core {
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* Concentric rotating rings - outer ring */
+.im-reactor-ring-1 {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Concentric rotating rings - middle ring */
+.im-reactor-ring-2 {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Concentric rotating rings - inner ring */
+.im-reactor-ring-3 {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Ambient glow effect surrounding reactor */
+.im-reactor-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Pulsing animation state for reactor */
+.im-reactor-pulse {
+  /* Applied when reactor should pulse */
+}
+
+/* ============================================
+   HUD PANEL EFFECT CLASSES (.im-panel-*)
+   Reference: Brief Section "PART 1: ALERT INTERRUPTION EFFECT"
+   Used for Fury alert "all panels flash red" effect
+   ============================================ */
+
+/* Quick flash effect on panels */
+.im-panel-flash {
+  /* Applied during flash animation */
+}
+
+/* Rhythmic pulse effect on panels */
+.im-panel-pulse {
+  /* Applied during pulse animation */
+}
+
+/* Glowing border effect */
+.im-panel-border-glow {
+  /* Applied when panel borders should glow */
+}
+
+/* Full panel takeover effect (color wash) */
+.im-panel-takeover {
+  /* Applied during Fury screen transition */
+}
+
+/* ============================================
+   GLITCH EFFECT CLASSES (.im-glitch-*)
+   Reference: Brief Section "Visual Resource Tiers, Tier 1"
+   ============================================ */
+
+/* Semi-transparent overlay for glitch effects */
+.im-glitch-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Text with glitch distortion effect */
+.im-glitch-text {
+  position: relative;
+}
+
+/* Burst/explosion glitch effect */
+.im-glitch-burst {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Horizontal scanline effect */
+.im-glitch-scanline {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  pointer-events: none;
+}
+
+/* Static noise overlay effect */
+.im-glitch-static {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* ============================================
+   PLACEHOLDER KEYFRAME ANIMATIONS
+   Minimal implementation - full animations in future phases
+   ============================================ */
+
+/* Arc reactor ring rotation */
+@keyframes im-reactor-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Arc reactor core pulse */
+@keyframes im-reactor-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Panel flash effect for Fury alert */
+@keyframes im-panel-flash {
+  0%, 100% {
+    box-shadow: none;
+  }
+  50% {
+    box-shadow: 0 0 var(--im-glow-size-md) var(--im-fury-red),
+                inset 0 0 var(--im-glow-size-sm) var(--im-fury-red-glow);
+  }
+}
+
+/* Glitch flicker effect */
+@keyframes im-glitch-flicker {
+  0%, 100% {
+    opacity: 0;
+  }
+  10%, 30%, 50%, 70%, 90% {
+    opacity: 0.05;
+  }
+  20%, 40%, 60%, 80% {
+    opacity: 0;
+  }
+}

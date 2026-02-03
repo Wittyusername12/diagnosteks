@@ -60,6 +60,11 @@
   --im-reactor-opacity: 0.35;
   --im-reactor-ring-width: 2px;
   --im-reactor-spin-duration: 60s;
+
+  /* Transition overlay properties */
+  --im-transition-z-index: 9999;
+  --im-transition-bg: rgba(0, 0, 0, 0.95);
+  --im-transition-duration: 2.5s;
 }
 
 /* ============================================
@@ -203,6 +208,61 @@
 /* Full panel takeover effect (color wash) */
 .im-panel-takeover {
   /* Applied during Fury screen transition */
+}
+
+/* ============================================
+   TRANSITION OVERLAY CLASSES (.im-transition-*)
+   Reference: Brief Section "Phase 2.5A Core Feedback Loop"
+   Full-screen container for firewall breach animations.
+   8 random transitions play inside on each correct answer.
+   Hidden by default — FirewallSequence shows/hides via GSAP.
+   ============================================ */
+
+/* The "movie screen" — full viewport coverage */
+.im-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: var(--im-transition-z-index);
+  background: var(--im-transition-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Don't block clicks when hidden */
+  opacity: 0; /* Hidden by default — GSAP will animate opacity to show/hide */
+  visibility: hidden; /* Fully hidden from screen readers and tab order when inactive */
+  overflow: hidden; /* Contain animation effects within the viewport */
+}
+
+/* When active, GSAP or JS will add this class */
+.im-transition-overlay.active {
+  pointer-events: all; /* Block clicks during transition to prevent input */
+  visibility: visible;
+  /* opacity is animated by GSAP, not set here */
+}
+
+/* Inner container where individual transition animations render */
+.im-transition-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Each animation type will add its own child elements here dynamically */
+}
+
+/* Placeholder class for transition text elements (like "ACCESS GRANTED") */
+.im-transition-text {
+  font-family: 'Orbitron', monospace;
+  color: var(--im-cyan);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 20px var(--im-cyan-glow), 0 0 40px var(--im-cyan-glow);
+  /* Size will be set per-transition by GSAP or specific sub-classes */
 }
 
 /* ============================================

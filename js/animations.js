@@ -251,6 +251,13 @@ class AnimationController {
     timeline.to({}, { duration: HUD_CONFIG.timing.transitionDelay });
 
     this.currentTimeline = timeline;
+
+    // ScrambleText effect for "ACCESS GRANTED" reveal
+    if (dialogueContent) {
+      this.scrambleText(dialogueContent, '"ACCESS GRANTED. Firewall breached."');
+      console.log('[GSAP] Playing ScrambleText effect');
+    }
+
     console.log('[GSAP] Playing correct sequence - animating', glowTargets.length, 'panels');
   }
 

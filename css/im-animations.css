@@ -1,13 +1,11 @@
 /* ============================================
    IRON MAN STEM MISSION - ANIMATION CSS FOUNDATION
-   Phase 2.5A: Namespaced CSS Structure
+   Phase 2.5A: Namespaced CSS Structure + Arc Reactor
 
    Reference: Iron_Man_STEM_Mission_Project_Brief_v3.md
    - "Set up module structure with namespaced CSS"
+   - "Create basic CSS Arc Reactor (static first)"
    - Class families: .im-reactor-*, .im-panel-*, .im-glitch-*
-
-   NOTE: This is the SKELETON foundation. Full implementations
-   are added in subsequent phases.
    ============================================ */
 
 /* ============================================
@@ -19,6 +17,7 @@
   --im-cyan: #00d4ff;
   --im-cyan-dim: #0099cc;
   --im-cyan-glow: rgba(0, 212, 255, 0.3);
+  --im-cyan-bright: rgba(0, 212, 255, 0.8);
 
   /* Dark backgrounds */
   --im-dark: #0a0a0a;
@@ -50,60 +49,134 @@
   --im-duration-normal: 0.3s;
   --im-duration-slow: 0.5s;
   --im-duration-dramatic: 1s;
+
+  /* Arc Reactor specific properties */
+  --im-reactor-size: 400px;
+  --im-reactor-core-size: 40px;
+  --im-reactor-ring1-size: 120px;
+  --im-reactor-ring2-size: 200px;
+  --im-reactor-ring3-size: 280px;
+  --im-reactor-glow-size: 450px;
+  --im-reactor-opacity: 0.35;
+  --im-reactor-ring-width: 2px;
+  --im-reactor-spin-duration: 60s;
 }
 
 /* ============================================
-   ARC REACTOR COMPONENT CLASSES (.im-reactor-*)
+   FIREWALL CONTENT POSITIONING CONTEXT
+   Enables absolute positioning for arc reactor
+   ============================================ */
+.firewall-content {
+  position: relative;
+}
+
+/* ============================================
+   ARC REACTOR COMPONENT (.im-reactor-*)
    Reference: Brief Section "Visual Resource Tiers, Tier 2"
-   Full visual implementation in future phase (Batch 2 / Item 5)
+   "CSS-Tricks Arc Reactor" - Central visual anchor
+
+   Static implementation with slow CSS rotation.
+   GSAP pulse animations added in future phase.
    ============================================ */
 
-/* Container for the arc reactor assembly */
+/* Outer wrapper - absolutely positioned at center of firewall content */
 .im-reactor-container {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--im-reactor-glow-size);
+  height: var(--im-reactor-glow-size);
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  opacity: var(--im-reactor-opacity);
+  z-index: 0;
 }
 
-/* Central glowing core of the reactor */
-.im-reactor-core {
-  position: absolute;
-  border-radius: 50%;
-}
-
-/* Concentric rotating rings - outer ring */
-.im-reactor-ring-1 {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* Concentric rotating rings - middle ring */
-.im-reactor-ring-2 {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* Concentric rotating rings - inner ring */
-.im-reactor-ring-3 {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* Ambient glow effect surrounding reactor */
+/* Ambient glow - large radial gradient providing the cyan bleed */
 .im-reactor-glow {
   position: absolute;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    var(--im-cyan-glow) 0%,
+    rgba(0, 212, 255, 0.15) 30%,
+    rgba(0, 212, 255, 0.05) 50%,
+    transparent 70%
+  );
   pointer-events: none;
 }
 
-/* Pulsing animation state for reactor */
+/* Outermost ring - dimmest, slow clockwise rotation */
+.im-reactor-ring-3 {
+  position: absolute;
+  width: var(--im-reactor-ring3-size);
+  height: var(--im-reactor-ring3-size);
+  border: var(--im-reactor-ring-width) solid var(--im-cyan-dim);
+  border-radius: 50%;
+  box-shadow:
+    0 0 8px var(--im-cyan-glow),
+    inset 0 0 8px var(--im-cyan-glow);
+  opacity: 0.6;
+  animation: im-reactor-spin var(--im-reactor-spin-duration) linear infinite;
+}
+
+/* Middle ring - stationary, moderate brightness */
+.im-reactor-ring-2 {
+  position: absolute;
+  width: var(--im-reactor-ring2-size);
+  height: var(--im-reactor-ring2-size);
+  border: var(--im-reactor-ring-width) solid var(--im-cyan);
+  border-radius: 50%;
+  box-shadow:
+    0 0 12px var(--im-cyan-glow),
+    inset 0 0 12px var(--im-cyan-glow);
+  opacity: 0.75;
+  /* No animation - middle ring stays still */
+}
+
+/* Inner ring - brighter, slow counter-clockwise rotation */
+.im-reactor-ring-1 {
+  position: absolute;
+  width: var(--im-reactor-ring1-size);
+  height: var(--im-reactor-ring1-size);
+  border: calc(var(--im-reactor-ring-width) + 1px) solid var(--im-cyan);
+  border-radius: 50%;
+  box-shadow:
+    0 0 15px var(--im-cyan-glow),
+    0 0 30px rgba(0, 212, 255, 0.2),
+    inset 0 0 15px var(--im-cyan-glow);
+  opacity: 0.85;
+  animation: im-reactor-spin var(--im-reactor-spin-duration) linear infinite reverse;
+}
+
+/* Central core - brightest element, intense glow */
+.im-reactor-core {
+  position: absolute;
+  width: var(--im-reactor-core-size);
+  height: var(--im-reactor-core-size);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    #ffffff 0%,
+    var(--im-cyan-bright) 40%,
+    var(--im-cyan) 70%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 20px var(--im-cyan),
+    0 0 40px var(--im-cyan-glow),
+    0 0 60px rgba(0, 212, 255, 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Pulse state - GSAP will toggle this class to trigger pulse animation */
 .im-reactor-pulse {
-  /* Applied when reactor should pulse */
+  /* Placeholder for GSAP-controlled pulse animation */
 }
 
 /* ============================================
@@ -179,11 +252,10 @@
 }
 
 /* ============================================
-   PLACEHOLDER KEYFRAME ANIMATIONS
-   Minimal implementation - full animations in future phases
+   KEYFRAME ANIMATIONS
    ============================================ */
 
-/* Arc reactor ring rotation */
+/* Arc reactor ring rotation - slow continuous spin */
 @keyframes im-reactor-spin {
   from {
     transform: rotate(0deg);
@@ -193,7 +265,7 @@
   }
 }
 
-/* Arc reactor core pulse */
+/* Arc reactor core pulse - for GSAP-triggered effects */
 @keyframes im-reactor-pulse {
   0%, 100% {
     opacity: 1;

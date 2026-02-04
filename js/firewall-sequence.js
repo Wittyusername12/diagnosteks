@@ -98,7 +98,7 @@ class FirewallSequence {
     const timeline = gsap.timeline({ paused: true });
 
     // Step 1: Activate overlay (visibility: visible)
-    timeline.set(this.overlay, { className: '+=active' }, 0);
+    timeline.call(() => { this.overlay.classList.add('active'); }, null, 0);
 
     // Step 2: Fade in overlay
     timeline.to(this.overlay, {
@@ -136,6 +136,10 @@ class FirewallSequence {
       // Remove active class
       this.overlay.classList.remove('active');
 
+      // CRITICAL: Remove inline styles GSAP left on the overlay from opacity tweens
+      // Without this, inline opacity:0 would permanently override the CSS
+      gsap.set(this.overlay, { clearProps: 'opacity' });
+
       // Clear content
       this.content.innerHTML = '';
 
@@ -172,7 +176,7 @@ class FirewallSequence {
     // Reset overlay state
     if (this.overlay) {
       this.overlay.classList.remove('active');
-      gsap.set(this.overlay, { opacity: 0 });
+      gsap.set(this.overlay, { clearProps: 'opacity' });
     }
 
     // Reset flags

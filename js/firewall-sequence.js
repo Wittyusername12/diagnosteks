@@ -429,6 +429,11 @@ class FirewallSequence {
       ease: 'power2.in'
     }, 0);
 
+    // Initialize PixiJS canvas inside the transition content container
+    if (window.pixiEffectManager) {
+      window.pixiEffectManager.init(this.content);
+    }
+
     // Build transition-specific content (adds to timeline)
     this._buildTransitionContent(type, timeline);
 
@@ -447,6 +452,11 @@ class FirewallSequence {
       // CRITICAL: Remove inline styles GSAP left on the overlay from opacity tweens
       // Without this, inline opacity:0 would permanently override the CSS
       gsap.set(this.overlay, { clearProps: 'opacity' });
+
+      // Reset PixiJS stage before clearing DOM
+      if (window.pixiEffectManager) {
+        window.pixiEffectManager.reset();
+      }
 
       // Clear content
       this.content.innerHTML = '';

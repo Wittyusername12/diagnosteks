@@ -175,7 +175,8 @@ class FirewallSequence {
   /**
    * Build ACCESS GRANTED transition
    * Reference: transition_access_granted.png
-   * Features: corner brackets, ScrambleText title, orange subtitle, lens flare
+   * Features: hex bg, light rays, particles, corner brackets with crosses,
+   *           ScrambleText title with bloom, decorated subtitle, lens flare
    * @param {gsap.core.Timeline} timeline - The GSAP timeline
    */
   _buildAccessGranted(timeline) {
@@ -184,26 +185,54 @@ class FirewallSequence {
     container.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
     this.content.appendChild(container);
 
-    // Create corner brackets (4 corners)
+    // === LAYER 0: Hexagonal background pattern ===
+    const hexBg = document.createElement('div');
+    hexBg.className = 'im-transition-hex-bg';
+    container.appendChild(hexBg);
+
+    // === LAYER 1: Diagonal light rays (behind text) ===
+    const raysContainer = document.createElement('div');
+    raysContainer.className = 'im-transition-rays-container';
+    container.appendChild(raysContainer);
+
+    const rays = [];
+    const rayCount = 8;
+    for (let i = 0; i < rayCount; i++) {
+      const ray = document.createElement('div');
+      ray.className = 'im-transition-ray';
+      const angle = (i * 360 / rayCount) + 22.5; // Offset to avoid pure vertical/horizontal
+      ray.style.transform = `rotate(${angle}deg)`;
+      raysContainer.appendChild(ray);
+      rays.push(ray);
+    }
+
+    // === LAYER 2: Corner brackets (4 corners) with crosshairs ===
     const brackets = [];
     const corners = [
-      { pos: 'top:30px;left:30px;', borders: 'border-top:3px solid;border-left:3px solid;', start: { x: -50, y: -50 } },
-      { pos: 'top:30px;right:30px;', borders: 'border-top:3px solid;border-right:3px solid;', start: { x: 50, y: -50 } },
-      { pos: 'bottom:30px;left:30px;', borders: 'border-bottom:3px solid;border-left:3px solid;', start: { x: -50, y: 50 } },
-      { pos: 'bottom:30px;right:30px;', borders: 'border-bottom:3px solid;border-right:3px solid;', start: { x: 50, y: 50 } }
+      { pos: 'top:40px;left:40px;', borders: 'border-top:3px solid;border-left:3px solid;', crossPos: 'top:-1px;left:-1px;', start: { x: -60, y: -60 } },
+      { pos: 'top:40px;right:40px;', borders: 'border-top:3px solid;border-right:3px solid;', crossPos: 'top:-1px;right:-1px;', start: { x: 60, y: -60 } },
+      { pos: 'bottom:40px;left:40px;', borders: 'border-bottom:3px solid;border-left:3px solid;', crossPos: 'bottom:-1px;left:-1px;', start: { x: -60, y: 60 } },
+      { pos: 'bottom:40px;right:40px;', borders: 'border-bottom:3px solid;border-right:3px solid;', crossPos: 'bottom:-1px;right:-1px;', start: { x: 60, y: 60 } }
     ];
 
     corners.forEach((corner) => {
       const bracket = document.createElement('div');
       bracket.className = 'im-transition-bracket';
       bracket.style.cssText = corner.pos + corner.borders;
+
+      // Add crosshair at junction
+      const cross = document.createElement('div');
+      cross.className = 'im-transition-bracket-cross';
+      cross.style.cssText = 'position:absolute;' + corner.crossPos;
+      bracket.appendChild(cross);
+
       container.appendChild(bracket);
       brackets.push({ el: bracket, start: corner.start });
     });
 
-    // Create text container (centered)
+    // === LAYER 3: Text container (centered, above rays) ===
     const textContainer = document.createElement('div');
-    textContainer.style.cssText = 'position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+    textContainer.style.cssText = 'position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;';
     container.appendChild(textContainer);
 
     // Create main title
@@ -212,11 +241,37 @@ class FirewallSequence {
     title.textContent = 'ACCESS GRANTED';
     textContainer.appendChild(title);
 
-    // Create subtitle
+    // Create subtitle with decorative flanking
     const subtitle = document.createElement('div');
     subtitle.className = 'im-transition-subtitle';
-    subtitle.textContent = '— FIREWALL BREACHED —';
+    subtitle.textContent = '── ◆ FIREWALL BREACHED ◆ ──';
     textContainer.appendChild(subtitle);
+
+    // === LAYER 4: Floating particles ===
+    const particles = [];
+    const particleCount = 15;
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'im-transition-particle';
+      // Random starting position near center
+      const startX = (Math.random() - 0.5) * 100;
+      const startY = (Math.random() - 0.5) * 60;
+      particle.style.cssText = `left:calc(50% + ${startX}px);top:calc(50% + ${startY}px);`;
+      container.appendChild(particle);
+
+      // Random end position (scatter outward)
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 150 + Math.random() * 200;
+      const endX = Math.cos(angle) * distance;
+      const endY = Math.sin(angle) * distance;
+
+      particles.push({
+        el: particle,
+        endX: endX,
+        endY: endY,
+        duration: 0.8 + Math.random() * 0.6
+      });
+    }
 
     // Create lens flare
     const flare = document.createElement('div');
@@ -226,7 +281,15 @@ class FirewallSequence {
     // === GSAP Animation Sequence ===
     // All times are absolute positions on the timeline
 
-    // 0.3s: Corner brackets slide in from edges (allow overlay to fade in first)
+    // 0.2s: Hex background fades in subtly
+    gsap.set(hexBg, { opacity: 0 });
+    timeline.to(hexBg, {
+      opacity: 0.4,
+      duration: 0.4,
+      ease: 'power2.out'
+    }, 0.2);
+
+    // 0.3s: Corner brackets slide in from edges
     brackets.forEach((b) => {
       gsap.set(b.el, { x: b.start.x, y: b.start.y, opacity: 0 });
       timeline.to(b.el, {
@@ -238,8 +301,19 @@ class FirewallSequence {
       }, 0.3);
     });
 
-    // 0.4s: Main text ScrambleText decode
-    gsap.set(title, { opacity: 1 });
+    // 0.3s: Light rays fade in and scale outward
+    rays.forEach((ray, i) => {
+      gsap.set(ray, { opacity: 0, scaleY: 0.5 });
+      timeline.to(ray, {
+        opacity: 0.6,
+        scaleY: 1,
+        duration: 0.5,
+        ease: 'power2.out'
+      }, 0.3 + (i * 0.03)); // Slight stagger
+    });
+
+    // 0.4s: Main text ScrambleText decode (with scale for "slam" effect)
+    gsap.set(title, { opacity: 1, scale: 1.08 });
     timeline.to(title, {
       duration: 1.0,
       scrambleText: {
@@ -251,6 +325,23 @@ class FirewallSequence {
       ease: 'none'
     }, 0.4);
 
+    // 0.5s: Particles scatter outward
+    particles.forEach((p, i) => {
+      gsap.set(p.el, { opacity: 0, x: 0, y: 0 });
+      timeline.to(p.el, {
+        opacity: 1,
+        duration: 0.15,
+        ease: 'power2.out'
+      }, 0.5 + (i * 0.02));
+      timeline.to(p.el, {
+        x: p.endX,
+        y: p.endY,
+        opacity: 0,
+        duration: p.duration,
+        ease: 'power2.out'
+      }, 0.55 + (i * 0.02));
+    });
+
     // 1.1s: Subtitle fades in and slides up
     gsap.set(subtitle, { opacity: 0, y: 20 });
     timeline.to(subtitle, {
@@ -259,6 +350,13 @@ class FirewallSequence {
       duration: 0.3,
       ease: 'power2.out'
     }, 1.1);
+
+    // 1.15s: Title "slam" settle (scale punch after ScrambleText mostly done)
+    timeline.to(title, {
+      scale: 1,
+      duration: 0.25,
+      ease: 'back.out(2)'
+    }, 1.15);
 
     // 1.2s: Lens flare flashes
     gsap.set(flare, { opacity: 0, scaleX: 0.5 });
@@ -274,9 +372,9 @@ class FirewallSequence {
       ease: 'power2.in'
     }, 1.5);
 
-    // 1.3s: Text glow pulse (yoyo)
+    // 1.3s: Text glow pulse (intense bloom)
     timeline.to(title, {
-      textShadow: '0 0 30px rgba(0,212,255,1), 0 0 60px rgba(0,212,255,0.8), 0 0 100px rgba(0,212,255,0.5)',
+      textShadow: '0 0 20px rgba(0,212,255,1), 0 0 40px rgba(0,212,255,1), 0 0 80px rgba(0,212,255,0.8), 0 0 120px rgba(0,212,255,0.6), 0 0 160px rgba(0,212,255,0.4)',
       duration: 0.2,
       yoyo: true,
       repeat: 1,
@@ -287,7 +385,7 @@ class FirewallSequence {
     timeline.to({}, { duration: 0.5 }, 1.8);
 
     // 2.3s: Everything fades out together
-    timeline.to([title, subtitle, ...brackets.map(b => b.el)], {
+    timeline.to([title, subtitle, hexBg, ...brackets.map(b => b.el), ...rays], {
       opacity: 0,
       duration: 0.3,
       ease: 'power2.in'

@@ -265,6 +265,65 @@
   /* Size will be set per-transition by GSAP or specific sub-classes */
 }
 
+/* ACCESS GRANTED main title text */
+.im-transition-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(2rem, 6vw, 5rem);
+  font-weight: 900;
+  color: var(--hud-cyan, #00d4ff);
+  text-shadow:
+    0 0 20px rgba(0, 212, 255, 0.8),
+    0 0 40px rgba(0, 212, 255, 0.4),
+    0 0 80px rgba(0, 212, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+  opacity: 0;
+}
+
+/* FIREWALL BREACHED subtitle text */
+.im-transition-subtitle {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(0.8rem, 2vw, 1.5rem);
+  font-weight: 600;
+  color: #ff6b00;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  text-align: center;
+  margin-top: 0.5rem;
+  opacity: 0;
+}
+
+/* Corner bracket decorations */
+.im-transition-bracket {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-color: var(--hud-cyan, #00d4ff);
+  opacity: 0;
+}
+
+/* Horizontal lens flare */
+.im-transition-flare {
+  position: absolute;
+  width: 120%;
+  height: 2px;
+  left: -10%;
+  top: 50%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 212, 255, 0.3),
+    rgba(255, 255, 255, 0.9),
+    rgba(0, 212, 255, 0.3),
+    transparent
+  );
+  box-shadow:
+    0 0 20px rgba(0, 212, 255, 0.5),
+    0 0 60px rgba(0, 212, 255, 0.3);
+  opacity: 0;
+}
+
 /* ============================================
    GLITCH EFFECT CLASSES (.im-glitch-*)
    Reference: Brief Section "Visual Resource Tiers, Tier 1"

@@ -1,0 +1,570 @@
+/* ============================================
+   IRON MAN STEM MISSION - ANIMATION CSS FOUNDATION
+   Phase 2.5A: Namespaced CSS Structure + Arc Reactor
+
+   Reference: Iron_Man_STEM_Mission_Project_Brief_v3.md
+   - "Set up module structure with namespaced CSS"
+   - "Create basic CSS Arc Reactor (static first)"
+   - Class families: .im-reactor-*, .im-panel-*, .im-glitch-*
+   ============================================ */
+
+/* ============================================
+   CSS CUSTOM PROPERTIES (--im-* namespace)
+   Avoids conflicts with existing --hud-* and --primary-* in styles.css
+   ============================================ */
+:root {
+  /* Primary colors - mirrors HUD_CONFIG.colors */
+  --im-cyan: #00d4ff;
+  --im-cyan-dim: #0099cc;
+  --im-cyan-glow: rgba(0, 212, 255, 0.3);
+  --im-cyan-bright: rgba(0, 212, 255, 0.8);
+
+  /* Dark backgrounds */
+  --im-dark: #0a0a0a;
+  --im-panel-bg: #0d1117;
+
+  /* Fury/SHIELD red */
+  --im-fury-red: #ff3333;
+  --im-fury-red-dim: #cc0000;
+  --im-fury-red-glow: rgba(255, 51, 51, 0.3);
+
+  /* Feedback colors */
+  --im-correct-green: #00ff00;
+  --im-wrong-red: #ff3333;
+  --im-warning-amber: #ffcc00;
+
+  /* Black Widow */
+  --im-widow-green: #00ff88;
+
+  /* Animation-specific variables */
+  --im-glow-size-sm: 10px;
+  --im-glow-size-md: 20px;
+  --im-glow-size-lg: 30px;
+
+  --im-blur-sm: 2px;
+  --im-blur-md: 5px;
+  --im-blur-lg: 10px;
+
+  --im-duration-fast: 0.15s;
+  --im-duration-normal: 0.3s;
+  --im-duration-slow: 0.5s;
+  --im-duration-dramatic: 1s;
+
+  /* Arc Reactor specific properties */
+  --im-reactor-size: 400px;
+  --im-reactor-core-size: 40px;
+  --im-reactor-ring1-size: 120px;
+  --im-reactor-ring2-size: 200px;
+  --im-reactor-ring3-size: 280px;
+  --im-reactor-glow-size: 450px;
+  --im-reactor-opacity: 0.35;
+  --im-reactor-ring-width: 2px;
+  --im-reactor-spin-duration: 60s;
+
+  /* Transition overlay properties */
+  --im-transition-z-index: 9999;
+  --im-transition-bg: rgba(5, 5, 10, 0.98);
+  --im-transition-duration: 2.5s;
+}
+
+/* ============================================
+   FIREWALL CONTENT POSITIONING CONTEXT
+   Enables absolute positioning for arc reactor
+   ============================================ */
+.firewall-content {
+  position: relative;
+}
+
+/* ============================================
+   ARC REACTOR COMPONENT (.im-reactor-*)
+   Reference: Brief Section "Visual Resource Tiers, Tier 2"
+   "CSS-Tricks Arc Reactor" - Central visual anchor
+
+   Static implementation with slow CSS rotation.
+   GSAP pulse animations added in future phase.
+   ============================================ */
+
+/* Outer wrapper - absolutely positioned at center of firewall content */
+.im-reactor-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--im-reactor-glow-size);
+  height: var(--im-reactor-glow-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: var(--im-reactor-opacity);
+  z-index: 0;
+}
+
+/* Ambient glow - large radial gradient providing the cyan bleed */
+.im-reactor-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    var(--im-cyan-glow) 0%,
+    rgba(0, 212, 255, 0.15) 30%,
+    rgba(0, 212, 255, 0.05) 50%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Outermost ring - dimmest, slow clockwise rotation */
+.im-reactor-ring-3 {
+  position: absolute;
+  width: var(--im-reactor-ring3-size);
+  height: var(--im-reactor-ring3-size);
+  border: var(--im-reactor-ring-width) solid var(--im-cyan-dim);
+  border-radius: 50%;
+  box-shadow:
+    0 0 8px var(--im-cyan-glow),
+    inset 0 0 8px var(--im-cyan-glow);
+  opacity: 0.6;
+  animation: im-reactor-spin var(--im-reactor-spin-duration) linear infinite;
+}
+
+/* Middle ring - stationary, moderate brightness */
+.im-reactor-ring-2 {
+  position: absolute;
+  width: var(--im-reactor-ring2-size);
+  height: var(--im-reactor-ring2-size);
+  border: var(--im-reactor-ring-width) solid var(--im-cyan);
+  border-radius: 50%;
+  box-shadow:
+    0 0 12px var(--im-cyan-glow),
+    inset 0 0 12px var(--im-cyan-glow);
+  opacity: 0.75;
+  /* No animation - middle ring stays still */
+}
+
+/* Inner ring - brighter, slow counter-clockwise rotation */
+.im-reactor-ring-1 {
+  position: absolute;
+  width: var(--im-reactor-ring1-size);
+  height: var(--im-reactor-ring1-size);
+  border: calc(var(--im-reactor-ring-width) + 1px) solid var(--im-cyan);
+  border-radius: 50%;
+  box-shadow:
+    0 0 15px var(--im-cyan-glow),
+    0 0 30px rgba(0, 212, 255, 0.2),
+    inset 0 0 15px var(--im-cyan-glow);
+  opacity: 0.85;
+  animation: im-reactor-spin var(--im-reactor-spin-duration) linear infinite reverse;
+}
+
+/* Central core - brightest element, intense glow */
+.im-reactor-core {
+  position: absolute;
+  width: var(--im-reactor-core-size);
+  height: var(--im-reactor-core-size);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    #ffffff 0%,
+    var(--im-cyan-bright) 40%,
+    var(--im-cyan) 70%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 20px var(--im-cyan),
+    0 0 40px var(--im-cyan-glow),
+    0 0 60px rgba(0, 212, 255, 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Pulse state - GSAP will toggle this class to trigger pulse animation */
+.im-reactor-pulse {
+  /* Placeholder for GSAP-controlled pulse animation */
+}
+
+/* ============================================
+   HUD PANEL EFFECT CLASSES (.im-panel-*)
+   Reference: Brief Section "PART 1: ALERT INTERRUPTION EFFECT"
+   Used for Fury alert "all panels flash red" effect
+   ============================================ */
+
+/* Quick flash effect on panels */
+.im-panel-flash {
+  /* Applied during flash animation */
+}
+
+/* Rhythmic pulse effect on panels */
+.im-panel-pulse {
+  /* Applied during pulse animation */
+}
+
+/* Glowing border effect */
+.im-panel-border-glow {
+  /* Applied when panel borders should glow */
+}
+
+/* Full panel takeover effect (color wash) */
+.im-panel-takeover {
+  /* Applied during Fury screen transition */
+}
+
+/* ============================================
+   TRANSITION OVERLAY CLASSES (.im-transition-*)
+   Reference: Brief Section "Phase 2.5A Core Feedback Loop"
+   Full-screen container for firewall breach animations.
+   8 random transitions play inside on each correct answer.
+   Hidden by default — FirewallSequence shows/hides via GSAP.
+   ============================================ */
+
+/* The "movie screen" — full viewport coverage */
+.im-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: var(--im-transition-z-index);
+  background: var(--im-transition-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Don't block clicks when hidden */
+  opacity: 0; /* Hidden by default — GSAP will animate opacity to show/hide */
+  visibility: hidden; /* Fully hidden from screen readers and tab order when inactive */
+  overflow: hidden; /* Contain animation effects within the viewport */
+}
+
+/* When active, GSAP or JS will add this class */
+.im-transition-overlay.active {
+  pointer-events: all; /* Block clicks during transition to prevent input */
+  visibility: visible;
+  /* opacity is animated by GSAP, not set here */
+}
+
+/* Inner container where individual transition animations render */
+.im-transition-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Each animation type will add its own child elements here dynamically */
+}
+
+/* Placeholder class for transition text elements (like "ACCESS GRANTED") */
+.im-transition-text {
+  font-family: 'Orbitron', monospace;
+  color: var(--im-cyan);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 20px var(--im-cyan-glow), 0 0 40px var(--im-cyan-glow);
+  /* Size will be set per-transition by GSAP or specific sub-classes */
+}
+
+/* ACCESS GRANTED main title text — MASSIVE white core with intense multi-layer cyan bloom */
+.im-transition-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(4rem, 12vw, 10rem);
+  font-weight: 900;
+  color: #ffffff; /* Pure white core */
+  text-shadow:
+    /* Inner white glow layers */
+    0 0 2px #ffffff,
+    0 0 5px #ffffff,
+    0 0 10px rgba(255, 255, 255, 0.9),
+    /* Cyan bloom layers - 7+ layers */
+    0 0 15px rgba(0, 212, 255, 1),
+    0 0 25px rgba(0, 212, 255, 1),
+    0 0 40px rgba(0, 212, 255, 0.9),
+    0 0 60px rgba(0, 212, 255, 0.8),
+    0 0 80px rgba(0, 212, 255, 0.7),
+    0 0 100px rgba(0, 212, 255, 0.5),
+    0 0 140px rgba(0, 212, 255, 0.4),
+    0 0 180px rgba(0, 212, 255, 0.3),
+    0 0 220px rgba(0, 212, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  text-align: center;
+  line-height: 1.1;
+  opacity: 0;
+}
+
+/* FIREWALL BREACHED subtitle text with INTENSE orange glow */
+.im-transition-subtitle {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(1rem, 2.5vw, 2rem);
+  font-weight: 700;
+  color: #ff8800;
+  text-shadow:
+    0 0 5px #ffffff,
+    0 0 10px rgba(255, 136, 0, 1),
+    0 0 20px rgba(255, 136, 0, 0.9),
+    0 0 35px rgba(255, 136, 0, 0.7),
+    0 0 50px rgba(255, 136, 0, 0.5),
+    0 0 70px rgba(255, 107, 0, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  text-align: center;
+  margin-top: 1.5rem;
+  opacity: 0;
+}
+
+/* Corner bracket decorations — MASSIVE with intense cyan glow */
+.im-transition-bracket {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-color: var(--im-cyan, #00d4ff);
+  filter:
+    drop-shadow(0 0 4px rgba(0, 212, 255, 1))
+    drop-shadow(0 0 8px rgba(0, 212, 255, 0.8))
+    drop-shadow(0 0 15px rgba(0, 212, 255, 0.5));
+  opacity: 0;
+}
+
+/* Horizontal lens flare */
+.im-transition-flare {
+  position: absolute;
+  width: 120%;
+  height: 2px;
+  left: -10%;
+  top: 50%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 212, 255, 0.3),
+    rgba(255, 255, 255, 0.9),
+    rgba(0, 212, 255, 0.3),
+    transparent
+  );
+  box-shadow:
+    0 0 20px rgba(0, 212, 255, 0.5),
+    0 0 60px rgba(0, 212, 255, 0.3);
+  opacity: 0;
+}
+
+/* Hexagonal background pattern for access_granted */
+.im-transition-hex-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* SVG hex pattern - dark grey outlines on near-black */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cpath fill='none' stroke='%231a1a2e' stroke-width='0.5' d='M14 0L0 8.5v16L14 33l14-8.5v-16L14 0zm0 16.5L0 25v16l14 8.5L28 41V25L14 16.5z'/%3E%3C/svg%3E");
+  background-size: 56px 98px;
+  opacity: 0.4;
+  z-index: 0;
+}
+
+/* FUI tech decoration - horizontal line with ticks */
+.im-transition-fui-line {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 212, 255, 0.4) 10%,
+    rgba(0, 212, 255, 0.8) 50%,
+    rgba(0, 212, 255, 0.4) 90%,
+    transparent
+  );
+  opacity: 0;
+}
+
+/* FUI tick marks container */
+.im-transition-fui-ticks {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+}
+
+/* Individual tick mark */
+.im-transition-fui-tick {
+  width: 2px;
+  height: 6px;
+  background: rgba(0, 212, 255, 0.7);
+  box-shadow: 0 0 4px rgba(0, 212, 255, 0.6);
+}
+
+/* FUI corner detail - small decorative element near brackets */
+.im-transition-fui-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(0, 212, 255, 0.5);
+  opacity: 0;
+}
+
+/* Container for diagonal light rays */
+.im-transition-rays-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Individual diagonal light ray */
+.im-transition-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 400px;
+  margin-left: -1.5px;
+  margin-top: -200px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 212, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(0, 212, 255, 0.1) 80%,
+    transparent 100%
+  );
+  transform-origin: center center;
+  opacity: 0;
+}
+
+/* Floating particle dot */
+.im-transition-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #00d4ff;
+  box-shadow:
+    0 0 6px rgba(0, 212, 255, 1),
+    0 0 12px rgba(0, 212, 255, 0.6);
+  opacity: 0;
+}
+
+/* Bracket crosshair mark at junction */
+.im-transition-bracket-cross {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  opacity: 0.8;
+}
+.im-transition-bracket-cross::before,
+.im-transition-bracket-cross::after {
+  content: '';
+  position: absolute;
+  background: var(--hud-cyan, #00d4ff);
+}
+.im-transition-bracket-cross::before {
+  width: 10px;
+  height: 2px;
+  top: 4px;
+  left: 0;
+}
+.im-transition-bracket-cross::after {
+  width: 2px;
+  height: 10px;
+  top: 0;
+  left: 4px;
+}
+
+/* ============================================
+   GLITCH EFFECT CLASSES (.im-glitch-*)
+   Reference: Brief Section "Visual Resource Tiers, Tier 1"
+   ============================================ */
+
+/* Semi-transparent overlay for glitch effects */
+.im-glitch-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Text with glitch distortion effect */
+.im-glitch-text {
+  position: relative;
+}
+
+/* Burst/explosion glitch effect */
+.im-glitch-burst {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Horizontal scanline effect */
+.im-glitch-scanline {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  pointer-events: none;
+}
+
+/* Static noise overlay effect */
+.im-glitch-static {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+
+/* Arc reactor ring rotation - slow continuous spin */
+@keyframes im-reactor-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Arc reactor core pulse - for GSAP-triggered effects */
+@keyframes im-reactor-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Panel flash effect for Fury alert */
+@keyframes im-panel-flash {
+  0%, 100% {
+    box-shadow: none;
+  }
+  50% {
+    box-shadow: 0 0 var(--im-glow-size-md) var(--im-fury-red),
+                inset 0 0 var(--im-glow-size-sm) var(--im-fury-red-glow);
+  }
+}
+
+/* Glitch flicker effect */
+@keyframes im-glitch-flicker {
+  0%, 100% {
+    opacity: 0;
+  }
+  10%, 30%, 50%, 70%, 90% {
+    opacity: 0.05;
+  }
+  20%, 40%, 60%, 80% {
+    opacity: 0;
+  }
+}

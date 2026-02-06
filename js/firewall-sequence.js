@@ -175,38 +175,22 @@ class FirewallSequence {
   /**
    * Build ACCESS GRANTED transition
    * Reference: transition_access_granted.png
-   * Features: hex bg, light rays, particles, corner brackets with crosses,
-   *           ScrambleText title with bloom, decorated subtitle, lens flare
+   * Features: hex bg, PixiJS god rays/particles/bloom, corner brackets with crosses,
+   *           ScrambleText title with bloom, decorated subtitle, PixiJS lens flare
    * @param {gsap.core.Timeline} timeline - The GSAP timeline
    */
   _buildAccessGranted(timeline) {
-    // Create container for all elements
+    // Create container for all DOM elements
     const container = document.createElement('div');
-    container.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
+    container.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:2;';
     this.content.appendChild(container);
 
-    // === LAYER 0: Hexagonal background pattern ===
+    // === DOM LAYER 0: Hexagonal background pattern ===
     const hexBg = document.createElement('div');
     hexBg.className = 'im-transition-hex-bg';
     container.appendChild(hexBg);
 
-    // === LAYER 1: Diagonal light rays (behind text) ===
-    const raysContainer = document.createElement('div');
-    raysContainer.className = 'im-transition-rays-container';
-    container.appendChild(raysContainer);
-
-    const rays = [];
-    const rayCount = 8;
-    for (let i = 0; i < rayCount; i++) {
-      const ray = document.createElement('div');
-      ray.className = 'im-transition-ray';
-      const angle = (i * 360 / rayCount) + 22.5; // Offset to avoid pure vertical/horizontal
-      ray.style.transform = `rotate(${angle}deg)`;
-      raysContainer.appendChild(ray);
-      rays.push(ray);
-    }
-
-    // === LAYER 2: Corner brackets (4 corners) with crosshairs ===
+    // === DOM LAYER 1: Corner brackets (4 corners) with crosshairs ===
     const brackets = [];
     const corners = [
       { pos: 'top:40px;left:40px;', borders: 'border-top:3px solid;border-left:3px solid;', crossPos: 'top:-1px;left:-1px;', start: { x: -60, y: -60 } },
@@ -230,7 +214,7 @@ class FirewallSequence {
       brackets.push({ el: bracket, start: corner.start });
     });
 
-    // === LAYER 3: Text container (centered, above rays) ===
+    // === DOM LAYER 2: Text container (centered, above PixiJS canvas) ===
     const textContainer = document.createElement('div');
     textContainer.style.cssText = 'position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;';
     container.appendChild(textContainer);
@@ -247,38 +231,265 @@ class FirewallSequence {
     subtitle.textContent = '── ◆ FIREWALL BREACHED ◆ ──';
     textContainer.appendChild(subtitle);
 
-    // === LAYER 4: Floating particles ===
-    const particles = [];
-    const particleCount = 15;
-    for (let i = 0; i < particleCount; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'im-transition-particle';
-      // Random starting position near center
-      const startX = (Math.random() - 0.5) * 100;
-      const startY = (Math.random() - 0.5) * 60;
-      particle.style.cssText = `left:calc(50% + ${startX}px);top:calc(50% + ${startY}px);`;
-      container.appendChild(particle);
+    // === PIXIJS ATMOSPHERIC EFFECTS (rendered on canvas behind DOM) ===
+    const app = window.pixiEffectManager.getApp();
+    const stage = window.pixiEffectManager.getStage();
 
-      // Random end position (scatter outward)
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 150 + Math.random() * 200;
-      const endX = Math.cos(angle) * distance;
-      const endY = Math.sin(angle) * distance;
+    if (app && stage) {
+      const screenW = app.screen.width;
+      const screenH = app.screen.height;
+      const centerX = screenW / 2;
+      const centerY = screenH * 0.45; // Slightly above center, behind text
 
-      particles.push({
-        el: particle,
-        endX: endX,
-        endY: endY,
-        duration: 0.8 + Math.random() * 0.6
+      // --- EFFECT 1: God Rays Background ---
+      const godRaysBg = new PIXI.Graphics();
+      godRaysBg.beginFill(0x003344, 0.3);
+      godRaysBg.drawRect(0, 0, screenW, screenH);
+      godRaysBg.endFill();
+      godRaysBg.blendMode = PIXI.BLEND_MODES.ADD;
+
+      const godRayFilter = new PIXI.filters.GodrayFilter({
+        angle: 30,
+        gain: 0,
+        lacunarity: 2.5,
+        parallel: false,
+        time: 0,
+        alpha: 0.7,
+        center: [0.5, 0.45]
       });
+      godRaysBg.filters = [godRayFilter];
+      stage.addChild(godRaysBg);
+
+      // --- EFFECT 2: Light Streak Lines (10 diagonal rays) ---
+      const streaksContainer = new PIXI.Container();
+      streaksContainer.blendMode = PIXI.BLEND_MODES.ADD;
+      stage.addChild(streaksContainer);
+
+      const streaks = [];
+      for (let i = 0; i < 10; i++) {
+        const streak = new PIXI.Graphics();
+        const angle = (i * 36) + (Math.random() * 15 - 7.5); // Every 36° with randomness
+        const length = 800 + Math.random() * 400;
+        const width = 1 + Math.random() * 3;
+        const alpha = 0.15 + Math.random() * 0.25;
+        const color = Math.random() > 0.7 ? 0x88eeff : 0x00d4ff;
+
+        const rad = (angle * Math.PI) / 180;
+        const endX = centerX + Math.cos(rad) * length;
+        const endY = centerY + Math.sin(rad) * length;
+
+        streak.lineStyle(width, color, alpha);
+        streak.moveTo(centerX, centerY);
+        streak.lineTo(endX, endY);
+        streak.alpha = 0;
+        streaksContainer.addChild(streak);
+        streaks.push({ graphic: streak, targetAlpha: alpha });
+      }
+
+      // --- EFFECT 3: Particle Burst Container ---
+      const particlesContainer = new PIXI.Container();
+      particlesContainer.blendMode = PIXI.BLEND_MODES.ADD;
+      stage.addChild(particlesContainer);
+
+      // --- EFFECT 4: Horizontal Lens Flare ---
+      const lensFlare = new PIXI.Graphics();
+      lensFlare.beginFill(0xffffff, 1);
+      lensFlare.drawRect(0, screenH * 0.45 - 3, screenW, 6);
+      lensFlare.endFill();
+      lensFlare.blendMode = PIXI.BLEND_MODES.ADD;
+      lensFlare.alpha = 0;
+
+      const glowFilter = new PIXI.filters.GlowFilter({
+        distance: 15,
+        outerStrength: 3,
+        innerStrength: 1,
+        color: 0x00d4ff,
+        quality: 0.3
+      });
+      lensFlare.filters = [glowFilter];
+      stage.addChild(lensFlare);
+
+      // --- EFFECT 5: Bloom Filter on Stage ---
+      const bloomFilter = new PIXI.filters.AdvancedBloomFilter({
+        threshold: 0.5,
+        bloomScale: 0,
+        brightness: 1.2,
+        blur: 4,
+        quality: 4
+      });
+
+      // --- EFFECT 6: RGB Split Filter on Stage ---
+      const rgbSplitFilter = new PIXI.filters.RGBSplitFilter([0, 0], [0, 0], [0, 0]);
+
+      stage.filters = [bloomFilter, rgbSplitFilter];
+
+      // === PIXIJS TIMELINE ANIMATIONS ===
+
+      // 0.0s: God rays gain ramps up
+      timeline.to(godRayFilter, {
+        gain: 0.6,
+        duration: 0.5,
+        ease: 'power2.out'
+      }, 0);
+
+      // 0.0s: God rays time animates continuously
+      timeline.to(godRayFilter, {
+        time: 3,
+        duration: 3,
+        ease: 'none'
+      }, 0);
+
+      // 0.0s: Bloom ramps up
+      timeline.to(bloomFilter, {
+        bloomScale: 0.5,
+        duration: 0.4,
+        ease: 'power2.out'
+      }, 0);
+
+      // 0.1s: Light streaks fade in with stagger
+      streaks.forEach((s, i) => {
+        timeline.to(s.graphic, {
+          alpha: s.targetAlpha,
+          duration: 0.4 + Math.random() * 0.3,
+          ease: 'power2.out'
+        }, 0.1 + (i * 0.05));
+      });
+
+      // 0.5s: TEXT SLAM MOMENT - spike effects
+      // God rays spike
+      timeline.to(godRayFilter, {
+        gain: 1.0,
+        duration: 0.1,
+        ease: 'power2.out'
+      }, 0.5);
+      timeline.to(godRayFilter, {
+        gain: 0.6,
+        duration: 0.3,
+        ease: 'power2.inOut'
+      }, 0.6);
+
+      // Bloom spike
+      timeline.to(bloomFilter, {
+        bloomScale: 1.5,
+        duration: 0.1,
+        ease: 'power2.out'
+      }, 0.5);
+      timeline.to(bloomFilter, {
+        bloomScale: 0.6,
+        duration: 0.5,
+        ease: 'power2.inOut'
+      }, 0.6);
+
+      // RGB Split flash
+      timeline.to(rgbSplitFilter.red, {
+        0: -4,
+        1: 2,
+        duration: 0.05,
+        ease: 'power2.out'
+      }, 0.5);
+      timeline.to(rgbSplitFilter.blue, {
+        0: 4,
+        1: -2,
+        duration: 0.05,
+        ease: 'power2.out'
+      }, 0.5);
+      timeline.to(rgbSplitFilter.red, {
+        0: 0,
+        1: 0,
+        duration: 0.3,
+        ease: 'power2.out'
+      }, 0.55);
+      timeline.to(rgbSplitFilter.blue, {
+        0: 0,
+        1: 0,
+        duration: 0.3,
+        ease: 'power2.out'
+      }, 0.55);
+
+      // Lens flare flash
+      timeline.to(lensFlare, {
+        alpha: 0.7,
+        duration: 0.1,
+        ease: 'power2.out'
+      }, 0.5);
+      timeline.to(lensFlare, {
+        alpha: 0.15,
+        duration: 0.8,
+        ease: 'power2.inOut'
+      }, 0.6);
+
+      // 0.5s: Particle burst - spawn 50 particles
+      timeline.call(() => {
+        for (let i = 0; i < 50; i++) {
+          const particle = new PIXI.Graphics();
+          const radius = 1 + Math.random() * 2;
+          const color = Math.random() > 0.5 ? 0x00d4ff : 0xffffff;
+
+          particle.beginFill(color, 0.8);
+          particle.drawCircle(0, 0, radius);
+          particle.endFill();
+
+          // Start near center with random offset
+          particle.x = centerX + (Math.random() - 0.5) * 100;
+          particle.y = centerY + (Math.random() - 0.5) * 60;
+          particle.alpha = 0;
+
+          particlesContainer.addChild(particle);
+
+          // Random outward direction
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 300 + Math.random() * 300;
+          const targetX = particle.x + Math.cos(angle) * distance;
+          const targetY = particle.y + Math.sin(angle) * distance;
+          const duration = 1.5 + Math.random() * 1.0;
+
+          // Animate particle outward
+          gsap.to(particle, {
+            alpha: 0.8,
+            duration: 0.1,
+            ease: 'power2.out'
+          });
+          gsap.to(particle, {
+            x: targetX,
+            y: targetY,
+            alpha: 0,
+            scale: 0.3,
+            duration: duration,
+            ease: 'power2.out',
+            delay: Math.random() * 0.1
+          });
+        }
+      }, null, 0.5);
+
+      // 2.0s: Fade out all PixiJS effects
+      timeline.to(godRaysBg, {
+        alpha: 0,
+        duration: 0.5,
+        ease: 'power2.in'
+      }, 2.0);
+
+      streaks.forEach((s) => {
+        timeline.to(s.graphic, {
+          alpha: 0,
+          duration: 0.5,
+          ease: 'power2.in'
+        }, 2.0);
+      });
+
+      timeline.to(lensFlare, {
+        alpha: 0,
+        duration: 0.5,
+        ease: 'power2.in'
+      }, 2.0);
+
+      timeline.to(bloomFilter, {
+        bloomScale: 0,
+        duration: 0.5,
+        ease: 'power2.in'
+      }, 2.0);
     }
 
-    // Create lens flare
-    const flare = document.createElement('div');
-    flare.className = 'im-transition-flare';
-    container.appendChild(flare);
-
-    // === GSAP Animation Sequence ===
+    // === DOM GSAP ANIMATION SEQUENCE ===
     // All times are absolute positions on the timeline
 
     // 0.2s: Hex background fades in subtly
@@ -301,17 +512,6 @@ class FirewallSequence {
       }, 0.3);
     });
 
-    // 0.3s: Light rays fade in and scale outward
-    rays.forEach((ray, i) => {
-      gsap.set(ray, { opacity: 0, scaleY: 0.5 });
-      timeline.to(ray, {
-        opacity: 0.6,
-        scaleY: 1,
-        duration: 0.5,
-        ease: 'power2.out'
-      }, 0.3 + (i * 0.03)); // Slight stagger
-    });
-
     // 0.4s: Main text ScrambleText decode (with scale for "slam" effect)
     gsap.set(title, { opacity: 1, scale: 1.08 });
     timeline.to(title, {
@@ -324,23 +524,6 @@ class FirewallSequence {
       },
       ease: 'none'
     }, 0.4);
-
-    // 0.5s: Particles scatter outward
-    particles.forEach((p, i) => {
-      gsap.set(p.el, { opacity: 0, x: 0, y: 0 });
-      timeline.to(p.el, {
-        opacity: 1,
-        duration: 0.15,
-        ease: 'power2.out'
-      }, 0.5 + (i * 0.02));
-      timeline.to(p.el, {
-        x: p.endX,
-        y: p.endY,
-        opacity: 0,
-        duration: p.duration,
-        ease: 'power2.out'
-      }, 0.55 + (i * 0.02));
-    });
 
     // 1.1s: Subtitle fades in and slides up
     gsap.set(subtitle, { opacity: 0, y: 20 });
@@ -358,20 +541,6 @@ class FirewallSequence {
       ease: 'back.out(2)'
     }, 1.15);
 
-    // 1.2s: Lens flare flashes
-    gsap.set(flare, { opacity: 0, scaleX: 0.5 });
-    timeline.to(flare, {
-      opacity: 1,
-      scaleX: 1,
-      duration: 0.2,
-      ease: 'power2.out'
-    }, 1.2);
-    timeline.to(flare, {
-      opacity: 0,
-      duration: 0.3,
-      ease: 'power2.in'
-    }, 1.5);
-
     // 1.3s: Text glow pulse (intense bloom)
     timeline.to(title, {
       textShadow: '0 0 20px rgba(0,212,255,1), 0 0 40px rgba(0,212,255,1), 0 0 80px rgba(0,212,255,0.8), 0 0 120px rgba(0,212,255,0.6), 0 0 160px rgba(0,212,255,0.4)',
@@ -384,8 +553,8 @@ class FirewallSequence {
     // 1.8s: Hold at full visibility
     timeline.to({}, { duration: 0.5 }, 1.8);
 
-    // 2.3s: Everything fades out together
-    timeline.to([title, subtitle, hexBg, ...brackets.map(b => b.el), ...rays], {
+    // 2.3s: DOM elements fade out together
+    timeline.to([title, subtitle, hexBg, ...brackets.map(b => b.el)], {
       opacity: 0,
       duration: 0.3,
       ease: 'power2.in'

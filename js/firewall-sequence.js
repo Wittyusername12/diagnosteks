@@ -194,16 +194,16 @@ class FirewallSequence {
     // === DOM LAYER 1: Corner brackets (4 corners) with crosshairs - 25px from edges ===
     const brackets = [];
     const corners = [
-      { pos: 'top:25px;left:25px;', borders: 'border-top:3px solid;border-left:3px solid;', crossPos: 'top:-1px;left:-1px;', start: { x: -80, y: -80 } },
-      { pos: 'top:25px;right:25px;', borders: 'border-top:3px solid;border-right:3px solid;', crossPos: 'top:-1px;right:-1px;', start: { x: 80, y: -80 } },
-      { pos: 'bottom:25px;left:25px;', borders: 'border-bottom:3px solid;border-left:3px solid;', crossPos: 'bottom:-1px;left:-1px;', start: { x: -80, y: 80 } },
-      { pos: 'bottom:25px;right:25px;', borders: 'border-bottom:3px solid;border-right:3px solid;', crossPos: 'bottom:-1px;right:-1px;', start: { x: 80, y: 80 } }
+      { className: 'bracket-tl', pos: 'top:25px;left:25px;', crossPos: 'top:-1px;left:-1px;', start: { x: -80, y: -80 } },
+      { className: 'bracket-tr', pos: 'top:25px;right:25px;', crossPos: 'top:-1px;right:-1px;', start: { x: 80, y: -80 } },
+      { className: 'bracket-bl', pos: 'bottom:25px;left:25px;', crossPos: 'bottom:-1px;left:-1px;', start: { x: -80, y: 80 } },
+      { className: 'bracket-br', pos: 'bottom:25px;right:25px;', crossPos: 'bottom:-1px;right:-1px;', start: { x: 80, y: 80 } }
     ];
 
     corners.forEach((corner) => {
       const bracket = document.createElement('div');
-      bracket.className = 'im-transition-bracket';
-      bracket.style.cssText = corner.pos + corner.borders;
+      bracket.className = 'im-transition-bracket ' + corner.className;
+      bracket.style.cssText = corner.pos;
 
       // Add crosshair at junction
       const cross = document.createElement('div');
@@ -274,7 +274,7 @@ class FirewallSequence {
 
     const titleLine2 = document.createElement('div');
     titleLine2.className = 'im-transition-title';
-    titleLine2.style.marginTop = '-0.15em'; // Tight line spacing
+    titleLine2.style.marginTop = '0.5rem'; // Gap between ACCESS and GRANTED
     titleLine2.textContent = 'GRANTED';
     textContainer.appendChild(titleLine2);
 

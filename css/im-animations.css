@@ -268,7 +268,7 @@
 /* ACCESS GRANTED main title text — MASSIVE white core with intense multi-layer cyan bloom */
 .im-transition-title {
   font-family: 'Orbitron', monospace;
-  font-size: clamp(5rem, 14vw, 12rem);
+  font-size: clamp(6rem, 17vw, 15rem);
   font-weight: 900;
   color: #ffffff; /* Pure white core */
   -webkit-text-stroke: 2px rgba(0, 212, 255, 0.9);
@@ -317,16 +317,34 @@
   position: absolute;
   width: 80px;
   height: 80px;
-  border: none; /* Reset all borders - JS applies only 2 sides per bracket */
-  border-color: #00d4ff;
-  background: transparent; /* Ensure no fill */
-  box-shadow:
-    0 0 10px rgba(0, 212, 255, 0.4),
-    0 0 20px rgba(0, 212, 255, 0.15);
+  border: none !important; /* Reset all borders */
+  background: transparent !important;
+  box-shadow: none !important; /* No box-shadow - only filter glow on borders */
   filter:
     drop-shadow(0 0 4px rgba(0, 212, 255, 0.8))
     drop-shadow(0 0 8px rgba(0, 212, 255, 0.4));
   opacity: 0;
+}
+
+/* Position-specific L-shaped brackets with explicit borders */
+.im-transition-bracket.bracket-tl {
+  border-top: 3px solid #00d4ff !important;
+  border-left: 3px solid #00d4ff !important;
+}
+
+.im-transition-bracket.bracket-tr {
+  border-top: 3px solid #00d4ff !important;
+  border-right: 3px solid #00d4ff !important;
+}
+
+.im-transition-bracket.bracket-bl {
+  border-bottom: 3px solid #00d4ff !important;
+  border-left: 3px solid #00d4ff !important;
+}
+
+.im-transition-bracket.bracket-br {
+  border-bottom: 3px solid #00d4ff !important;
+  border-right: 3px solid #00d4ff !important;
 }
 
 /* Horizontal lens flare */

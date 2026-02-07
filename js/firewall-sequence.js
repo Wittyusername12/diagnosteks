@@ -127,7 +127,341 @@ class FirewallSequence {
    * Stub - Arc Reactor Pulse transition (not yet implemented)
    */
   _buildArcReactorPulse(timeline) {
-    this._buildPlaceholder('arc_reactor_pulse', timeline);
+    // === DOM CONTAINER (minimal - just for optional flavor label) ===
+    const container = document.createElement('div');
+    container.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:2;';
+    this.content.appendChild(container);
+
+    // Optional flavor label at bottom
+    const label = document.createElement('div');
+    label.className = 'im-transition-fui-label';
+    label.style.cssText = 'bottom:30px;left:50%;transform:translateX(-50%);top:auto;';
+    label.textContent = '◇ ARC REACTOR DISCHARGE ◇';
+    container.appendChild(label);
+
+    // === PIXIJS EFFECTS ===
+    const app = window.pixiEffectManager.getApp();
+    const stage = window.pixiEffectManager.getStage();
+
+    if (app && stage) {
+      const screenW = app.screen.width;
+      const screenH = app.screen.height;
+      const cx = screenW / 2;
+      const cy = screenH / 2;
+      const minDim = Math.min(screenW, screenH);
+
+      // --- ELEMENT 1: THREE CONCENTRIC SEGMENTED RINGS ---
+      const ringConfigs = [
+        { radius: minDim * 0.35, lineWidth: 2, lineAlpha: 0.5, segments: 12, direction: 1, speed: 2.0 },   // Outer
+        { radius: minDim * 0.24, lineWidth: 3, lineAlpha: 0.7, segments: 10, direction: -1, speed: 1.5 }, // Middle
+        { radius: minDim * 0.14, lineWidth: 4, lineAlpha: 0.8, segments: 8, direction: 1, speed: 2.0 }    // Inner (fast)
+      ];
+
+      const rings = [];
+      ringConfigs.forEach((cfg) => {
+        const ring = new PIXI.Graphics();
+        const numSegments = cfg.segments;
+        const segmentAngle = (Math.PI * 2) / numSegments;
+        const gapRatio = 0.15;
+
+        // Draw segmented arcs
+        ring.lineStyle(cfg.lineWidth, 0x00d4ff, cfg.lineAlpha);
+        for (let s = 0; s < numSegments; s++) {
+          const startA = s * segmentAngle;
+          const endA = startA + segmentAngle * (1 - gapRatio);
+          ring.arc(cx, cy, cfg.radius, startA, endA);
+          // Move to start of next segment
+          const nextStart = endA + segmentAngle * gapRatio;
+          ring.moveTo(
+            cx + Math.cos(nextStart) * cfg.radius,
+            cy + Math.sin(nextStart) * cfg.radius
+          );
+        }
+
+        // Add glowing nodes along the ring (5 per ring)
+        for (let n = 0; n < 5; n++) {
+          const nodeAngle = (n / 5) * Math.PI * 2;
+          ring.beginFill(0x00d4ff, 0.9);
+          ring.drawCircle(
+            cx + Math.cos(nodeAngle) * cfg.radius,
+            cy + Math.sin(nodeAngle) * cfg.radius,
+            3
+          );
+          ring.endFill();
+        }
+
+        ring.blendMode = PIXI.BLEND_MODES.ADD;
+        ring.alpha = 0;
+
+        // Set pivot for rotation around center
+        ring.pivot.set(cx, cy);
+        ring.position.set(cx, cy);
+
+        stage.addChild(ring);
+        rings.push({ graphic: ring, direction: cfg.direction, speed: cfg.speed });
+      });
+
+      // --- ELEMENT 2: REACTOR CORE (bright center) ---
+      const core = new PIXI.Graphics();
+      core.beginFill(0xffffff, 0.15); // LOW alpha - bloom amplifies
+      core.drawCircle(cx, cy, minDim * 0.06);
+      core.endFill();
+      core.blendMode = PIXI.BLEND_MODES.ADD;
+      core.alpha = 0;
+      stage.addChild(core);
+
+      // --- ELEMENT 3: RADIAL LIGHT RAYS (16 rays from core) ---
+      const maxLen = Math.max(screenW, screenH) * 0.7;
+      const rays = [];
+      for (let i = 0; i < 16; i++) {
+        const ray = new PIXI.Graphics();
+        const angle = (i / 16) * Math.PI * 2;
+        const thickness = 1 + Math.random() * 3;
+        const length = maxLen * (0.3 + Math.random() * 0.7);
+        const rayAlpha = 0.1 + Math.random() * 0.2;
+
+        ray.lineStyle(thickness, 0x00d4ff, rayAlpha);
+        ray.moveTo(cx, cy);
+        ray.lineTo(cx + Math.cos(angle) * length, cy + Math.sin(angle) * length);
+        ray.blendMode = PIXI.BLEND_MODES.ADD;
+        ray.alpha = 0;
+        stage.addChild(ray);
+        rays.push({ graphic: ray, targetAlpha: rayAlpha });
+      }
+
+      // --- ELEMENT 4: ENERGY ARCS / LIGHTNING (5 arcs between rings) ---
+      const innerR = minDim * 0.14;
+      const outerR = minDim * 0.35;
+      const arcs = [];
+      for (let a = 0; a < 5; a++) {
+        const arc = new PIXI.Graphics();
+        const arcAngle = (a / 5) * Math.PI * 2 + Math.random() * 0.5;
+        const steps = 8;
+
+        arc.lineStyle(2, 0x88eeff, 0.6);
+        const startX = cx + Math.cos(arcAngle) * innerR;
+        const startY = cy + Math.sin(arcAngle) * innerR;
+        arc.moveTo(startX, startY);
+
+        for (let step = 1; step <= steps; step++) {
+          const t = step / steps;
+          const r = innerR + (outerR - innerR) * t;
+          const jitter = (Math.random() - 0.5) * 30;
+          const perpAngle = arcAngle + Math.PI / 2;
+          const px = cx + Math.cos(arcAngle) * r + Math.cos(perpAngle) * jitter;
+          const py = cy + Math.sin(arcAngle) * r + Math.sin(perpAngle) * jitter;
+          arc.lineTo(px, py);
+        }
+
+        arc.blendMode = PIXI.BLEND_MODES.ADD;
+        arc.alpha = 0;
+        stage.addChild(arc);
+        arcs.push({ graphic: arc, flickerDelay: 0.5 + Math.random() * 1.0 });
+      }
+
+      // --- ELEMENT 5: ORBITING DATA FRAGMENTS (12 small rectangles) ---
+      const fragments = [];
+      for (let f = 0; f < 12; f++) {
+        const frag = new PIXI.Graphics();
+        const fragW = 4 + Math.random() * 8;
+        const fragH = 2 + Math.random() * 4;
+        frag.beginFill(0x00d4ff, 0.3 + Math.random() * 0.3);
+        frag.drawRect(-fragW / 2, -fragH / 2, fragW, fragH);
+        frag.endFill();
+        frag.blendMode = PIXI.BLEND_MODES.ADD;
+
+        const orbitRadius = minDim * (0.2 + Math.random() * 0.2);
+        const startAngle = (f / 12) * Math.PI * 2;
+        frag.x = cx + Math.cos(startAngle) * orbitRadius;
+        frag.y = cy + Math.sin(startAngle) * orbitRadius;
+        frag.alpha = 0;
+        stage.addChild(frag);
+
+        const endAngle = startAngle + Math.PI * (1 + Math.random());
+        fragments.push({
+          graphic: frag,
+          orbitRadius: orbitRadius,
+          startAngle: startAngle,
+          endAngle: endAngle
+        });
+      }
+
+      // --- ELEMENT 6: BLOOM FILTER ---
+      const bloomFilter = new PIXI.filters.AdvancedBloomFilter({
+        threshold: 0.3,
+        bloomScale: 1.0,
+        brightness: 1.3,
+        blur: 6,
+        quality: 4
+      });
+
+      // --- ELEMENT 7: RGB SPLIT FILTER ---
+      const rgbFilter = new PIXI.filters.RGBSplitFilter([0, 0], [0, 0], [0, 0]);
+
+      stage.filters = [bloomFilter, rgbFilter];
+
+      // === GSAP TIMELINE ANIMATIONS ===
+
+      // 0.0s - 0.3s: Rings fade in
+      rings.forEach((r, i) => {
+        timeline.to(r.graphic, {
+          alpha: 1,
+          duration: 0.3,
+          ease: 'power2.out'
+        }, 0.1 + i * 0.05);
+      });
+
+      // 0.1s: Core appears
+      timeline.to(core, {
+        alpha: 0.15,
+        duration: 0.3,
+        ease: 'power2.in'
+      }, 0.1);
+
+      // 0.1s: Bloom ramps up
+      timeline.to(bloomFilter, {
+        bloomScale: 1.5,
+        duration: 0.3,
+        ease: 'power2.out'
+      }, 0.1);
+
+      // 0.2s: Rays fade in with stagger
+      rays.forEach((r, i) => {
+        timeline.to(r.graphic, {
+          alpha: r.targetAlpha + 0.2,
+          duration: 0.4,
+          ease: 'power2.out'
+        }, 0.2 + i * 0.02);
+      });
+
+      // 0.3s: Rings start spinning (continuous rotation)
+      rings.forEach((r) => {
+        timeline.to(r.graphic, {
+          rotation: r.direction * Math.PI * 2 * r.speed,
+          duration: 2.0,
+          ease: 'none'
+        }, 0.3);
+      });
+
+      // 0.3s: Fragments fade in and start orbiting
+      fragments.forEach((f, i) => {
+        timeline.to(f.graphic, {
+          alpha: 0.5,
+          duration: 0.3,
+          ease: 'power2.out'
+        }, 0.3 + i * 0.05);
+
+        timeline.to(f.graphic, {
+          x: cx + Math.cos(f.endAngle) * f.orbitRadius,
+          y: cy + Math.sin(f.endAngle) * f.orbitRadius,
+          duration: 1.8,
+          ease: 'none'
+        }, 0.3);
+      });
+
+      // 0.8s: PEAK DISCHARGE - bloom spike, RGB split, core pulse
+      timeline.to(bloomFilter, {
+        bloomScale: 4.0,
+        duration: 0.15,
+        ease: 'power2.out'
+      }, 0.8);
+      timeline.to(bloomFilter, {
+        bloomScale: 2.0,
+        duration: 0.3,
+        ease: 'power2.inOut'
+      }, 1.0);
+
+      // RGB split flash
+      timeline.to(rgbFilter.red, {
+        0: -4,
+        duration: 0.05,
+        ease: 'power2.out'
+      }, 0.8);
+      timeline.to(rgbFilter.blue, {
+        0: 4,
+        duration: 0.05,
+        ease: 'power2.out'
+      }, 0.8);
+      timeline.to(rgbFilter.red, {
+        0: 0,
+        duration: 0.1,
+        ease: 'power2.out'
+      }, 0.85);
+      timeline.to(rgbFilter.blue, {
+        0: 0,
+        duration: 0.1,
+        ease: 'power2.out'
+      }, 0.85);
+
+      // Core pulse (yoyo between 0.1 and 0.3)
+      timeline.to(core, {
+        alpha: 0.3,
+        duration: 0.2,
+        ease: 'power2.out',
+        yoyo: true,
+        repeat: 4
+      }, 0.5);
+
+      // Energy arcs flicker
+      arcs.forEach((a) => {
+        const delay = a.flickerDelay;
+        timeline.to(a.graphic, { alpha: 0.8, duration: 0.05, ease: 'none' }, delay);
+        timeline.to(a.graphic, { alpha: 0, duration: 0.1, ease: 'none' }, delay + 0.1);
+        timeline.to(a.graphic, { alpha: 0.6, duration: 0.05, ease: 'none' }, delay + 0.3);
+        timeline.to(a.graphic, { alpha: 0, duration: 0.15, ease: 'none' }, delay + 0.4);
+      });
+
+      // 2.0s - 2.3s: Everything fades out
+      rings.forEach((r) => {
+        timeline.to(r.graphic, {
+          alpha: 0,
+          duration: 0.3,
+          ease: 'power2.in'
+        }, 2.0);
+      });
+
+      timeline.to(core, {
+        alpha: 0,
+        duration: 0.3,
+        ease: 'power2.in'
+      }, 2.0);
+
+      rays.forEach((r) => {
+        timeline.to(r.graphic, {
+          alpha: 0,
+          duration: 0.3,
+          ease: 'power2.in'
+        }, 2.0);
+      });
+
+      fragments.forEach((f) => {
+        timeline.to(f.graphic, {
+          alpha: 0,
+          duration: 0.3,
+          ease: 'power2.in'
+        }, 2.0);
+      });
+
+      timeline.to(bloomFilter, {
+        bloomScale: 0,
+        duration: 0.3,
+        ease: 'power2.in'
+      }, 2.0);
+    }
+
+    // === DOM ANIMATIONS ===
+    gsap.set(label, { opacity: 0 });
+    timeline.to(label, {
+      opacity: 0.7,
+      duration: 0.4,
+      ease: 'power2.out'
+    }, 0.3);
+
+    timeline.to(label, {
+      opacity: 0,
+      duration: 0.3,
+      ease: 'power2.in'
+    }, 2.0);
   }
 
   /**

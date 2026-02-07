@@ -312,19 +312,20 @@
   opacity: 0;
 }
 
-/* Corner bracket decorations — MASSIVE with intense cyan glow */
+/* Corner bracket decorations — L-shaped with cyan glow */
 .im-transition-bracket {
   position: absolute;
   width: 80px;
   height: 80px;
-  border-color: var(--im-cyan, #00d4ff);
+  border: none; /* Reset all borders - JS applies only 2 sides per bracket */
+  border-color: #00d4ff;
+  background: transparent; /* Ensure no fill */
   box-shadow:
-    0 0 10px rgba(0, 212, 255, 0.5),
-    0 0 20px rgba(0, 212, 255, 0.2),
-    inset 0 0 6px rgba(0, 212, 255, 0.2);
+    0 0 10px rgba(0, 212, 255, 0.4),
+    0 0 20px rgba(0, 212, 255, 0.15);
   filter:
-    drop-shadow(0 0 5px rgba(0, 212, 255, 1))
-    drop-shadow(0 0 10px rgba(0, 212, 255, 0.6));
+    drop-shadow(0 0 4px rgba(0, 212, 255, 0.8))
+    drop-shadow(0 0 8px rgba(0, 212, 255, 0.4));
   opacity: 0;
 }
 

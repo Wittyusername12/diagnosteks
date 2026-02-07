@@ -191,13 +191,33 @@ class FirewallSequence {
     hexBg.className = 'im-transition-hex-bg';
     container.appendChild(hexBg);
 
-    // === DOM LAYER 1: Corner brackets (4 corners) with crosshairs - 25px from edges ===
+    // === DOM LAYER 1: Corner brackets (4 corners) with crosshairs and arm tip ticks - 25px from edges ===
     const brackets = [];
     const corners = [
-      { className: 'bracket-tl', pos: 'top:25px;left:25px;', crossPos: 'top:-1px;left:-1px;', start: { x: -80, y: -80 } },
-      { className: 'bracket-tr', pos: 'top:25px;right:25px;', crossPos: 'top:-1px;right:-1px;', start: { x: 80, y: -80 } },
-      { className: 'bracket-bl', pos: 'bottom:25px;left:25px;', crossPos: 'bottom:-1px;left:-1px;', start: { x: -80, y: 80 } },
-      { className: 'bracket-br', pos: 'bottom:25px;right:25px;', crossPos: 'bottom:-1px;right:-1px;', start: { x: 80, y: 80 } }
+      { className: 'bracket-tl', pos: 'top:25px;left:25px;', crossPos: 'top:-1px;left:-1px;', start: { x: -80, y: -80 },
+        ticks: [
+          { cls: 'im-transition-bracket-tick im-transition-bracket-tick-h', style: 'right:0;top:-4px;' },
+          { cls: 'im-transition-bracket-tick im-transition-bracket-tick-v', style: 'left:-4px;bottom:0;' }
+        ]
+      },
+      { className: 'bracket-tr', pos: 'top:25px;right:25px;', crossPos: 'top:-1px;right:-1px;', start: { x: 80, y: -80 },
+        ticks: [
+          { cls: 'im-transition-bracket-tick im-transition-bracket-tick-h', style: 'left:0;top:-4px;' },
+          { cls: 'im-transition-bracket-tick im-transition-bracket-tick-v', style: 'right:-4px;bottom:0;' }
+        ]
+      },
+      { className: 'bracket-bl', pos: 'bottom:25px;left:25px;', crossPos: 'bottom:-1px;left:-1px;', start: { x: -80, y: 80 },
+        ticks: [
+          { cls: 'im-transition-bracket-tick im-transition-bracket-tick-h', style: 'right:0;bottom:-4px;' },
+          { cls: 'im-transition-bracket-tick im-transition-bracket-tick-v', style: 'left:-4px;top:0;' }
+        ]
+      },
+      { className: 'bracket-br', pos: 'bottom:25px;right:25px;', crossPos: 'bottom:-1px;right:-1px;', start: { x: 80, y: 80 },
+        ticks: [
+          { cls: 'im-transition-bracket-tick im-transition-bracket-tick-h', style: 'left:0;bottom:-4px;' },
+          { cls: 'im-transition-bracket-tick im-transition-bracket-tick-v', style: 'right:-4px;top:0;' }
+        ]
+      }
     ];
 
     corners.forEach((corner) => {
@@ -210,6 +230,14 @@ class FirewallSequence {
       cross.className = 'im-transition-bracket-cross';
       cross.style.cssText = 'position:absolute;' + corner.crossPos;
       bracket.appendChild(cross);
+
+      // Add tick marks at arm tips
+      corner.ticks.forEach((tickDef) => {
+        const tick = document.createElement('div');
+        tick.className = tickDef.cls;
+        tick.style.cssText = 'position:absolute;' + tickDef.style;
+        bracket.appendChild(tick);
+      });
 
       container.appendChild(bracket);
       brackets.push({ el: bracket, start: corner.start });
@@ -276,11 +304,42 @@ class FirewallSequence {
     }
     container.appendChild(bottomIndicators);
 
-    const fuiElements = [topLine, topTicks, bottomLine, bottomTicks, leftLine, rightLine, topLabel, bottomIndicators];
+    // Side accent hash marks (left and right) - 3 parallel lines each
+    const leftHash = document.createElement('div');
+    leftHash.className = 'im-transition-fui-hash im-transition-fui-hash-left';
+    for (let i = 0; i < 3; i++) {
+      const line = document.createElement('div');
+      line.className = 'im-transition-fui-hash-line';
+      leftHash.appendChild(line);
+    }
+    container.appendChild(leftHash);
+
+    const rightHash = document.createElement('div');
+    rightHash.className = 'im-transition-fui-hash im-transition-fui-hash-right';
+    for (let i = 0; i < 3; i++) {
+      const line = document.createElement('div');
+      line.className = 'im-transition-fui-hash-line';
+      rightHash.appendChild(line);
+    }
+    container.appendChild(rightHash);
+
+    // Small data readout text in lower corners
+    const readoutBL = document.createElement('div');
+    readoutBL.className = 'im-transition-fui-readout im-transition-fui-readout-bl';
+    readoutBL.textContent = 'SYS: 100%';
+    container.appendChild(readoutBL);
+
+    const readoutBR = document.createElement('div');
+    readoutBR.className = 'im-transition-fui-readout im-transition-fui-readout-br';
+    readoutBR.textContent = 'ENC: AES-256';
+    container.appendChild(readoutBR);
+
+    const fuiElements = [topLine, topTicks, bottomLine, bottomTicks, leftLine, rightLine, topLabel, bottomIndicators, leftHash, rightHash, readoutBL, readoutBR];
 
     // === DOM LAYER 2: Text container (centered, above PixiJS canvas) ===
+    // NOTE: NO overflow:hidden — the large text-shadow must spread naturally without clipping
     const textContainer = document.createElement('div');
-    textContainer.style.cssText = 'position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;max-width:95%;overflow:hidden;text-align:center;';
+    textContainer.style.cssText = 'position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;max-width:95%;text-align:center;background:none;border:none;outline:none;';
     container.appendChild(textContainer);
 
     // Create TWO-LINE title: "ACCESS" on top, "GRANTED" on bottom

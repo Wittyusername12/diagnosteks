@@ -268,7 +268,7 @@
 /* ACCESS GRANTED main title text — MASSIVE white core with intense multi-layer cyan bloom */
 .im-transition-title {
   font-family: 'Orbitron', monospace;
-  font-size: clamp(4rem, 12vw, 9rem);
+  font-size: clamp(5rem, 14vw, 11rem);
   font-weight: 900;
   color: #ffffff; /* Pure white core */
   -webkit-text-stroke: 2px rgba(0, 212, 255, 0.9);
@@ -570,6 +570,66 @@
 
 .im-transition-fui-dot-dim {
   opacity: 0.3;
+}
+
+/* Bracket arm tip tick marks - small perpendicular lines at arm endpoints */
+.im-transition-bracket-tick {
+  position: absolute;
+  background: #00d4ff;
+  opacity: 0.6;
+}
+.im-transition-bracket-tick-h {
+  width: 1px;
+  height: 8px;
+}
+.im-transition-bracket-tick-v {
+  width: 8px;
+  height: 1px;
+}
+
+/* Side accent hash marks - parallel lines at left/right edges */
+.im-transition-fui-hash {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  z-index: 4;
+}
+.im-transition-fui-hash-left {
+  left: 12px;
+}
+.im-transition-fui-hash-right {
+  right: 12px;
+}
+.im-transition-fui-hash-line {
+  width: 20px;
+  height: 1px;
+  background: rgba(0, 212, 255, 0.4);
+}
+
+/* Small data readout text - flavor HUD data in lower corners */
+.im-transition-fui-readout {
+  position: absolute;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 400;
+  color: rgba(0, 212, 255, 0.4);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0;
+  z-index: 4;
+}
+.im-transition-fui-readout-bl {
+  bottom: 45px;
+  left: 35px;
+}
+.im-transition-fui-readout-br {
+  bottom: 45px;
+  right: 35px;
+  text-align: right;
 }
 
 /* ============================================

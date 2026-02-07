@@ -268,7 +268,7 @@
 /* ACCESS GRANTED main title text — MASSIVE white core with intense multi-layer cyan bloom */
 .im-transition-title {
   font-family: 'Orbitron', monospace;
-  font-size: clamp(6rem, 17vw, 15rem);
+  font-size: clamp(4rem, 12vw, 9rem);
   font-weight: 900;
   color: #ffffff; /* Pure white core */
   -webkit-text-stroke: 2px rgba(0, 212, 255, 0.9);
@@ -526,6 +526,50 @@
   height: 15px;
   top: 0;
   left: 0;
+}
+
+/* FUI top/bottom labels - small interface text */
+.im-transition-fui-label {
+  position: absolute;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #00d4ff;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0;
+  z-index: 4;
+}
+
+.im-transition-fui-label-top {
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.im-transition-fui-label-bottom {
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* FUI status indicators - small rectangles */
+.im-transition-fui-indicators {
+  position: absolute;
+  display: flex;
+  gap: 3px;
+  z-index: 4;
+  opacity: 0;
+}
+
+.im-transition-fui-dot {
+  width: 4px;
+  height: 2px;
+  background: #00d4ff;
+}
+
+.im-transition-fui-dot-dim {
+  opacity: 0.3;
 }
 
 /* ============================================

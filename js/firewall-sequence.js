@@ -295,23 +295,9 @@ class FirewallSequence {
       const centerY = screenH * 0.45; // Slightly above center, behind text
       const maxLen = Math.max(screenW, screenH) * 0.9;
 
-      // --- EFFECT 0: Glow core ellipse behind text (light source for bloom) ---
-      const glowCore = new PIXI.Graphics();
-      glowCore.beginFill(0x00d4ff, 0.2);
-      glowCore.drawEllipse(centerX, centerY, screenW * 0.35, screenH * 0.2);
-      glowCore.endFill();
-      glowCore.blendMode = PIXI.BLEND_MODES.ADD;
-      glowCore.alpha = 0;
-
-      const coreGlowFilter = new PIXI.filters.GlowFilter({
-        distance: 60,
-        outerStrength: 4,
-        innerStrength: 1,
-        color: 0x00d4ff,
-        quality: 0.3
-      });
-      glowCore.filters = [coreGlowFilter];
-      stage.addChild(glowCore);
+      // NOTE: Glow core ellipse REMOVED - the radial starburst rays converging at center
+      // with additive blending + AdvancedBloomFilter naturally creates the volumetric halo.
+      // A visible ellipse shape looked like a "cyan egg" behind the text.
 
       // --- EFFECT 1: RADIAL STARBURST RAYS (28 rays emanating from center) ---
       const raysContainer = new PIXI.Container();
@@ -391,13 +377,6 @@ class FirewallSequence {
 
       // === PIXIJS TIMELINE ANIMATIONS ===
 
-      // 0.0s: Glow core fades in
-      timeline.to(glowCore, {
-        alpha: 0.15,
-        duration: 0.3,
-        ease: 'power2.out'
-      }, 0);
-
       // 0.0s: Bloom ramps up
       timeline.to(bloomFilter, {
         bloomScale: 2.0,
@@ -424,18 +403,6 @@ class FirewallSequence {
       });
 
       // 0.5s: TEXT SLAM MOMENT - spike effects - EXPLOSIVE
-      // Glow core spike
-      timeline.to(glowCore, {
-        alpha: 0.5,
-        duration: 0.1,
-        ease: 'power2.out'
-      }, 0.5);
-      timeline.to(glowCore, {
-        alpha: 0.25,
-        duration: 0.4,
-        ease: 'power2.inOut'
-      }, 0.6);
-
       // Radial rays spike to full brightness
       rays.forEach((r) => {
         timeline.to(r.graphic, {
@@ -565,12 +532,6 @@ class FirewallSequence {
       }, null, 0.5);
 
       // 1.8s: Fade out all PixiJS effects
-      timeline.to(glowCore, {
-        alpha: 0,
-        duration: 0.5,
-        ease: 'power2.in'
-      }, 1.8);
-
       rays.forEach((r) => {
         timeline.to(r.graphic, {
           alpha: 0,

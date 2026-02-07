@@ -265,48 +265,66 @@
   /* Size will be set per-transition by GSAP or specific sub-classes */
 }
 
-/* ACCESS GRANTED main title text — white core with intense cyan bloom */
+/* ACCESS GRANTED main title text — MASSIVE white core with intense multi-layer cyan bloom */
 .im-transition-title {
   font-family: 'Orbitron', monospace;
-  font-size: clamp(2rem, 6vw, 5rem);
+  font-size: clamp(4rem, 12vw, 10rem);
   font-weight: 900;
-  color: #e0f4ff; /* Near-white with slight cyan tint */
+  color: #ffffff; /* Pure white core */
+  -webkit-text-stroke: 1px rgba(0, 212, 255, 0.8);
   text-shadow:
-    0 0 10px rgba(0, 212, 255, 1),
-    0 0 20px rgba(0, 212, 255, 0.9),
-    0 0 40px rgba(0, 212, 255, 0.7),
-    0 0 80px rgba(0, 212, 255, 0.5),
-    0 0 120px rgba(0, 212, 255, 0.3);
+    /* Inner white glow layers */
+    0 0 5px #ffffff,
+    0 0 10px #ffffff,
+    0 0 15px rgba(255, 255, 255, 0.9),
+    /* Cyan bloom layers - 7+ layers progressively wider */
+    0 0 20px #00d4ff,
+    0 0 30px #00d4ff,
+    0 0 40px #00d4ff,
+    0 0 60px rgba(0, 212, 255, 0.9),
+    0 0 80px rgba(0, 212, 255, 0.8),
+    0 0 120px rgba(0, 212, 255, 0.5),
+    0 0 200px rgba(0, 212, 255, 0.3);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   text-align: center;
+  line-height: 1.1;
   opacity: 0;
 }
 
-/* FIREWALL BREACHED subtitle text with orange glow */
+/* FIREWALL BREACHED subtitle text with INTENSE orange glow */
 .im-transition-subtitle {
   font-family: 'Rajdhani', sans-serif;
-  font-size: clamp(0.8rem, 2vw, 1.5rem);
-  font-weight: 600;
-  color: #ff6b00;
+  font-size: clamp(1rem, 2.5vw, 2rem);
+  font-weight: 700;
+  color: #ff8800;
   text-shadow:
-    0 0 10px rgba(255, 107, 0, 0.8),
-    0 0 20px rgba(255, 107, 0, 0.5),
-    0 0 40px rgba(255, 107, 0, 0.3);
+    0 0 5px #ffffff,
+    0 0 10px rgba(255, 136, 0, 1),
+    0 0 20px rgba(255, 136, 0, 0.9),
+    0 0 35px rgba(255, 136, 0, 0.7),
+    0 0 50px rgba(255, 107, 0, 0.5),
+    0 0 70px rgba(255, 107, 0, 0.3);
   text-transform: uppercase;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.35em;
   text-align: center;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
   opacity: 0;
 }
 
-/* Corner bracket decorations — larger with cyan glow */
+/* Corner bracket decorations — MASSIVE with intense cyan glow */
 .im-transition-bracket {
   position: absolute;
-  width: 60px;
-  height: 60px;
-  border-color: var(--hud-cyan, #00d4ff);
-  filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.8));
+  width: 80px;
+  height: 80px;
+  border-color: var(--im-cyan, #00d4ff);
+  box-shadow:
+    0 0 8px rgba(0, 212, 255, 0.6),
+    0 0 15px rgba(0, 212, 255, 0.3),
+    inset 0 0 4px rgba(0, 212, 255, 0.2);
+  filter:
+    drop-shadow(0 0 4px rgba(0, 212, 255, 1))
+    drop-shadow(0 0 8px rgba(0, 212, 255, 0.6));
   opacity: 0;
 }
 
@@ -415,6 +433,80 @@
   height: 10px;
   top: 0;
   left: 4px;
+}
+
+/* ============================================
+   FUI BORDER DECORATIONS (.im-transition-fui-*)
+   Tech-line details around perimeter
+   ============================================ */
+
+/* FUI tech decoration - horizontal/vertical line segments */
+.im-transition-fui-line {
+  position: absolute;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 212, 255, 0.4) 10%,
+    rgba(0, 212, 255, 0.7) 50%,
+    rgba(0, 212, 255, 0.4) 90%,
+    transparent
+  );
+  opacity: 0;
+}
+
+.im-transition-fui-line.horizontal {
+  height: 1px;
+  width: 120px;
+}
+
+.im-transition-fui-line.vertical {
+  width: 1px;
+  height: 120px;
+}
+
+/* FUI tick marks container */
+.im-transition-fui-ticks {
+  position: absolute;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+}
+
+/* Individual tick mark */
+.im-transition-fui-tick {
+  width: 2px;
+  height: 6px;
+  background: rgba(0, 212, 255, 0.6);
+  box-shadow: 0 0 4px rgba(0, 212, 255, 0.5);
+}
+
+/* FUI corner accent - small decorative element near brackets */
+.im-transition-fui-corner {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  opacity: 0;
+}
+
+.im-transition-fui-corner::before,
+.im-transition-fui-corner::after {
+  content: '';
+  position: absolute;
+  background: rgba(0, 212, 255, 0.5);
+}
+
+.im-transition-fui-corner::before {
+  width: 15px;
+  height: 1px;
+  top: 0;
+  left: 0;
+}
+
+.im-transition-fui-corner::after {
+  width: 1px;
+  height: 15px;
+  top: 0;
+  left: 0;
 }
 
 /* ============================================

@@ -259,11 +259,28 @@ class FirewallSequence {
     rightLine.style.cssText = 'right:40px;top:50%;transform:translateY(-50%);';
     container.appendChild(rightLine);
 
-    const fuiElements = [topLine, topTicks, bottomLine, bottomTicks, leftLine, rightLine];
+    // Top center label
+    const topLabel = document.createElement('div');
+    topLabel.className = 'im-transition-fui-label im-transition-fui-label-top';
+    topLabel.textContent = '◇ S.H.I.E.L.D. MAINFRAME ◇';
+    container.appendChild(topLabel);
+
+    // Bottom center status indicators (7 small rectangles)
+    const bottomIndicators = document.createElement('div');
+    bottomIndicators.className = 'im-transition-fui-indicators';
+    bottomIndicators.style.cssText = 'bottom:18px;left:50%;transform:translateX(-50%);';
+    for (let i = 0; i < 7; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'im-transition-fui-dot' + (i % 2 === 1 ? ' im-transition-fui-dot-dim' : '');
+      bottomIndicators.appendChild(dot);
+    }
+    container.appendChild(bottomIndicators);
+
+    const fuiElements = [topLine, topTicks, bottomLine, bottomTicks, leftLine, rightLine, topLabel, bottomIndicators];
 
     // === DOM LAYER 2: Text container (centered, above PixiJS canvas) ===
     const textContainer = document.createElement('div');
-    textContainer.style.cssText = 'position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+    textContainer.style.cssText = 'position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;max-width:95%;overflow:hidden;text-align:center;';
     container.appendChild(textContainer);
 
     // Create TWO-LINE title: "ACCESS" on top, "GRANTED" on bottom

@@ -191,13 +191,13 @@ class FirewallSequence {
     hexBg.className = 'im-transition-hex-bg';
     container.appendChild(hexBg);
 
-    // === DOM LAYER 1: Corner brackets (4 corners) with crosshairs - 30px from edges ===
+    // === DOM LAYER 1: Corner brackets (4 corners) with crosshairs - 25px from edges ===
     const brackets = [];
     const corners = [
-      { pos: 'top:30px;left:30px;', borders: 'border-top:3px solid;border-left:3px solid;', crossPos: 'top:-1px;left:-1px;', start: { x: -80, y: -80 } },
-      { pos: 'top:30px;right:30px;', borders: 'border-top:3px solid;border-right:3px solid;', crossPos: 'top:-1px;right:-1px;', start: { x: 80, y: -80 } },
-      { pos: 'bottom:30px;left:30px;', borders: 'border-bottom:3px solid;border-left:3px solid;', crossPos: 'bottom:-1px;left:-1px;', start: { x: -80, y: 80 } },
-      { pos: 'bottom:30px;right:30px;', borders: 'border-bottom:3px solid;border-right:3px solid;', crossPos: 'bottom:-1px;right:-1px;', start: { x: 80, y: 80 } }
+      { pos: 'top:25px;left:25px;', borders: 'border-top:3px solid;border-left:3px solid;', crossPos: 'top:-1px;left:-1px;', start: { x: -80, y: -80 } },
+      { pos: 'top:25px;right:25px;', borders: 'border-top:3px solid;border-right:3px solid;', crossPos: 'top:-1px;right:-1px;', start: { x: 80, y: -80 } },
+      { pos: 'bottom:25px;left:25px;', borders: 'border-bottom:3px solid;border-left:3px solid;', crossPos: 'bottom:-1px;left:-1px;', start: { x: -80, y: 80 } },
+      { pos: 'bottom:25px;right:25px;', borders: 'border-bottom:3px solid;border-right:3px solid;', crossPos: 'bottom:-1px;right:-1px;', start: { x: 80, y: 80 } }
     ];
 
     corners.forEach((corner) => {
@@ -219,12 +219,12 @@ class FirewallSequence {
     // Top horizontal line with ticks
     const topLine = document.createElement('div');
     topLine.className = 'im-transition-fui-line horizontal';
-    topLine.style.cssText = 'top:45px;left:50%;transform:translateX(-50%);';
+    topLine.style.cssText = 'top:40px;left:50%;transform:translateX(-50%);';
     container.appendChild(topLine);
 
     const topTicks = document.createElement('div');
     topTicks.className = 'im-transition-fui-ticks';
-    topTicks.style.cssText = 'top:38px;left:50%;transform:translateX(-50%);';
+    topTicks.style.cssText = 'top:33px;left:50%;transform:translateX(-50%);';
     for (let i = 0; i < 7; i++) {
       const tick = document.createElement('div');
       tick.className = 'im-transition-fui-tick';
@@ -235,12 +235,12 @@ class FirewallSequence {
     // Bottom horizontal line with ticks
     const bottomLine = document.createElement('div');
     bottomLine.className = 'im-transition-fui-line horizontal';
-    bottomLine.style.cssText = 'bottom:45px;left:50%;transform:translateX(-50%);';
+    bottomLine.style.cssText = 'bottom:40px;left:50%;transform:translateX(-50%);';
     container.appendChild(bottomLine);
 
     const bottomTicks = document.createElement('div');
     bottomTicks.className = 'im-transition-fui-ticks';
-    bottomTicks.style.cssText = 'bottom:38px;left:50%;transform:translateX(-50%);';
+    bottomTicks.style.cssText = 'bottom:33px;left:50%;transform:translateX(-50%);';
     for (let i = 0; i < 7; i++) {
       const tick = document.createElement('div');
       tick.className = 'im-transition-fui-tick';
@@ -251,12 +251,12 @@ class FirewallSequence {
     // Left and right vertical lines
     const leftLine = document.createElement('div');
     leftLine.className = 'im-transition-fui-line vertical';
-    leftLine.style.cssText = 'left:45px;top:50%;transform:translateY(-50%);';
+    leftLine.style.cssText = 'left:40px;top:50%;transform:translateY(-50%);';
     container.appendChild(leftLine);
 
     const rightLine = document.createElement('div');
     rightLine.className = 'im-transition-fui-line vertical';
-    rightLine.style.cssText = 'right:45px;top:50%;transform:translateY(-50%);';
+    rightLine.style.cssText = 'right:40px;top:50%;transform:translateY(-50%);';
     container.appendChild(rightLine);
 
     const fuiElements = [topLine, topTicks, bottomLine, bottomTicks, leftLine, rightLine];
@@ -293,70 +293,63 @@ class FirewallSequence {
       const screenH = app.screen.height;
       const centerX = screenW / 2;
       const centerY = screenH * 0.45; // Slightly above center, behind text
+      const maxLen = Math.max(screenW, screenH) * 0.9;
 
-      // --- EFFECT 0: Glow backlight behind text area ---
-      const glowBacklight = new PIXI.Graphics();
-      const backlightW = screenW * 0.6;
-      const backlightH = screenH * 0.3;
-      glowBacklight.beginFill(0x00d4ff, 0.15);
-      glowBacklight.drawRoundedRect(centerX - backlightW / 2, centerY - backlightH / 2, backlightW, backlightH, 20);
-      glowBacklight.endFill();
-      glowBacklight.blendMode = PIXI.BLEND_MODES.ADD;
-      glowBacklight.alpha = 0;
+      // --- EFFECT 0: Glow core ellipse behind text (light source for bloom) ---
+      const glowCore = new PIXI.Graphics();
+      glowCore.beginFill(0x00d4ff, 0.2);
+      glowCore.drawEllipse(centerX, centerY, screenW * 0.35, screenH * 0.2);
+      glowCore.endFill();
+      glowCore.blendMode = PIXI.BLEND_MODES.ADD;
+      glowCore.alpha = 0;
 
-      const backlightGlowFilter = new PIXI.filters.GlowFilter({
-        distance: 50,
-        outerStrength: 3,
+      const coreGlowFilter = new PIXI.filters.GlowFilter({
+        distance: 60,
+        outerStrength: 4,
         innerStrength: 1,
         color: 0x00d4ff,
         quality: 0.3
       });
-      glowBacklight.filters = [backlightGlowFilter];
-      stage.addChild(glowBacklight);
+      glowCore.filters = [coreGlowFilter];
+      stage.addChild(glowCore);
 
-      // --- EFFECT 1: God Rays Background - BRIGHTER ---
-      const godRaysBg = new PIXI.Graphics();
-      godRaysBg.beginFill(0x002244, 0.4); // Brighter fill
-      godRaysBg.drawRect(0, 0, screenW, screenH);
-      godRaysBg.endFill();
-      godRaysBg.blendMode = PIXI.BLEND_MODES.ADD;
+      // --- EFFECT 1: RADIAL STARBURST RAYS (28 rays emanating from center) ---
+      const raysContainer = new PIXI.Container();
+      raysContainer.blendMode = PIXI.BLEND_MODES.ADD;
+      stage.addChild(raysContainer);
 
-      const godRayFilter = new PIXI.filters.GodrayFilter({
-        angle: 30,
-        gain: 0,
-        lacunarity: 2.5,
-        parallel: false,
-        time: 0,
-        alpha: 0.8, // Higher alpha
-        center: [0.5, 0.45]
-      });
-      godRaysBg.filters = [godRayFilter];
-      stage.addChild(godRaysBg);
+      const rays = [];
+      for (let i = 0; i < 28; i++) {
+        const ray = new PIXI.Graphics();
+        const angle = (i / 28) * Math.PI * 2 + (Math.random() * 0.1 - 0.05); // Slight randomness
+        const thickness = 1 + Math.random() * 6; // 1-7px wide
+        const length = maxLen * (0.5 + Math.random() * 0.5); // 50-100% max length
+        const rayAlpha = 0.15 + Math.random() * 0.35; // 0.15-0.5 alpha
+        const color = Math.random() > 0.7 ? 0x88eeff : 0x00d4ff;
 
-      // --- EFFECT 2: Light Streak Lines (12 diagonal rays) - THICKER AND BRIGHTER ---
-      const streaksContainer = new PIXI.Container();
-      streaksContainer.blendMode = PIXI.BLEND_MODES.ADD;
-      stage.addChild(streaksContainer);
+        ray.lineStyle(thickness, color, rayAlpha);
+        ray.moveTo(centerX, centerY);
+        ray.lineTo(centerX + Math.cos(angle) * length, centerY + Math.sin(angle) * length);
+        ray.alpha = 0;
+        raysContainer.addChild(ray);
+        rays.push({ graphic: ray, targetAlpha: rayAlpha });
+      }
 
-      const streaks = [];
-      for (let i = 0; i < 12; i++) {
-        const streak = new PIXI.Graphics();
-        const angle = (i * 30) + (Math.random() * 12 - 6); // Every 30° with randomness
-        const length = 900 + Math.random() * 500;
-        const width = 3 + Math.random() * 5; // THICKER: 3-8px
-        const alpha = 0.5 + Math.random() * 0.4; // BRIGHTER: 0.5-0.9
-        const color = Math.random() > 0.6 ? 0x88eeff : 0x00d4ff;
+      // --- EFFECT 1.5: EXTRA THICK HORIZONTAL RAYS for lens flare band ---
+      const horizontalRays = [];
+      const hAngles = [-0.05, 0.02, Math.PI - 0.03, Math.PI + 0.04, -0.12]; // Near horizontal
+      for (let i = 0; i < 5; i++) {
+        const hRay = new PIXI.Graphics();
+        const thickness = 8 + Math.random() * 7; // 8-15px thick
+        const length = maxLen * 1.1;
+        const hAlpha = 0.3 + Math.random() * 0.3;
 
-        const rad = (angle * Math.PI) / 180;
-        const endX = centerX + Math.cos(rad) * length;
-        const endY = centerY + Math.sin(rad) * length;
-
-        streak.lineStyle(width, color, alpha);
-        streak.moveTo(centerX, centerY);
-        streak.lineTo(endX, endY);
-        streak.alpha = 0;
-        streaksContainer.addChild(streak);
-        streaks.push({ graphic: streak, targetAlpha: alpha });
+        hRay.lineStyle(thickness, 0x00d4ff, hAlpha);
+        hRay.moveTo(centerX, centerY);
+        hRay.lineTo(centerX + Math.cos(hAngles[i]) * length, centerY + Math.sin(hAngles[i]) * length);
+        hRay.alpha = 0;
+        raysContainer.addChild(hRay);
+        horizontalRays.push({ graphic: hRay, targetAlpha: hAlpha });
       }
 
       // --- EFFECT 3: Particle Burst Container ---
@@ -364,30 +357,30 @@ class FirewallSequence {
       particlesContainer.blendMode = PIXI.BLEND_MODES.ADD;
       stage.addChild(particlesContainer);
 
-      // --- EFFECT 4: Horizontal Lens Flare ---
+      // --- EFFECT 4: Horizontal Lens Flare (full width, very thin) ---
       const lensFlare = new PIXI.Graphics();
-      lensFlare.beginFill(0xffffff, 1);
-      lensFlare.drawRect(0, screenH * 0.45 - 3, screenW, 6);
+      lensFlare.beginFill(0xffffff, 0.6);
+      lensFlare.drawRect(0, centerY - 2, screenW, 4);
       lensFlare.endFill();
       lensFlare.blendMode = PIXI.BLEND_MODES.ADD;
       lensFlare.alpha = 0;
 
-      const glowFilter = new PIXI.filters.GlowFilter({
-        distance: 15,
+      const flareGlowFilter = new PIXI.filters.GlowFilter({
+        distance: 20,
         outerStrength: 3,
         innerStrength: 1,
         color: 0x00d4ff,
         quality: 0.3
       });
-      lensFlare.filters = [glowFilter];
+      lensFlare.filters = [flareGlowFilter];
       stage.addChild(lensFlare);
 
-      // --- EFFECT 5: Bloom Filter on Stage - INTENSIFIED ---
+      // --- EFFECT 5: Bloom Filter on Stage - AGGRESSIVE ---
       const bloomFilter = new PIXI.filters.AdvancedBloomFilter({
-        threshold: 0.4, // Lower threshold catches more elements
-        bloomScale: 0,
-        brightness: 1.3,
-        blur: 6, // More blur
+        threshold: 0.3, // Lower threshold = more elements bloom
+        bloomScale: 1.5, // Higher starting value
+        brightness: 1.4,
+        blur: 8, // More blur
         quality: 4
       });
 
@@ -398,89 +391,100 @@ class FirewallSequence {
 
       // === PIXIJS TIMELINE ANIMATIONS ===
 
-      // 0.0s: Glow backlight fades in
-      timeline.to(glowBacklight, {
+      // 0.0s: Glow core fades in
+      timeline.to(glowCore, {
         alpha: 0.15,
         duration: 0.3,
         ease: 'power2.out'
       }, 0);
 
-      // 0.0s: God rays gain ramps up - BRIGHTER
-      timeline.to(godRayFilter, {
-        gain: 0.8, // Higher gain
-        duration: 0.5,
-        ease: 'power2.out'
-      }, 0);
-
-      // 0.0s: God rays time animates continuously
-      timeline.to(godRayFilter, {
-        time: 3,
-        duration: 3,
-        ease: 'none'
-      }, 0);
-
       // 0.0s: Bloom ramps up
       timeline.to(bloomFilter, {
-        bloomScale: 0.8,
+        bloomScale: 2.0,
         duration: 0.4,
         ease: 'power2.out'
       }, 0);
 
-      // 0.1s: Light streaks fade in with stagger
-      streaks.forEach((s, i) => {
-        timeline.to(s.graphic, {
-          alpha: s.targetAlpha,
-          duration: 0.4 + Math.random() * 0.3,
-          ease: 'power2.out'
-        }, 0.1 + (i * 0.05));
+      // 0.1s: Radial rays fade in with stagger
+      rays.forEach((r, i) => {
+        timeline.to(r.graphic, {
+          alpha: r.targetAlpha * 0.6,
+          duration: 0.3,
+          ease: 'power2.in'
+        }, 0.1 + (i * 0.01));
       });
 
-      // 0.5s: TEXT SLAM MOMENT - spike effects - INTENSIFIED
-      // Glow backlight spike
-      timeline.to(glowBacklight, {
-        alpha: 0.4,
+      // 0.15s: Horizontal rays fade in
+      horizontalRays.forEach((r, i) => {
+        timeline.to(r.graphic, {
+          alpha: r.targetAlpha * 0.5,
+          duration: 0.35,
+          ease: 'power2.in'
+        }, 0.15 + (i * 0.02));
+      });
+
+      // 0.5s: TEXT SLAM MOMENT - spike effects - EXPLOSIVE
+      // Glow core spike
+      timeline.to(glowCore, {
+        alpha: 0.5,
         duration: 0.1,
         ease: 'power2.out'
       }, 0.5);
-      timeline.to(glowBacklight, {
-        alpha: 0.2,
+      timeline.to(glowCore, {
+        alpha: 0.25,
         duration: 0.4,
         ease: 'power2.inOut'
       }, 0.6);
 
-      // God rays spike - HIGHER
-      timeline.to(godRayFilter, {
-        gain: 1.2, // Higher spike
-        duration: 0.1,
-        ease: 'power2.out'
-      }, 0.5);
-      timeline.to(godRayFilter, {
-        gain: 0.8,
-        duration: 0.3,
-        ease: 'power2.inOut'
-      }, 0.6);
+      // Radial rays spike to full brightness
+      rays.forEach((r) => {
+        timeline.to(r.graphic, {
+          alpha: 1,
+          duration: 0.1,
+          ease: 'power2.out'
+        }, 0.5);
+        timeline.to(r.graphic, {
+          alpha: r.targetAlpha * 0.8,
+          duration: 0.3,
+          ease: 'power2.inOut'
+        }, 0.6);
+      });
+
+      // Horizontal rays spike
+      horizontalRays.forEach((r) => {
+        timeline.to(r.graphic, {
+          alpha: 1,
+          duration: 0.1,
+          ease: 'power2.out'
+        }, 0.5);
+        timeline.to(r.graphic, {
+          alpha: r.targetAlpha,
+          duration: 0.3,
+          ease: 'power2.inOut'
+        }, 0.6);
+      });
 
       // Bloom spike - MASSIVE
       timeline.to(bloomFilter, {
-        bloomScale: 4.0, // Much higher spike
-        duration: 0.1,
+        bloomScale: 5.0, // Very high spike
+        duration: 0.15,
         ease: 'power2.out'
       }, 0.5);
       timeline.to(bloomFilter, {
-        bloomScale: 2.0, // Higher settle
-        duration: 0.5,
+        bloomScale: 2.5, // Higher settle
+        duration: 0.3,
         ease: 'power2.inOut'
-      }, 0.6);
+      }, 0.65);
 
-      // RGB Split flash
+      // RGB Split flash - STRONGER
       timeline.to(rgbSplitFilter.red, {
-        0: -4,
+        0: -5,
         1: 2,
         duration: 0.05,
         ease: 'power2.out'
       }, 0.5);
       timeline.to(rgbSplitFilter.blue, {
-        0: 4,
+        0: 5,
         1: -2,
         duration: 0.05,
         ease: 'power2.out'
@@ -488,109 +492,112 @@ class FirewallSequence {
       timeline.to(rgbSplitFilter.red, {
         0: 0,
         1: 0,
-        duration: 0.3,
+        duration: 0.15,
         ease: 'power2.out'
       }, 0.55);
       timeline.to(rgbSplitFilter.blue, {
         0: 0,
         1: 0,
-        duration: 0.3,
+        duration: 0.15,
         ease: 'power2.out'
       }, 0.55);
 
       // Lens flare flash
       timeline.to(lensFlare, {
-        alpha: 0.7,
-        duration: 0.1,
+        alpha: 0.8,
+        duration: 0.05,
         ease: 'power2.out'
       }, 0.5);
       timeline.to(lensFlare, {
-        alpha: 0.15,
-        duration: 0.8,
+        alpha: 0.2,
+        duration: 0.3,
         ease: 'power2.inOut'
-      }, 0.6);
+      }, 0.55);
 
-      // 0.5s: Particle burst - spawn 60 BRIGHTER particles
+      // 0.5s: Particle burst - spawn 50 particles (circles and elongated debris)
       timeline.call(() => {
-        for (let i = 0; i < 60; i++) {
+        for (let i = 0; i < 50; i++) {
           const particle = new PIXI.Graphics();
-          const isElongated = Math.random() > 0.7; // Some elongated for motion blur effect
-          const radius = 2 + Math.random() * 3; // LARGER: 2-5px
+          const isElongated = Math.random() > 0.65; // ~35% elongated for motion blur feel
+          const radius = 2 + Math.random() * 2; // 2-4px radius
           const color = Math.random() > 0.4 ? 0x00d4ff : 0xffffff;
 
-          particle.beginFill(color, 1.0); // FULL alpha fill
+          particle.beginFill(color, 1.0);
           if (isElongated) {
-            particle.drawRect(-1, -3, 2, 6); // Elongated debris
+            particle.drawRect(-1, -4, 2, 8); // Elongated debris
           } else {
             particle.drawCircle(0, 0, radius);
           }
           particle.endFill();
           particle.blendMode = PIXI.BLEND_MODES.ADD;
 
-          // Start near center with random offset
-          particle.x = centerX + (Math.random() - 0.5) * 120;
-          particle.y = centerY + (Math.random() - 0.5) * 80;
+          // Start clustered near center
+          particle.x = centerX + (Math.random() - 0.5) * 100;
+          particle.y = centerY + (Math.random() - 0.5) * 60;
           particle.alpha = 0;
 
           particlesContainer.addChild(particle);
 
-          // Random outward direction
+          // Random outward direction - some slow, some fast
           const angle = Math.random() * Math.PI * 2;
-          const distance = 350 + Math.random() * 400;
+          const isFast = Math.random() > 0.5;
+          const distance = isFast ? (400 + Math.random() * 300) : (150 + Math.random() * 150);
           const targetX = particle.x + Math.cos(angle) * distance;
           const targetY = particle.y + Math.sin(angle) * distance;
-          const duration = 1.5 + Math.random() * 1.0;
+          const duration = isFast ? (1.0 + Math.random() * 0.5) : (1.2 + Math.random() * 0.8);
 
-          // Animate particle outward - START FULLY BRIGHT
+          // Animate particle outward - START AT FULL BRIGHTNESS
           gsap.to(particle, {
-            alpha: 1.0, // Full alpha
-            duration: 0.05,
-            ease: 'power2.out'
+            alpha: 1.0,
+            duration: 0.02,
+            ease: 'none'
           });
           gsap.to(particle, {
             x: targetX,
             y: targetY,
             alpha: 0,
-            scale: 0.4,
+            scale: 0.3,
             duration: duration,
             ease: 'power2.out',
-            delay: Math.random() * 0.15
+            delay: Math.random() * 0.1
           });
         }
       }, null, 0.5);
 
-      // 2.0s: Fade out all PixiJS effects
-      timeline.to(glowBacklight, {
+      // 1.8s: Fade out all PixiJS effects
+      timeline.to(glowCore, {
         alpha: 0,
         duration: 0.5,
         ease: 'power2.in'
-      }, 2.0);
+      }, 1.8);
 
-      timeline.to(godRaysBg, {
-        alpha: 0,
-        duration: 0.5,
-        ease: 'power2.in'
-      }, 2.0);
-
-      streaks.forEach((s) => {
-        timeline.to(s.graphic, {
+      rays.forEach((r) => {
+        timeline.to(r.graphic, {
           alpha: 0,
           duration: 0.5,
           ease: 'power2.in'
-        }, 2.0);
+        }, 1.8);
+      });
+
+      horizontalRays.forEach((r) => {
+        timeline.to(r.graphic, {
+          alpha: 0,
+          duration: 0.5,
+          ease: 'power2.in'
+        }, 1.8);
       });
 
       timeline.to(lensFlare, {
         alpha: 0,
         duration: 0.5,
         ease: 'power2.in'
-      }, 2.0);
+      }, 1.8);
 
       timeline.to(bloomFilter, {
         bloomScale: 0,
         duration: 0.5,
         ease: 'power2.in'
-      }, 2.0);
+      }, 1.8);
     }
 
     // === DOM GSAP ANIMATION SEQUENCE ===

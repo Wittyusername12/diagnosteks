@@ -151,7 +151,15 @@ class FirewallSequence {
       const maxLen = Math.max(w, h) * 0.8;
 
       // =========================================================
-      // LAYER 1: HEXAGONAL GRID BACKGROUND
+      // TWO-CONTAINER ARCHITECTURE: Hardware (NORMAL blend) vs Energy (ADD blend + bloom)
+      // =========================================================
+      const hardwareContainer = new PIXI.Container();
+      const energyContainer = new PIXI.Container();
+      stage.addChild(hardwareContainer);  // Hardware renders FIRST (behind)
+      stage.addChild(energyContainer);    // Energy renders ON TOP (in front)
+
+      // =========================================================
+      // LAYER 1: HEXAGONAL GRID BACKGROUND (HARDWARE — NORMAL blend)
       // =========================================================
       const hexGrid = new PIXI.Graphics();
       const hexRadius = 30;
@@ -172,12 +180,12 @@ class FirewallSequence {
           hexGrid.drawPolygon(points);
         }
       }
-      hexGrid.blendMode = PIXI.BLEND_MODES.ADD;
+      // NORMAL blendMode (default) — hardware stays dark
       hexGrid.alpha = 0;
-      stage.addChild(hexGrid);
+      hardwareContainer.addChild(hexGrid);
 
       // =========================================================
-      // LAYER 2: ATMOSPHERIC HAZE FILLS (volumetric depth)
+      // LAYER 2: ATMOSPHERIC HAZE FILLS (ENERGY — ADD blend)
       // =========================================================
       const atmoOuter = new PIXI.Graphics();
       atmoOuter.beginFill(0x0a3355, 0.08);
@@ -185,7 +193,7 @@ class FirewallSequence {
       atmoOuter.endFill();
       atmoOuter.blendMode = PIXI.BLEND_MODES.ADD;
       atmoOuter.alpha = 0;
-      stage.addChild(atmoOuter);
+      energyContainer.addChild(atmoOuter);
 
       const atmoMid1 = new PIXI.Graphics();
       atmoMid1.beginFill(0x003366, 0.06);
@@ -193,7 +201,7 @@ class FirewallSequence {
       atmoMid1.endFill();
       atmoMid1.blendMode = PIXI.BLEND_MODES.ADD;
       atmoMid1.alpha = 0;
-      stage.addChild(atmoMid1);
+      energyContainer.addChild(atmoMid1);
 
       const atmoMid2 = new PIXI.Graphics();
       atmoMid2.beginFill(0x004477, 0.08);
@@ -201,10 +209,10 @@ class FirewallSequence {
       atmoMid2.endFill();
       atmoMid2.blendMode = PIXI.BLEND_MODES.ADD;
       atmoMid2.alpha = 0;
-      stage.addChild(atmoMid2);
+      energyContainer.addChild(atmoMid2);
 
       // =========================================================
-      // LAYER 3: PERIPHERAL DATA PANELS (left and right edges)
+      // LAYER 3: PERIPHERAL DATA PANELS (HARDWARE — NORMAL blend)
       // =========================================================
       const panels = new PIXI.Graphics();
       for (let p = 0; p < 18; p++) {
@@ -222,9 +230,9 @@ class FirewallSequence {
         panels.lineStyle(1, 0x00d4ff, 0.12 + Math.random() * 0.15);
         panels.drawRect(panelX, panelY, panelW, panelH);
       }
-      panels.blendMode = PIXI.BLEND_MODES.ADD;
+      // NORMAL blendMode (default) — hardware stays dark
       panels.alpha = 0;
-      stage.addChild(panels);
+      hardwareContainer.addChild(panels);
 
       // =========================================================
       // LAYER 4: RING SYSTEM — SOLID MECHANICAL PLATE SEGMENTS
@@ -326,11 +334,11 @@ class FirewallSequence {
           ring.endFill();
         }
 
-        ring.blendMode = PIXI.BLEND_MODES.ADD;
+        // NORMAL blendMode (default) — dark steel fills stay dark, bright edges stay sharp
         ring.pivot.set(cx, cy);
         ring.position.set(cx, cy);
         ring.alpha = 0;
-        stage.addChild(ring);
+        hardwareContainer.addChild(ring);
         blockRings.push({ graphic: ring, dir: rc.direction, speed: rc.speed });
       });
 
@@ -346,12 +354,12 @@ class FirewallSequence {
         accentRings.lineStyle(ar.width, ar.color, ar.alpha);
         accentRings.drawCircle(cx, cy, minDim * ar.r);
       });
-      accentRings.blendMode = PIXI.BLEND_MODES.ADD;
+      // NORMAL blendMode (default) — thin accent lines stay crisp
       accentRings.alpha = 0;
-      stage.addChild(accentRings);
+      hardwareContainer.addChild(accentRings);
 
       // =========================================================
-      // LAYER 5: CORE (5-layer blown-out radiant source)
+      // LAYER 5: CORE (ENERGY — ADD blend, 5-layer blown-out radiant source)
       // =========================================================
       const coreL1 = new PIXI.Graphics();
       coreL1.beginFill(0x003366, 0.1);
@@ -359,7 +367,7 @@ class FirewallSequence {
       coreL1.endFill();
       coreL1.blendMode = PIXI.BLEND_MODES.ADD;
       coreL1.alpha = 0;
-      stage.addChild(coreL1);
+      energyContainer.addChild(coreL1);
 
       const coreL2 = new PIXI.Graphics();
       coreL2.beginFill(0x0066aa, 0.15);
@@ -367,7 +375,7 @@ class FirewallSequence {
       coreL2.endFill();
       coreL2.blendMode = PIXI.BLEND_MODES.ADD;
       coreL2.alpha = 0;
-      stage.addChild(coreL2);
+      energyContainer.addChild(coreL2);
 
       const coreL3 = new PIXI.Graphics();
       coreL3.beginFill(0x00aaff, 0.25);
@@ -375,7 +383,7 @@ class FirewallSequence {
       coreL3.endFill();
       coreL3.blendMode = PIXI.BLEND_MODES.ADD;
       coreL3.alpha = 0;
-      stage.addChild(coreL3);
+      energyContainer.addChild(coreL3);
 
       const coreL4 = new PIXI.Graphics();
       coreL4.beginFill(0x88ddff, 0.4);
@@ -383,7 +391,7 @@ class FirewallSequence {
       coreL4.endFill();
       coreL4.blendMode = PIXI.BLEND_MODES.ADD;
       coreL4.alpha = 0;
-      stage.addChild(coreL4);
+      energyContainer.addChild(coreL4);
 
       const coreL5 = new PIXI.Graphics();
       coreL5.beginFill(0xffffff, 0.6);
@@ -391,12 +399,12 @@ class FirewallSequence {
       coreL5.endFill();
       coreL5.blendMode = PIXI.BLEND_MODES.ADD;
       coreL5.alpha = 0;
-      stage.addChild(coreL5);
+      energyContainer.addChild(coreL5);
 
       const coreLayers = [coreL1, coreL2, coreL3, coreL4, coreL5];
 
       // =========================================================
-      // LAYER 6: RADIAL RAYS (30 rays, NO CARDINAL CROSSHAIR)
+      // LAYER 6: RADIAL RAYS (ENERGY — ADD blend, 30 rays, NO CARDINAL CROSSHAIR)
       // =========================================================
       const rays = [];
       const numRays = 30;
@@ -415,12 +423,12 @@ class FirewallSequence {
         ray.lineTo(cx + Math.cos(angle) * length, cy + Math.sin(angle) * length);
         ray.blendMode = PIXI.BLEND_MODES.ADD;
         ray.alpha = 0;
-        stage.addChild(ray);
+        energyContainer.addChild(ray);
         rays.push({ graphic: ray, targetAlpha: isThick ? 0.5 : (0.15 + Math.random() * 0.15) });
       }
 
       // =========================================================
-      // LAYER 7: LIGHTNING WITH BRANCHING (6 bolts, dual-layer)
+      // LAYER 7: LIGHTNING WITH BRANCHING (ENERGY — ADD blend, 6 bolts, dual-layer)
       // =========================================================
       const boltInnerR = minDim * 0.08;
       const boltOuterR = minDim * 0.55;
@@ -485,13 +493,13 @@ class FirewallSequence {
         boltCore.blendMode = PIXI.BLEND_MODES.ADD;
         boltGlow.alpha = 0;
         boltCore.alpha = 0;
-        stage.addChild(boltGlow);
-        stage.addChild(boltCore);
+        energyContainer.addChild(boltGlow);
+        energyContainer.addChild(boltCore);
         bolts.push({ glow: boltGlow, core: boltCore, delay: 0.4 + Math.random() * 0.8 });
       }
 
       // =========================================================
-      // LAYER 8: HORIZONTAL RING OVERFLOW STREAKS
+      // LAYER 8: HORIZONTAL RING OVERFLOW STREAKS (ENERGY — ADD blend)
       // =========================================================
       const overflowStreaks = [];
       const outerRingR = minDim * 0.42;
@@ -507,12 +515,12 @@ class FirewallSequence {
         streak.lineTo(endX, cy + yOffset);
         streak.blendMode = PIXI.BLEND_MODES.ADD;
         streak.alpha = 0;
-        stage.addChild(streak);
+        energyContainer.addChild(streak);
         overflowStreaks.push(streak);
       }
 
       // =========================================================
-      // LAYER 9: ORBITING FRAGMENTS + HORIZONTAL STREAKS
+      // LAYER 9: ORBITING FRAGMENTS + HORIZONTAL STREAKS (ENERGY — ADD blend)
       // =========================================================
       const fragments = [];
       const fragColors = [0x1a5577, 0x00d4ff, 0x44ccff, 0x88ddff];
@@ -532,7 +540,7 @@ class FirewallSequence {
         frag.x = cx + Math.cos(startAngle) * orbitRadius;
         frag.y = cy + Math.sin(startAngle) * orbitRadius;
         frag.alpha = 0;
-        stage.addChild(frag);
+        energyContainer.addChild(frag);
 
         const endAngle = startAngle + Math.PI * (0.8 + Math.random() * 1.5);
         fragments.push({ graphic: frag, orbitRadius, endAngle });
@@ -555,33 +563,40 @@ class FirewallSequence {
         streak.x = startX;
         streak.y = streakY;
         streak.alpha = 0;
-        stage.addChild(streak);
+        energyContainer.addChild(streak);
 
         const targetX = goRight ? (w + streakW) : (-streakW);
         streaks.push({ graphic: streak, targetX, enterDelay: 0.3 + Math.random() * 1.2 });
       }
 
       // =========================================================
-      // LAYER 10: FILTERS (aggressive bloom + glow + RGB)
+      // LAYER 10: FILTERS — Two-container architecture
+      // energyContainer: bloom + glow (energy effects bloom, hardware stays crisp)
+      // stage: RGB split only (brief flash at peak discharge)
+      // hardwareContainer: NO filters (dark metal stays dark)
       // =========================================================
       const bloomFilter = new PIXI.filters.AdvancedBloomFilter({
-        threshold: 0.12,
-        bloomScale: 3.0,
-        brightness: 1.4,
-        blur: 10,
+        threshold: 0.15,
+        bloomScale: 2.5,
+        brightness: 1.3,
+        blur: 8,
         quality: 6
       });
 
       const glowFilter = new PIXI.filters.GlowFilter({
-        distance: 20,
-        outerStrength: 2.5,
+        distance: 15,
+        outerStrength: 2,
         innerStrength: 1,
         color: 0x00d4ff,
         quality: 0.3
       });
 
+      // Bloom + glow on ENERGY container only — core/rays/lightning bloom, rings stay dark
+      energyContainer.filters = [bloomFilter, glowFilter];
+
+      // RGB split on stage for peak discharge flash
       const rgbFilter = new PIXI.filters.RGBSplitFilter([0, 0], [0, 0], [0, 0]);
-      stage.filters = [bloomFilter, glowFilter, rgbFilter];
+      stage.filters = [rgbFilter];
 
       // =========================================================
       // GSAP TIMELINE ANIMATIONS

@@ -186,9 +186,10 @@ class FirewallSequence {
 
       // =========================================================
       // LAYER 2: ATMOSPHERIC HAZE FILLS (ENERGY — ADD blend)
+      // REDUCED alphas to prevent teal flooding — haze should be barely perceptible
       // =========================================================
       const atmoOuter = new PIXI.Graphics();
-      atmoOuter.beginFill(0x0a3355, 0.08);
+      atmoOuter.beginFill(0x0a3355, 0.03);
       atmoOuter.drawCircle(cx, cy, minDim * 0.45);
       atmoOuter.endFill();
       atmoOuter.blendMode = PIXI.BLEND_MODES.ADD;
@@ -196,7 +197,7 @@ class FirewallSequence {
       energyContainer.addChild(atmoOuter);
 
       const atmoMid1 = new PIXI.Graphics();
-      atmoMid1.beginFill(0x003366, 0.06);
+      atmoMid1.beginFill(0x003366, 0.025);
       atmoMid1.drawCircle(cx, cy, minDim * 0.32);
       atmoMid1.endFill();
       atmoMid1.blendMode = PIXI.BLEND_MODES.ADD;
@@ -204,7 +205,7 @@ class FirewallSequence {
       energyContainer.addChild(atmoMid1);
 
       const atmoMid2 = new PIXI.Graphics();
-      atmoMid2.beginFill(0x004477, 0.08);
+      atmoMid2.beginFill(0x004477, 0.03);
       atmoMid2.drawCircle(cx, cy, minDim * 0.20);
       atmoMid2.endFill();
       atmoMid2.blendMode = PIXI.BLEND_MODES.ADD;
@@ -261,18 +262,20 @@ class FirewallSequence {
       }
 
       // Ring configurations: outer rings = wider bands, darker; inner rings = narrower, brighter edges
+      // TWEAK 2: bodyAlpha → 0.95 for full opacity (metal is opaque)
+      // TWEAK 7: edgeAlpha +20%, inner ring edgeWidth +1px for sharper specular highlights
       const ringConfigs = [
         // OUTER RINGS — widest bands, darkest bodies, subtle edges
-        { innerR: 0.39, outerR: 0.44, numSegs: 14, gapDeg: 3, bodyColor: 0x0a1520, bodyAlpha: 0.7, edgeColor: 0x1a5577, edgeAlpha: 0.5, edgeWidth: 1.5, direction: 1, speed: 5.0 },
-        { innerR: 0.35, outerR: 0.38, numSegs: 16, gapDeg: 2.5, bodyColor: 0x0d1a2d, bodyAlpha: 0.8, edgeColor: 0x00a4cc, edgeAlpha: 0.6, edgeWidth: 2, direction: -1, speed: 4.0 },
+        { innerR: 0.39, outerR: 0.44, numSegs: 14, gapDeg: 3, bodyColor: 0x0a1520, bodyAlpha: 0.95, edgeColor: 0x1a5577, edgeAlpha: 0.65, edgeWidth: 1.5, direction: 1, speed: 5.0 },
+        { innerR: 0.35, outerR: 0.38, numSegs: 16, gapDeg: 2.5, bodyColor: 0x0d1a2d, bodyAlpha: 0.95, edgeColor: 0x00a4cc, edgeAlpha: 0.75, edgeWidth: 2, direction: -1, speed: 4.0 },
         // MID RINGS — medium width, brighter edges, most detailed
-        { innerR: 0.30, outerR: 0.34, numSegs: 18, gapDeg: 2, bodyColor: 0x0f1e33, bodyAlpha: 0.85, edgeColor: 0x00d4ff, edgeAlpha: 0.7, edgeWidth: 2, direction: 1, speed: 3.5 },
-        { innerR: 0.265, outerR: 0.29, numSegs: 14, gapDeg: 2, bodyColor: 0x0d1a2d, bodyAlpha: 0.75, edgeColor: 0x00bbdd, edgeAlpha: 0.6, edgeWidth: 1.5, direction: -1, speed: 3.0 },
-        { innerR: 0.23, outerR: 0.26, numSegs: 20, gapDeg: 1.5, bodyColor: 0x112640, bodyAlpha: 0.85, edgeColor: 0x00d4ff, edgeAlpha: 0.75, edgeWidth: 2.5, direction: 1, speed: 2.5 },
-        // INNER RINGS — narrower bands, brightest edges, fastest rotation
-        { innerR: 0.19, outerR: 0.22, numSegs: 16, gapDeg: 2, bodyColor: 0x122844, bodyAlpha: 0.8, edgeColor: 0x44ccff, edgeAlpha: 0.8, edgeWidth: 2, direction: -1, speed: 2.0 },
-        { innerR: 0.155, outerR: 0.185, numSegs: 14, gapDeg: 2, bodyColor: 0x153050, bodyAlpha: 0.85, edgeColor: 0x66ddff, edgeAlpha: 0.8, edgeWidth: 2.5, direction: 1, speed: 1.8 },
-        { innerR: 0.12, outerR: 0.15, numSegs: 12, gapDeg: 2.5, bodyColor: 0x183858, bodyAlpha: 0.8, edgeColor: 0x88eeff, edgeAlpha: 0.85, edgeWidth: 3, direction: -1, speed: 1.5 },
+        { innerR: 0.30, outerR: 0.34, numSegs: 18, gapDeg: 2, bodyColor: 0x0f1e33, bodyAlpha: 0.95, edgeColor: 0x00d4ff, edgeAlpha: 0.85, edgeWidth: 2.5, direction: 1, speed: 3.5 },
+        { innerR: 0.265, outerR: 0.29, numSegs: 14, gapDeg: 2, bodyColor: 0x0d1a2d, bodyAlpha: 0.95, edgeColor: 0x00bbdd, edgeAlpha: 0.75, edgeWidth: 2, direction: -1, speed: 3.0 },
+        { innerR: 0.23, outerR: 0.26, numSegs: 20, gapDeg: 1.5, bodyColor: 0x112640, bodyAlpha: 0.95, edgeColor: 0x00d4ff, edgeAlpha: 0.9, edgeWidth: 3, direction: 1, speed: 2.5 },
+        // INNER RINGS — narrower bands, brightest edges (near-white), fastest rotation
+        { innerR: 0.19, outerR: 0.22, numSegs: 16, gapDeg: 2, bodyColor: 0x122844, bodyAlpha: 0.95, edgeColor: 0x44ccff, edgeAlpha: 0.95, edgeWidth: 3, direction: -1, speed: 2.0 },
+        { innerR: 0.155, outerR: 0.185, numSegs: 14, gapDeg: 2, bodyColor: 0x153050, bodyAlpha: 0.95, edgeColor: 0x66ddff, edgeAlpha: 0.95, edgeWidth: 3.5, direction: 1, speed: 1.8 },
+        { innerR: 0.12, outerR: 0.15, numSegs: 12, gapDeg: 2.5, bodyColor: 0x183858, bodyAlpha: 0.95, edgeColor: 0x88eeff, edgeAlpha: 1.0, edgeWidth: 4, direction: -1, speed: 1.5 },
       ];
 
       const blockRings = [];
@@ -281,16 +284,40 @@ class FirewallSequence {
         const ring = new PIXI.Graphics();
         const innerRadius = minDim * rc.innerR;
         const outerRadius = minDim * rc.outerR;
-        const segAngle = (Math.PI * 2) / rc.numSegs;
         const gapAngle = (rc.gapDeg * Math.PI) / 180;
-        const plateAngle = segAngle - gapAngle;
 
+        // TWEAK 4: Generate IRREGULAR segment widths (60-140% of base width)
+        const segAngles = [];
+        let totalAngle = 0;
         for (let s = 0; s < rc.numSegs; s++) {
-          const startA = s * segAngle;
+          const baseAngle = (Math.PI * 2) / rc.numSegs;
+          const variation = baseAngle * (0.6 + Math.random() * 0.8);
+          segAngles.push(variation);
+          totalAngle += variation;
+        }
+        // Normalize so they sum to exactly 2*PI
+        const scale = (Math.PI * 2) / totalAngle;
+        for (let s = 0; s < segAngles.length; s++) {
+          segAngles[s] *= scale;
+        }
+
+        let startA = 0;
+        for (let s = 0; s < rc.numSegs; s++) {
+          const segAngle = segAngles[s];
+          const plateAngle = segAngle - gapAngle;
           const endA = startA + plateAngle;
 
-          // 1. PLATE BODY — filled polygon tracing inner and outer arcs (dark steel blue)
-          drawArcPlate(ring, cx, cy, innerRadius, outerRadius, startA, endA, rc.bodyColor, rc.bodyAlpha, 6);
+          // TWEAK 3: Per-segment brightness randomization (25-40% variation)
+          const segAlphaVariation = 0.65 + Math.random() * 0.35; // 0.65-1.0 multiplier
+          const thisSegAlpha = rc.bodyAlpha * segAlphaVariation;
+          // Occasionally brighten some segments
+          let thisBodyColor = rc.bodyColor;
+          if (Math.random() > 0.7) {
+            thisBodyColor = rc.bodyColor + 0x0a0a10; // Slightly brighter
+          }
+
+          // 1. PLATE BODY — filled polygon with per-segment color/alpha variation
+          drawArcPlate(ring, cx, cy, innerRadius, outerRadius, startA, endA, thisBodyColor, thisSegAlpha, 6);
 
           // 2. BRIGHT INNER EDGE — specular highlight on core-facing face
           ring.lineStyle(rc.edgeWidth, rc.edgeColor, rc.edgeAlpha);
@@ -320,18 +347,30 @@ class FirewallSequence {
 
           // Reset lineStyle for next segment's fill
           ring.lineStyle(0);
+          startA += segAngle; // Move to next segment (includes gap)
         }
 
+        // TWEAK 6: Explicit dark gap shadow circles at ring boundaries
+        ring.lineStyle(1.5, 0x000508, 0.6);
+        ring.drawCircle(cx, cy, innerRadius - 1);
+        ring.lineStyle(1, 0x000508, 0.4);
+        ring.drawCircle(cx, cy, outerRadius + 1);
+        ring.lineStyle(0);
+
         // GLOWING NODES on some segments (every 3rd-4th segment)
-        for (let n = 0; n < rc.numSegs; n += 3 + Math.floor(Math.random() * 2)) {
-          const nodeAngle = n * segAngle + plateAngle * 0.5;
-          const nodeR = innerRadius + 2; // Just inside the inner edge
-          ring.beginFill(0xffffff, 0.7);
-          ring.drawCircle(cx + Math.cos(nodeAngle) * nodeR, cy + Math.sin(nodeAngle) * nodeR, 2.5);
-          ring.endFill();
-          ring.beginFill(rc.edgeColor, 0.5);
-          ring.drawCircle(cx + Math.cos(nodeAngle) * nodeR, cy + Math.sin(nodeAngle) * nodeR, 4);
-          ring.endFill();
+        let nodeStartA = 0;
+        for (let n = 0; n < rc.numSegs; n++) {
+          if (n % (3 + Math.floor(Math.random() * 2)) === 0) {
+            const nodeAngle = nodeStartA + (segAngles[n] - gapAngle) * 0.5;
+            const nodeR = innerRadius + 2; // Just inside the inner edge
+            ring.beginFill(0xffffff, 0.7);
+            ring.drawCircle(cx + Math.cos(nodeAngle) * nodeR, cy + Math.sin(nodeAngle) * nodeR, 2.5);
+            ring.endFill();
+            ring.beginFill(rc.edgeColor, 0.5);
+            ring.drawCircle(cx + Math.cos(nodeAngle) * nodeR, cy + Math.sin(nodeAngle) * nodeR, 4);
+            ring.endFill();
+          }
+          nodeStartA += segAngles[n];
         }
 
         // NORMAL blendMode (default) — dark steel fills stay dark, bright edges stay sharp
@@ -360,10 +399,11 @@ class FirewallSequence {
 
       // =========================================================
       // LAYER 5: CORE (ENERGY — ADD blend, 5-layer blown-out radiant source)
+      // TWEAK 5: Expanded outer layer radii (~2x) for "blown-out" effect — fills ~15% of image
       // =========================================================
       const coreL1 = new PIXI.Graphics();
       coreL1.beginFill(0x003366, 0.1);
-      coreL1.drawCircle(cx, cy, minDim * 0.15);
+      coreL1.drawCircle(cx, cy, minDim * 0.22);
       coreL1.endFill();
       coreL1.blendMode = PIXI.BLEND_MODES.ADD;
       coreL1.alpha = 0;
@@ -371,7 +411,7 @@ class FirewallSequence {
 
       const coreL2 = new PIXI.Graphics();
       coreL2.beginFill(0x0066aa, 0.15);
-      coreL2.drawCircle(cx, cy, minDim * 0.10);
+      coreL2.drawCircle(cx, cy, minDim * 0.16);
       coreL2.endFill();
       coreL2.blendMode = PIXI.BLEND_MODES.ADD;
       coreL2.alpha = 0;
@@ -379,7 +419,7 @@ class FirewallSequence {
 
       const coreL3 = new PIXI.Graphics();
       coreL3.beginFill(0x00aaff, 0.25);
-      coreL3.drawCircle(cx, cy, minDim * 0.07);
+      coreL3.drawCircle(cx, cy, minDim * 0.11);
       coreL3.endFill();
       coreL3.blendMode = PIXI.BLEND_MODES.ADD;
       coreL3.alpha = 0;
@@ -387,7 +427,7 @@ class FirewallSequence {
 
       const coreL4 = new PIXI.Graphics();
       coreL4.beginFill(0x88ddff, 0.4);
-      coreL4.drawCircle(cx, cy, minDim * 0.04);
+      coreL4.drawCircle(cx, cy, minDim * 0.055);
       coreL4.endFill();
       coreL4.blendMode = PIXI.BLEND_MODES.ADD;
       coreL4.alpha = 0;
@@ -395,7 +435,7 @@ class FirewallSequence {
 
       const coreL5 = new PIXI.Graphics();
       coreL5.beginFill(0xffffff, 0.6);
-      coreL5.drawCircle(cx, cy, minDim * 0.02);
+      coreL5.drawCircle(cx, cy, minDim * 0.025);
       coreL5.endFill();
       coreL5.blendMode = PIXI.BLEND_MODES.ADD;
       coreL5.alpha = 0;

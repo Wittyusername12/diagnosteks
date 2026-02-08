@@ -227,68 +227,128 @@ class FirewallSequence {
       stage.addChild(panels);
 
       // =========================================================
-      // LAYER 4: RING SYSTEM (9 rings with RECTANGULAR BLOCK segments)
+      // LAYER 4: RING SYSTEM — SOLID MECHANICAL PLATE SEGMENTS
+      // Two-tone rendering: dark filled body + bright inner edge (specular)
       // =========================================================
+
+      // Helper: Draw filled arc-band polygon (traces inner arc then outer arc)
+      function drawArcPlate(g, centerX, centerY, innerR, outerR, startAngle, endAngle, fillColor, fillAlpha, steps) {
+        steps = steps || 8;
+        const points = [];
+        // Trace inner arc forward
+        for (let i = 0; i <= steps; i++) {
+          const a = startAngle + (endAngle - startAngle) * (i / steps);
+          points.push(centerX + Math.cos(a) * innerR);
+          points.push(centerY + Math.sin(a) * innerR);
+        }
+        // Trace outer arc backward
+        for (let i = steps; i >= 0; i--) {
+          const a = startAngle + (endAngle - startAngle) * (i / steps);
+          points.push(centerX + Math.cos(a) * outerR);
+          points.push(centerY + Math.sin(a) * outerR);
+        }
+        g.beginFill(fillColor, fillAlpha);
+        g.drawPolygon(points);
+        g.endFill();
+      }
+
+      // Ring configurations: outer rings = wider bands, darker; inner rings = narrower, brighter edges
       const ringConfigs = [
-        { radius: 0.42, blocks: 40, blockW: 12, blockH: 4, color: 0x1a5577, alpha: 0.25, dir: 1, speed: 0.8 },
-        { radius: 0.38, blocks: 36, blockW: 14, blockH: 6, color: 0x00d4ff, alpha: 0.5, dir: -1, speed: 1.0 },
-        { radius: 0.34, blocks: 30, blockW: 10, blockH: 3, color: 0x1a6688, alpha: 0.2, dir: 1, speed: 0.6 },
-        { radius: 0.30, blocks: 28, blockW: 16, blockH: 7, color: 0x00d4ff, alpha: 0.6, dir: -1, speed: 1.2 },
-        { radius: 0.26, blocks: 24, blockW: 12, blockH: 4, color: 0x2288aa, alpha: 0.3, dir: 1, speed: 0.9 },
-        { radius: 0.22, blocks: 22, blockW: 14, blockH: 6, color: 0x00d4ff, alpha: 0.65, dir: -1, speed: 1.4 },
-        { radius: 0.18, blocks: 20, blockW: 10, blockH: 3, color: 0x3399bb, alpha: 0.25, dir: 1, speed: 1.1 },
-        { radius: 0.15, blocks: 18, blockW: 16, blockH: 7, color: 0x44ccff, alpha: 0.7, dir: -1, speed: 1.6 },
-        { radius: 0.12, blocks: 14, blockW: 12, blockH: 5, color: 0x88ddff, alpha: 0.5, dir: 1, speed: 1.8 }
+        // OUTER RINGS — widest bands, darkest bodies, subtle edges
+        { innerR: 0.39, outerR: 0.44, numSegs: 14, gapDeg: 3, bodyColor: 0x0a1520, bodyAlpha: 0.7, edgeColor: 0x1a5577, edgeAlpha: 0.5, edgeWidth: 1.5, direction: 1, speed: 5.0 },
+        { innerR: 0.35, outerR: 0.38, numSegs: 16, gapDeg: 2.5, bodyColor: 0x0d1a2d, bodyAlpha: 0.8, edgeColor: 0x00a4cc, edgeAlpha: 0.6, edgeWidth: 2, direction: -1, speed: 4.0 },
+        // MID RINGS — medium width, brighter edges, most detailed
+        { innerR: 0.30, outerR: 0.34, numSegs: 18, gapDeg: 2, bodyColor: 0x0f1e33, bodyAlpha: 0.85, edgeColor: 0x00d4ff, edgeAlpha: 0.7, edgeWidth: 2, direction: 1, speed: 3.5 },
+        { innerR: 0.265, outerR: 0.29, numSegs: 14, gapDeg: 2, bodyColor: 0x0d1a2d, bodyAlpha: 0.75, edgeColor: 0x00bbdd, edgeAlpha: 0.6, edgeWidth: 1.5, direction: -1, speed: 3.0 },
+        { innerR: 0.23, outerR: 0.26, numSegs: 20, gapDeg: 1.5, bodyColor: 0x112640, bodyAlpha: 0.85, edgeColor: 0x00d4ff, edgeAlpha: 0.75, edgeWidth: 2.5, direction: 1, speed: 2.5 },
+        // INNER RINGS — narrower bands, brightest edges, fastest rotation
+        { innerR: 0.19, outerR: 0.22, numSegs: 16, gapDeg: 2, bodyColor: 0x122844, bodyAlpha: 0.8, edgeColor: 0x44ccff, edgeAlpha: 0.8, edgeWidth: 2, direction: -1, speed: 2.0 },
+        { innerR: 0.155, outerR: 0.185, numSegs: 14, gapDeg: 2, bodyColor: 0x153050, bodyAlpha: 0.85, edgeColor: 0x66ddff, edgeAlpha: 0.8, edgeWidth: 2.5, direction: 1, speed: 1.8 },
+        { innerR: 0.12, outerR: 0.15, numSegs: 12, gapDeg: 2.5, bodyColor: 0x183858, bodyAlpha: 0.8, edgeColor: 0x88eeff, edgeAlpha: 0.85, edgeWidth: 3, direction: -1, speed: 1.5 },
       ];
 
       const blockRings = [];
-      ringConfigs.forEach((cfg) => {
+
+      ringConfigs.forEach((rc) => {
         const ring = new PIXI.Graphics();
-        const radius = minDim * cfg.radius;
+        const innerRadius = minDim * rc.innerR;
+        const outerRadius = minDim * rc.outerR;
+        const segAngle = (Math.PI * 2) / rc.numSegs;
+        const gapAngle = (rc.gapDeg * Math.PI) / 180;
+        const plateAngle = segAngle - gapAngle;
 
-        ring.beginFill(cfg.color, cfg.alpha);
-        for (let b = 0; b < cfg.blocks; b++) {
-          const angle = (b / cfg.blocks) * Math.PI * 2;
-          const bx = cx + Math.cos(angle) * radius;
-          const by = cy + Math.sin(angle) * radius;
-          const perpAngle = angle + Math.PI / 2;
-          const hw = cfg.blockW / 2;
-          const hh = cfg.blockH / 2;
-          const cosP = Math.cos(perpAngle);
-          const sinP = Math.sin(perpAngle);
-          const cosA = Math.cos(angle);
-          const sinA = Math.sin(angle);
+        for (let s = 0; s < rc.numSegs; s++) {
+          const startA = s * segAngle;
+          const endA = startA + plateAngle;
 
-          ring.drawPolygon([
-            bx - cosP * hw - cosA * hh, by - sinP * hw - sinA * hh,
-            bx + cosP * hw - cosA * hh, by + sinP * hw - sinA * hh,
-            bx + cosP * hw + cosA * hh, by + sinP * hw + sinA * hh,
-            bx - cosP * hw + cosA * hh, by - sinP * hw + sinA * hh
-          ]);
+          // 1. PLATE BODY — filled polygon tracing inner and outer arcs (dark steel blue)
+          drawArcPlate(ring, cx, cy, innerRadius, outerRadius, startA, endA, rc.bodyColor, rc.bodyAlpha, 6);
+
+          // 2. BRIGHT INNER EDGE — specular highlight on core-facing face
+          ring.lineStyle(rc.edgeWidth, rc.edgeColor, rc.edgeAlpha);
+          ring.arc(cx, cy, innerRadius, startA, endA);
+          // Move pen to avoid connecting line to next segment
+          const nextStart = endA + gapAngle;
+          if (s < rc.numSegs - 1) {
+            ring.moveTo(cx + Math.cos(nextStart) * innerRadius, cy + Math.sin(nextStart) * innerRadius);
+          }
+
+          // 3. FAINT OUTER EDGE — very dim line on shadow side
+          ring.lineStyle(1, rc.edgeColor, rc.edgeAlpha * 0.2);
+          ring.arc(cx, cy, outerRadius, startA, endA);
+          if (s < rc.numSegs - 1) {
+            ring.moveTo(cx + Math.cos(nextStart) * outerRadius, cy + Math.sin(nextStart) * outerRadius);
+          }
+
+          // 4. SURFACE DETAIL — thin circumferential line through the middle of the plate (for wider rings only)
+          if (outerRadius - innerRadius > 15) {
+            const midRadius = (innerRadius + outerRadius) / 2;
+            ring.lineStyle(1, rc.edgeColor, rc.edgeAlpha * 0.15);
+            ring.arc(cx, cy, midRadius, startA + gapAngle * 0.5, endA - gapAngle * 0.5);
+            if (s < rc.numSegs - 1) {
+              ring.moveTo(cx + Math.cos(nextStart) * midRadius, cy + Math.sin(nextStart) * midRadius);
+            }
+          }
+
+          // Reset lineStyle for next segment's fill
+          ring.lineStyle(0);
         }
-        ring.endFill();
 
-        // Add glowing nodes (4 per ring)
-        const nodeCount = 4 + Math.floor(Math.random() * 3);
-        for (let n = 0; n < nodeCount; n++) {
-          const nodeAngle = (n / nodeCount) * Math.PI * 2 + Math.random() * 0.3;
-          const nx = cx + Math.cos(nodeAngle) * radius;
-          const ny = cy + Math.sin(nodeAngle) * radius;
-          ring.beginFill(0x88ddff, 0.8);
-          ring.drawCircle(nx, ny, 4);
+        // GLOWING NODES on some segments (every 3rd-4th segment)
+        for (let n = 0; n < rc.numSegs; n += 3 + Math.floor(Math.random() * 2)) {
+          const nodeAngle = n * segAngle + plateAngle * 0.5;
+          const nodeR = innerRadius + 2; // Just inside the inner edge
+          ring.beginFill(0xffffff, 0.7);
+          ring.drawCircle(cx + Math.cos(nodeAngle) * nodeR, cy + Math.sin(nodeAngle) * nodeR, 2.5);
           ring.endFill();
-          ring.beginFill(0xffffff, 0.6);
-          ring.drawCircle(nx, ny, 2);
+          ring.beginFill(rc.edgeColor, 0.5);
+          ring.drawCircle(cx + Math.cos(nodeAngle) * nodeR, cy + Math.sin(nodeAngle) * nodeR, 4);
           ring.endFill();
         }
 
         ring.blendMode = PIXI.BLEND_MODES.ADD;
-        ring.alpha = 0;
         ring.pivot.set(cx, cy);
         ring.position.set(cx, cy);
+        ring.alpha = 0;
         stage.addChild(ring);
-        blockRings.push({ graphic: ring, dir: cfg.dir, speed: cfg.speed });
+        blockRings.push({ graphic: ring, dir: rc.direction, speed: rc.speed });
       });
+
+      // THIN ACCENT RINGS — single bright lines between main bands (no fill)
+      const accentRings = new PIXI.Graphics();
+      const accentRadii = [
+        { r: 0.345, color: 0x00d4ff, alpha: 0.2, width: 1 },
+        { r: 0.295, color: 0x00aacc, alpha: 0.15, width: 1 },
+        { r: 0.255, color: 0x00d4ff, alpha: 0.2, width: 1 },
+        { r: 0.188, color: 0x44ccff, alpha: 0.2, width: 1 },
+      ];
+      accentRadii.forEach((ar) => {
+        accentRings.lineStyle(ar.width, ar.color, ar.alpha);
+        accentRings.drawCircle(cx, cy, minDim * ar.r);
+      });
+      accentRings.blendMode = PIXI.BLEND_MODES.ADD;
+      accentRings.alpha = 0;
+      stage.addChild(accentRings);
 
       // =========================================================
       // LAYER 5: CORE (5-layer blown-out radiant source)
@@ -538,6 +598,8 @@ class FirewallSequence {
         timeline.to(r.graphic, { alpha: 1, duration: 0.3, ease: 'power2.out' }, 0.1 + i * 0.02);
       });
 
+      timeline.to(accentRings, { alpha: 0.6, duration: 0.35, ease: 'power2.out' }, 0.15);
+
       coreLayers.forEach((c, i) => {
         timeline.to(c, { alpha: 0.6 + i * 0.08, duration: 0.25, ease: 'power2.in' }, 0.1 + i * 0.03);
       });
@@ -614,6 +676,8 @@ class FirewallSequence {
       blockRings.forEach((r) => {
         timeline.to(r.graphic, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 2.0);
       });
+
+      timeline.to(accentRings, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 2.0);
 
       coreLayers.forEach((c) => {
         timeline.to(c, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 2.0);

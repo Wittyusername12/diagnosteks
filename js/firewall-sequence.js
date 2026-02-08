@@ -791,7 +791,339 @@ class FirewallSequence {
    * Stub - Scan Sweep transition (not yet implemented)
    */
   _buildScanSweep(timeline) {
-    this._buildPlaceholder('scan_sweep', timeline);
+    // === DOM CONTAINER ===
+    const container = document.createElement('div');
+    container.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:2;';
+    this.content.appendChild(container);
+
+    const label = document.createElement('div');
+    label.className = 'im-transition-fui-label';
+    label.style.cssText = 'bottom:30px;left:50%;transform:translateX(-50%);top:auto;';
+    label.textContent = '◇ SCAN SWEEP ◇';
+    container.appendChild(label);
+
+    // === PIXIJS EFFECTS ===
+    const app = window.pixiEffectManager.getApp();
+    const stage = window.pixiEffectManager.getStage();
+
+    if (app && stage) {
+      const w = app.screen.width;
+      const h = app.screen.height;
+
+      // =========================================================
+      // TWO-CONTAINER ARCHITECTURE: Background (NORMAL) vs Beam (ADD + bloom)
+      // =========================================================
+      const backgroundContainer = new PIXI.Container();
+      const beamContainer = new PIXI.Container();
+      stage.addChild(backgroundContainer);
+      stage.addChild(beamContainer);
+
+      // =========================================================
+      // LAYER 1: HEXAGONAL GRID BACKGROUND (NORMAL blend)
+      // =========================================================
+      const hexGrid = new PIXI.Graphics();
+      const hexRadius = 30;
+      const hexW = hexRadius * Math.sqrt(3);
+      const hexH = hexRadius * 2;
+      hexGrid.lineStyle(1, 0x0a2a3a, 0.06);
+
+      for (let row = -2; row < Math.ceil(h / (hexH * 0.75)) + 2; row++) {
+        for (let col = -2; col < Math.ceil(w / hexW) + 2; col++) {
+          const offsetX = (row % 2) * (hexW / 2);
+          const gx = col * hexW + offsetX;
+          const gy = row * hexH * 0.75;
+          const points = [];
+          for (let v = 0; v < 6; v++) {
+            points.push(gx + hexRadius * Math.cos(Math.PI / 3 * v + Math.PI / 6));
+            points.push(gy + hexRadius * Math.sin(Math.PI / 3 * v + Math.PI / 6));
+          }
+          hexGrid.drawPolygon(points);
+        }
+      }
+      hexGrid.alpha = 0;
+      backgroundContainer.addChild(hexGrid);
+
+      // =========================================================
+      // LAYER 2: HUD DATA PANELS (left and right edges, NORMAL blend)
+      // =========================================================
+      const hudPanels = new PIXI.Graphics();
+
+      // Left side panels (8-10 panels)
+      for (let p = 0; p < 9; p++) {
+        const panelX = 15 + Math.random() * 100;
+        const panelY = h * 0.08 + (p / 9) * h * 0.8 + Math.random() * 30;
+        const panelW = 40 + Math.random() * 80;
+        const panelH = 15 + Math.random() * 35;
+
+        hudPanels.lineStyle(1, 0x00d4ff, 0.12 + Math.random() * 0.08);
+        hudPanels.drawRect(panelX, panelY, panelW, panelH);
+
+        // Internal bar lines for some panels
+        if (Math.random() > 0.5) {
+          const barCount = 2 + Math.floor(Math.random() * 4);
+          for (let b = 0; b < barCount; b++) {
+            const barY = panelY + 4 + (b / barCount) * (panelH - 8);
+            const barW = panelW * (0.3 + Math.random() * 0.6);
+            hudPanels.lineStyle(1, 0x00d4ff, 0.08);
+            hudPanels.moveTo(panelX + 3, barY);
+            hudPanels.lineTo(panelX + 3 + barW, barY);
+          }
+        }
+      }
+
+      // Right side panels (4-6 panels)
+      for (let p = 0; p < 5; p++) {
+        const panelX = w - 150 + Math.random() * 100;
+        const panelY = h * 0.15 + (p / 5) * h * 0.7 + Math.random() * 40;
+        const panelW = 30 + Math.random() * 60;
+        const panelH = 12 + Math.random() * 25;
+
+        hudPanels.lineStyle(1, 0x00d4ff, 0.1 + Math.random() * 0.08);
+        hudPanels.drawRect(panelX, panelY, panelW, panelH);
+      }
+
+      hudPanels.alpha = 0;
+      backgroundContainer.addChild(hudPanels);
+
+      // =========================================================
+      // LAYER 3: CIRCULAR RADAR ELEMENT (upper-left, NORMAL blend)
+      // =========================================================
+      const radar = new PIXI.Graphics();
+      const radarX = 100 + Math.random() * 60;
+      const radarY = 100 + Math.random() * 60;
+
+      // Concentric circles
+      radar.lineStyle(1, 0x00d4ff, 0.12);
+      radar.drawCircle(radarX, radarY, 40);
+      radar.drawCircle(radarX, radarY, 60);
+      radar.drawCircle(radarX, radarY, 80);
+
+      // Crosshair
+      radar.lineStyle(1, 0x00d4ff, 0.1);
+      radar.moveTo(radarX - 85, radarY);
+      radar.lineTo(radarX + 85, radarY);
+      radar.moveTo(radarX, radarY - 85);
+      radar.lineTo(radarX, radarY + 85);
+
+      // Center dot
+      radar.beginFill(0x00d4ff, 0.3);
+      radar.drawCircle(radarX, radarY, 4);
+      radar.endFill();
+
+      radar.alpha = 0;
+      backgroundContainer.addChild(radar);
+
+      // =========================================================
+      // LAYER 4: HORIZONTAL INTERFERENCE LINES (subtle, NORMAL blend)
+      // =========================================================
+      const interferenceLines = new PIXI.Graphics();
+      for (let i = 0; i < 5; i++) {
+        const lineY = Math.random() * h;
+        interferenceLines.beginFill(0x00d4ff, 0.03 + Math.random() * 0.03);
+        interferenceLines.drawRect(0, lineY, w, 1);
+        interferenceLines.endFill();
+      }
+      interferenceLines.alpha = 0;
+      backgroundContainer.addChild(interferenceLines);
+
+      // =========================================================
+      // LAYER 5: AFTERGLOW TRAIL (grows as beam sweeps, ADD blend)
+      // =========================================================
+      const afterglow = new PIXI.Graphics();
+      afterglow.beginFill(0x002233, 0.08);
+      afterglow.drawRect(0, 0, w, h);
+      afterglow.endFill();
+      afterglow.blendMode = PIXI.BLEND_MODES.ADD;
+      afterglow.alpha = 0;
+      afterglow.scale.y = 0; // Start with no height
+      beamContainer.addChild(afterglow);
+
+      // =========================================================
+      // LAYER 6: THE SCAN BEAM (sweeps top to bottom)
+      // =========================================================
+      const beamGroup = new PIXI.Container();
+
+      // Secondary glow (wide, soft)
+      const secondaryGlow = new PIXI.Graphics();
+      secondaryGlow.beginFill(0x003355, 0.06);
+      secondaryGlow.drawRect(0, -40, w, 80);
+      secondaryGlow.endFill();
+      secondaryGlow.blendMode = PIXI.BLEND_MODES.ADD;
+      beamGroup.addChild(secondaryGlow);
+
+      // Main glow band (medium)
+      const glowBand = new PIXI.Graphics();
+      glowBand.beginFill(0x00d4ff, 0.15);
+      glowBand.drawRect(0, -20, w, 40);
+      glowBand.endFill();
+      glowBand.blendMode = PIXI.BLEND_MODES.ADD;
+      beamGroup.addChild(glowBand);
+
+      // Core line (white-hot, 3px)
+      const coreLine = new PIXI.Graphics();
+      coreLine.beginFill(0xffffff, 0.95);
+      coreLine.drawRect(0, -1.5, w, 3);
+      coreLine.endFill();
+      coreLine.blendMode = PIXI.BLEND_MODES.ADD;
+      beamGroup.addChild(coreLine);
+
+      // Lens flare hotspot (slightly left of center)
+      const flareX = w * 0.35;
+      const outerFlare = new PIXI.Graphics();
+      outerFlare.beginFill(0x00d4ff, 0.3);
+      outerFlare.drawCircle(flareX, 0, 60);
+      outerFlare.endFill();
+      outerFlare.blendMode = PIXI.BLEND_MODES.ADD;
+      beamGroup.addChild(outerFlare);
+
+      const innerFlare = new PIXI.Graphics();
+      innerFlare.beginFill(0xffffff, 0.8);
+      innerFlare.drawCircle(flareX, 0, 25);
+      innerFlare.endFill();
+      innerFlare.blendMode = PIXI.BLEND_MODES.ADD;
+      beamGroup.addChild(innerFlare);
+
+      // Edge flares (2-3 small bright spots)
+      for (let ef = 0; ef < 3; ef++) {
+        const edgeFlare = new PIXI.Graphics();
+        const efX = w * (0.1 + Math.random() * 0.8);
+        edgeFlare.beginFill(0x88ddff, 0.4);
+        edgeFlare.drawCircle(efX, 0, 8 + Math.random() * 4);
+        edgeFlare.endFill();
+        edgeFlare.blendMode = PIXI.BLEND_MODES.ADD;
+        beamGroup.addChild(edgeFlare);
+      }
+
+      beamGroup.y = -50; // Start above screen
+      beamGroup.alpha = 0;
+      beamContainer.addChild(beamGroup);
+
+      // =========================================================
+      // LAYER 7: DRIP PARTICLES (digital rain falling from beam)
+      // =========================================================
+      const dripParticles = [];
+      const numDrips = 50;
+
+      for (let d = 0; d < numDrips; d++) {
+        const drip = new PIXI.Graphics();
+        const dripW = 1 + Math.random();
+        const dripH = 10 + Math.random() * 20;
+        const dripAlpha = 0.3 + Math.random() * 0.3;
+
+        drip.beginFill(0x00d4ff, dripAlpha);
+        drip.drawRect(-dripW / 2, 0, dripW, dripH);
+        drip.endFill();
+        drip.blendMode = PIXI.BLEND_MODES.ADD;
+
+        drip.x = Math.random() * w;
+        drip.y = -50; // Start off-screen
+        drip.alpha = 0;
+        beamContainer.addChild(drip);
+
+        dripParticles.push({
+          graphic: drip,
+          fallDistance: 80 + Math.random() * 120,
+          fallDuration: 0.4 + Math.random() * 0.4,
+          startDelay: d / numDrips * 1.4 // Staggered across sweep duration
+        });
+      }
+
+      // =========================================================
+      // LAYER 8: FILTERS
+      // =========================================================
+      const bloomFilter = new PIXI.filters.AdvancedBloomFilter({
+        threshold: 0.4,
+        bloomScale: 1.8,
+        brightness: 1.2,
+        blur: 6,
+        quality: 4
+      });
+      beamContainer.filters = [bloomFilter];
+
+      const rgbFilter = new PIXI.filters.RGBSplitFilter([0, 0], [0, 0], [0, 0]);
+      stage.filters = [rgbFilter];
+
+      // =========================================================
+      // GSAP TIMELINE ANIMATIONS
+      // =========================================================
+
+      // --- 0.0s - 0.3s: FADE IN BACKGROUND ---
+      timeline.to(hexGrid, { alpha: 0.5, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(hudPanels, { alpha: 0.7, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(radar, { alpha: 0.6, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(interferenceLines, { alpha: 0.5, duration: 0.3, ease: 'power2.out' }, 0);
+
+      // --- 0.0s - 0.2s: FADE IN BEAM ---
+      timeline.to(beamGroup, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0);
+
+      // --- 0.1s - 1.6s: BEAM SWEEP (top to bottom) ---
+      timeline.to(beamGroup, {
+        y: h + 50,
+        duration: 1.5,
+        ease: 'none',
+        onUpdate: function() {
+          // Sync afterglow height with beam position
+          const progress = (beamGroup.y + 50) / (h + 100);
+          afterglow.scale.y = Math.max(0, progress);
+          afterglow.alpha = 0.5;
+        }
+      }, 0.1);
+
+      // --- 0.1s - 1.5s: DRIP PARTICLES (staggered activation) ---
+      dripParticles.forEach((dp) => {
+        const activationTime = 0.1 + dp.startDelay;
+
+        timeline.to(dp.graphic, {
+          alpha: 0.6,
+          duration: 0.05
+        }, activationTime);
+
+        // Set initial y position based on beam position at activation time
+        timeline.call(() => {
+          const beamProgress = dp.startDelay / 1.4;
+          dp.graphic.y = -50 + beamProgress * (h + 100);
+        }, null, activationTime);
+
+        // Fall downward
+        timeline.to(dp.graphic, {
+          y: '+=' + dp.fallDistance,
+          duration: dp.fallDuration,
+          ease: 'power2.out'
+        }, activationTime);
+
+        // Fade out while falling
+        timeline.to(dp.graphic, {
+          alpha: 0,
+          duration: dp.fallDuration * 0.8
+        }, activationTime + dp.fallDuration * 0.2);
+      });
+
+      // --- 0.3s - 1.0s: BLOOM BUILDS ---
+      timeline.to(bloomFilter, { bloomScale: 2.5, duration: 0.7, ease: 'power2.out' }, 0.3);
+
+      // --- 1.0s - 1.5s: PEAK BLOOM ---
+      timeline.to(bloomFilter, { bloomScale: 3.0, duration: 0.5, ease: 'power2.inOut' }, 1.0);
+
+      // --- 1.5s: RGB SPLIT FLASH ---
+      timeline.to(rgbFilter.red, { 0: -2, duration: 0.05, ease: 'power2.out' }, 1.5);
+      timeline.to(rgbFilter.blue, { 0: 2, duration: 0.05, ease: 'power2.out' }, 1.5);
+      timeline.to(rgbFilter.red, { 0: 0, duration: 0.1, ease: 'power2.out' }, 1.55);
+      timeline.to(rgbFilter.blue, { 0: 0, duration: 0.1, ease: 'power2.out' }, 1.55);
+
+      // --- 1.6s - 2.0s: FADE OUT ---
+      timeline.to(hexGrid, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+      timeline.to(hudPanels, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+      timeline.to(radar, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+      timeline.to(interferenceLines, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+      timeline.to(afterglow, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+      timeline.to(beamGroup, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.6);
+      timeline.to(bloomFilter, { bloomScale: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+    }
+
+    // === DOM ANIMATIONS ===
+    gsap.set(label, { opacity: 0 });
+    timeline.to(label, { opacity: 0.7, duration: 0.3, ease: 'power2.out' }, 0.3);
+    timeline.to(label, { opacity: 0, duration: 0.3, ease: 'power2.in' }, 1.6);
   }
 
   /**

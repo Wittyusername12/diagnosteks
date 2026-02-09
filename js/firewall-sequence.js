@@ -804,6 +804,9 @@ class FirewallSequence {
       // Add refinement layer (noise grain, dark band population, UI fragments, brighter radar)
       this._addGlitchBurstRefinement(glitchContainer, w, h);
 
+      // Add color depth layer (full saturation range, muddy blocks, dark maroons, white accents)
+      this._addGlitchBurstColorDepth(glitchContainer, w, h);
+
       // Sub-container for noise bands (redrawn on ticker)
       const noiseBandGfx = new PIXI.Graphics();
       glitchContainer.addChild(noiseBandGfx);
@@ -1672,6 +1675,274 @@ class FirewallSequence {
     arrowGfx.endFill();
 
     glitchContainer.addChild(arrowGfx);
+  }
+
+  _addGlitchBurstColorDepth(glitchContainer, w, h) {
+    // =============================================================
+    // COLOR DEPTH LAYER — addresses saturation uniformity problem
+    // Current: all blocks at 70-90% saturation (uniform neon)
+    // Target: full range from 10% (olive) to 100% (magenta)
+    // Strategy: add desaturated blocks + MULTIPLY overlay + dark tints
+    // All drawn ONCE, static. Per ChatGPT PixiJS report guidance.
+    // =============================================================
+
+    // =============================================
+    // LAYER 1: MULTIPLY BLEND OVERLAY
+    // A separate Graphics with MULTIPLY blend mode
+    // Per PixiJS v7 docs: "use a separate Graphics object"
+    // for blend modes, since they apply per-primitive.
+    // Semi-transparent colored patches DARKEN existing neon
+    // blocks underneath, creating desaturation effect.
+    // =============================================
+    var desatOverlay = new PIXI.Graphics();
+    desatOverlay.blendMode = PIXI.BLEND_MODES.MULTIPLY;
+
+    // 30 large patches that tone down neon areas
+    for (var doi = 0; doi < 30; doi++) {
+        var doX = Math.random() * w;
+        var doY = Math.random() * h;
+        var doW = 40 + Math.random() * 120;
+        var doH = 8 + Math.random() * 30;
+
+        // Desaturation tint colors — muted warm/cool grays
+        var desatColors = [
+            0x998888, 0x889988, 0x888899,
+            0x887766, 0x667788, 0x776688,
+            0xaa9988, 0x8899aa, 0x99aa88,
+            0x776655, 0x557766, 0x665577
+        ];
+        var doColor = desatColors[Math.floor(Math.random() * desatColors.length)];
+        desatOverlay.beginFill(doColor, 0.30 + Math.random() * 0.40);
+        desatOverlay.drawRect(doX, doY, doW, doH);
+        desatOverlay.endFill();
+    }
+
+    glitchContainer.addChild(desatOverlay);
+
+    // =============================================
+    // LAYER 2: DESATURATED / MUDDY BLOCKS (120 blocks)
+    // The exact hex values from the analysis.
+    // These are the "connective tissue" — 25-30% of
+    // the composition should be these mid-tones.
+    // Three tiers: low-sat, mid-sat, near-gray
+    // =============================================
+    var colorDepthGfx = new PIXI.Graphics();
+
+    // TIER 1: Olive / Sage / Muddy green (replace excess neon green)
+    var oliveColors = [0x556633, 0x667744, 0x445522, 0x778844, 0x669944, 0x557733, 0x3a4a22, 0x4a5a33];
+
+    // TIER 2: Dusty rose / Mauve / Soft warm
+    var roseColors = [0x995566, 0x886655, 0xaa7777, 0x775577, 0x886688, 0x664466, 0x9a8070, 0xaa8888];
+
+    // TIER 3: Burnt sienna / Brown / Warm earth
+    var earthColors = [0x884422, 0x775533, 0x996644, 0x663322, 0x774433, 0x885533, 0x6a4422, 0x8a6644];
+
+    // TIER 4: Slate blue / Steel / Cool desaturated
+    var slateColors = [0x445566, 0x556677, 0x334455, 0x667788, 0x4a5a6a, 0x5a6a7a, 0x3a4a5a, 0x6a7a8a];
+
+    // TIER 5: Warm gray / Cool gray
+    var grayColors = [0x554444, 0x665555, 0x443333, 0x444455, 0x555566, 0x333344, 0x504040, 0x405050];
+
+    // TIER 6: Muted teal / Dark teal
+    var tealColors = [0x336666, 0x558888, 0x224433, 0x335544, 0x223344, 0x446666, 0x2a4a4a, 0x4a6a6a];
+
+    var allMuddy = oliveColors.concat(roseColors, earthColors, slateColors, grayColors, tealColors);
+
+    for (var mci = 0; mci < 120; mci++) {
+        var mcX = Math.random() * w;
+        var mcY = Math.random() * h;
+        var mcColor = allMuddy[Math.floor(Math.random() * allMuddy.length)];
+
+        // Vary block sizes dramatically
+        var sizeRoll = Math.random();
+        var mcW, mcH;
+        if (sizeRoll < 0.3) {
+            // Small 3-8px
+            mcW = 3 + Math.random() * 5;
+            mcH = 3 + Math.random() * 5;
+        } else if (sizeRoll < 0.7) {
+            // Medium 10-25px
+            mcW = 10 + Math.random() * 15;
+            mcH = 4 + Math.random() * 12;
+        } else {
+            // Large 25-50px
+            mcW = 25 + Math.random() * 25;
+            mcH = 5 + Math.random() * 18;
+        }
+
+        var mcAlpha = 0.30 + Math.random() * 0.55;
+        colorDepthGfx.beginFill(mcColor, mcAlpha);
+        colorDepthGfx.drawRect(mcX, mcY, mcW, mcH);
+        colorDepthGfx.endFill();
+    }
+
+    // =============================================
+    // LAYER 3: DARK-BUT-COLORED BLOCKS (40 blocks)
+    // Very dark versions of each hue — NOT black.
+    // Tint the "void" zones with warm/cool/green/red/purple.
+    // These are FELT more than seen — 5-15% brightness.
+    // =============================================
+    var darkColoredBlocks = [
+        0x1a0808, 0x220a0a, 0x180808,  // Dark warm red
+        0x08081a, 0x0a0a22, 0x081018,  // Dark cool blue
+        0x081808, 0x0a220a, 0x0a1a0a,  // Dark green
+        0x180808, 0x220808, 0x1a0a0a,  // Dark red
+        0x100818, 0x180a22, 0x120a1a,  // Dark purple
+        0x181808, 0x1a1a08, 0x141408,  // Dark yellow/olive
+        0x081818, 0x0a1a1a, 0x081414   // Dark teal
+    ];
+
+    for (var dci = 0; dci < 40; dci++) {
+        var dcX = Math.random() * w;
+        var dcY = Math.random() * h;
+        var dcW = 15 + Math.random() * 80;
+        var dcH = 8 + Math.random() * 30;
+        var dcColor = darkColoredBlocks[Math.floor(Math.random() * darkColoredBlocks.length)];
+        colorDepthGfx.beginFill(dcColor, 0.50 + Math.random() * 0.45);
+        colorDepthGfx.drawRect(dcX, dcY, dcW, dcH);
+        colorDepthGfx.endFill();
+    }
+
+    // =============================================
+    // LAYER 4: DARK MAROON / DEEP RED BLOCKS (35 blocks)
+    // Expand the red range DOWNWARD into dark territory
+    // The reference has dark maroon that creates a 2-tier
+    // red system: dark background + bright foreground
+    // =============================================
+    var maroonColors = [
+        0x440011, 0x550016, 0x660022,
+        0x330011, 0x440016, 0x550022,
+        0x770033, 0x880044, 0x660033,
+        0x2a0011, 0x3a0016, 0x4a0022
+    ];
+
+    for (var mri = 0; mri < 35; mri++) {
+        var mrX = Math.random() * w;
+        var mrY = Math.random() * h;
+        var mrW = 8 + Math.random() * 35;
+        var mrH = 4 + Math.random() * 15;
+        var mrColor = maroonColors[Math.floor(Math.random() * maroonColors.length)];
+        colorDepthGfx.beginFill(mrColor, 0.40 + Math.random() * 0.50);
+        colorDepthGfx.drawRect(mrX, mrY, mrW, mrH);
+        colorDepthGfx.endFill();
+    }
+
+    // =============================================
+    // LAYER 5: WHITE / NEAR-WHITE ACCENTS (25 blocks)
+    // Scattered sparkle throughout the composition
+    // Mix of cool white (#DDEEFF) and warm white (#FFEEDD)
+    // Creates dynamic range contrast against mid-tones
+    // =============================================
+    var whiteVariants = [
+        0xffffff, 0xffeedd, 0xddeeff, 0xffddcc, 0xccddff,
+        0xeeeedd, 0xddeeee, 0xfff0e0, 0xe0f0ff, 0xf0f0f0
+    ];
+
+    for (var whi = 0; whi < 25; whi++) {
+        var whX = Math.random() * w;
+        var whY = Math.random() * h;
+        var whColor = whiteVariants[Math.floor(Math.random() * whiteVariants.length)];
+
+        if (Math.random() < 0.4) {
+            // Tiny hot pixel 1-3px
+            colorDepthGfx.beginFill(whColor, 0.30 + Math.random() * 0.50);
+            colorDepthGfx.drawRect(whX, whY, 1 + Math.random() * 2, 1 + Math.random() * 2);
+            colorDepthGfx.endFill();
+        } else {
+            // Small bright block 5-15px
+            var whW = 5 + Math.random() * 10;
+            var whH = 2 + Math.random() * 5;
+            colorDepthGfx.beginFill(whColor, 0.20 + Math.random() * 0.40);
+            colorDepthGfx.drawRect(whX, whY, whW, whH);
+            colorDepthGfx.endFill();
+        }
+    }
+
+    // =============================================
+    // LAYER 6: ELECTRIC BLUE BLOCKS (12 blocks)
+    // Standalone blue presence — distinct from teal/cyan
+    // Analysis: "Image 1 underuses standalone blue"
+    // =============================================
+    var blueColors = [0x2244ff, 0x3355ee, 0x2233dd, 0x4466ff, 0x1133cc, 0x3344ee];
+
+    for (var bli = 0; bli < 12; bli++) {
+        var blX = Math.random() * w;
+        var blY = Math.random() * h;
+        var blW = 6 + Math.random() * 20;
+        var blH = 3 + Math.random() * 10;
+        var blColor = blueColors[Math.floor(Math.random() * blueColors.length)];
+        colorDepthGfx.beginFill(blColor, 0.30 + Math.random() * 0.45);
+        colorDepthGfx.drawRect(blX, blY, blW, blH);
+        colorDepthGfx.endFill();
+    }
+
+    // =============================================
+    // LAYER 7: NAVY-TINTED DARK ZONE WASHES
+    // Full-width very low alpha navy/warm overlays
+    // These tint entire horizontal zones so NO dark band
+    // is perfectly neutral black
+    // =============================================
+
+    // Warm dark washes
+    for (var wdi = 0; wdi < 6; wdi++) {
+        var wdY = Math.random() * h;
+        var wdH = 20 + Math.random() * 50;
+        colorDepthGfx.beginFill(0x110808, 0.08 + Math.random() * 0.10);
+        colorDepthGfx.drawRect(0, wdY, w, wdH);
+        colorDepthGfx.endFill();
+    }
+
+    // Cool dark washes
+    for (var cdi = 0; cdi < 6; cdi++) {
+        var cdY = Math.random() * h;
+        var cdH = 20 + Math.random() * 50;
+        colorDepthGfx.beginFill(0x080811, 0.08 + Math.random() * 0.10);
+        colorDepthGfx.drawRect(0, cdY, w, cdH);
+        colorDepthGfx.endFill();
+    }
+
+    // Navy-tinted washes
+    for (var ndi = 0; ndi < 4; ndi++) {
+        var ndY = Math.random() * h;
+        var ndH = 25 + Math.random() * 40;
+        colorDepthGfx.beginFill(0x0a1530, 0.10 + Math.random() * 0.12);
+        colorDepthGfx.drawRect(0, ndY, w, ndH);
+        colorDepthGfx.endFill();
+    }
+
+    glitchContainer.addChild(colorDepthGfx);
+
+    // =============================================
+    // LAYER 8: SECONDARY RING DISPLAY (lower-left)
+    // The reference has a second ring in red/maroon tones
+    // Smaller than the primary, partially visible
+    // =============================================
+    var ring2Gfx = new PIXI.Graphics();
+    var r2CX = w * 0.12;
+    var r2CY = h * 0.78;
+    var r2R = Math.min(w, h) * 0.06;
+
+    // Main ring — dark red/maroon
+    ring2Gfx.lineStyle(2, 0x881122, 0.35);
+    ring2Gfx.arc(r2CX, r2CY, r2R, 0.3, Math.PI * 1.6);
+
+    // Inner ring
+    ring2Gfx.moveTo(r2CX + r2R * 0.6, r2CY);
+    ring2Gfx.lineStyle(1.5, 0x661122, 0.25);
+    ring2Gfx.arc(r2CX, r2CY, r2R * 0.6, 0, Math.PI * 1.3);
+
+    // Center dot
+    ring2Gfx.lineStyle(0);
+    ring2Gfx.beginFill(0xcc2233, 0.40);
+    ring2Gfx.drawCircle(r2CX, r2CY, 2.5);
+    ring2Gfx.endFill();
+
+    // Faint glow behind
+    ring2Gfx.beginFill(0x220808, 0.20);
+    ring2Gfx.drawCircle(r2CX, r2CY, r2R * 1.3);
+    ring2Gfx.endFill();
+
+    glitchContainer.addChild(ring2Gfx);
   }
 
   /**

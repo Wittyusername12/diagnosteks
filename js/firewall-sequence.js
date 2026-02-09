@@ -927,12 +927,12 @@ class FirewallSequence {
       glitchContainer.addChild(centerText);
 
       // =========================================================
-      // NOISE BAND COLORS — the multicolor chaos
+      // NOISE BAND COLORS — mixed neon + desaturated per reference
       // =========================================================
       const bandColors = [
-        0x00d4ff, 0xff00ff, 0xff0044, 0xff6b00, 0x00ff88,
-        0xffff00, 0x8800ff, 0x00ffcc, 0xff3388, 0x44aaff,
-        0xcc00ff, 0xff8800, 0x00ddaa, 0xff0088, 0x6600ff
+        0x00d4ff, 0xff00ff, 0xff0044, 0xff6b00, 0x556633,
+        0x995566, 0x8800ff, 0x445566, 0xff3388, 0x44aaff,
+        0x884422, 0xff8800, 0x336666, 0xff0088, 0x775533
       ];
 
       // =========================================================
@@ -1120,14 +1120,14 @@ class FirewallSequence {
 
     var denseBg = new PIXI.Graphics();
 
-    // COLOR PALETTE — full spectrum chaos per reference image
+    // COLOR PALETTE — mixed neon + desaturated per reference (50/50)
     var colors = [
-        0xff0044, 0xff00ff, 0x00d4ff, 0xff6b00, 0x00ff88,
-        0xffff00, 0x8800ff, 0x00ffcc, 0xff3388, 0x44aaff,
-        0xcc00ff, 0xff8800, 0x00ddaa, 0xff0088, 0x6600ff,
-        0x44ff00, 0xff4444, 0x0088ff, 0xff00aa, 0xaaff00,
-        0xdd00ff, 0x00ffff, 0xff6600, 0x88ff44, 0xff0000,
-        0x0000ff, 0x00ff00, 0xff00cc, 0xccff00, 0x0044ff
+        0xff0044, 0xff00ff, 0x00d4ff, 0xff6b00, 0x556633,
+        0x995566, 0x8800ff, 0x445566, 0xff3388, 0x44aaff,
+        0x884422, 0xff8800, 0x336666, 0xff0088, 0x775533,
+        0x667744, 0xff4444, 0x0088ff, 0x886688, 0x554444,
+        0x440011, 0x00ffff, 0xff6600, 0x4a5a6a, 0x660022,
+        0x2244ff, 0x225522, 0xff00cc, 0x443333, 0x0a1530
     ];
 
     // =============================================

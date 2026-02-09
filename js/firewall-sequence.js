@@ -1155,6 +1155,27 @@ class FirewallSequence {
       interferenceLines.alpha = 0;
       backgroundContainer.addChild(interferenceLines);
 
+      // === TEMPORARY DIAGNOSTIC ===
+      console.log('=== SCAN SWEEP BACKGROUND DIAGNOSTIC ===');
+      console.log('backgroundContainer children:', backgroundContainer.children.length);
+      backgroundContainer.children.forEach(function(child, i) {
+          if (child.geometry) {
+              console.log('Child ' + i + ':', {
+                  type: child.constructor.name,
+                  alpha: child.alpha,
+                  visible: child.visible,
+                  blendMode: child.blendMode,
+                  fillCount: child.geometry.graphicsData ? child.geometry.graphicsData.filter(function(d) { return d.fillStyle && d.fillStyle.alpha > 0; }).length : 'N/A',
+                  strokeCount: child.geometry.graphicsData ? child.geometry.graphicsData.filter(function(d) { return d.lineStyle && d.lineStyle.width > 0; }).length : 'N/A'
+              });
+          }
+      });
+      console.log('backgroundContainer alpha:', backgroundContainer.alpha);
+      console.log('backgroundContainer visible:', backgroundContainer.visible);
+      console.log('backgroundContainer blendMode:', backgroundContainer.blendMode);
+      console.log('backgroundContainer filters:', backgroundContainer.filters);
+      console.log('=== END DIAGNOSTIC ===');
+
       // =========================================================
       // LAYER 8: DORMANT BEAM (full width, low intensity, FIXED Y)
       // =========================================================

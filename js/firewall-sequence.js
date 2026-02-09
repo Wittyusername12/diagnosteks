@@ -853,22 +853,34 @@ class FirewallSequence {
 
       // Helper: draw a horizontal rail with dark body + bright top edge
       const drawHRail = (rx, ry, rw) => {
-        structuralRails.beginFill(0x0c1a28, 0.9);
+        // FILLED dark body (visible steel-blue, not black)
+        structuralRails.beginFill(0x18303d, 0.92);
         structuralRails.drawRect(rx, ry, rw, 10);
         structuralRails.endFill();
-        structuralRails.lineStyle(1.5, 0x40a0c0, 0.6);
+        // Bright top edge (specular highlight)
+        structuralRails.lineStyle(2, 0x50b8d8, 0.7);
         structuralRails.moveTo(rx, ry);
         structuralRails.lineTo(rx + rw, ry);
+        // Dark bottom edge (shadow)
+        structuralRails.lineStyle(1, 0x000508, 0.4);
+        structuralRails.moveTo(rx, ry + 10);
+        structuralRails.lineTo(rx + rw, ry + 10);
       };
 
       // Helper: draw a vertical channel with dark body + bright left edge
       const drawVChannel = (cx, cy, ch) => {
-        structuralRails.beginFill(0x0c1a28, 0.9);
-        structuralRails.drawRect(cx, cy, 4, ch);
+        // FILLED dark body (visible steel-blue)
+        structuralRails.beginFill(0x18303d, 0.92);
+        structuralRails.drawRect(cx, cy, 6, ch);
         structuralRails.endFill();
-        structuralRails.lineStyle(1.5, 0x40a0c0, 0.5);
+        // Bright left edge (specular highlight)
+        structuralRails.lineStyle(2, 0x50b8d8, 0.65);
         structuralRails.moveTo(cx, cy);
         structuralRails.lineTo(cx, cy + ch);
+        // Dark right edge (shadow)
+        structuralRails.lineStyle(1, 0x000508, 0.4);
+        structuralRails.moveTo(cx + 6, cy);
+        structuralRails.lineTo(cx + 6, cy + ch);
       };
 
       // LEFT SIDE - 3 horizontal rails
@@ -890,15 +902,15 @@ class FirewallSequence {
       // RIGHT SIDE - 1 vertical channel
       drawVChannel(w * 0.78, beamY - h * 0.25, h * 0.35);
 
-      // Junction gussets at intersections (small filled circles)
-      structuralRails.beginFill(0x40a0c0, 0.4);
-      structuralRails.drawCircle(w * 0.15, topRailY, 3);
-      structuralRails.drawCircle(w * 0.15, midRailY, 3);
-      structuralRails.drawCircle(w * 0.15, bottomRailY, 3);
-      structuralRails.drawCircle(w * 0.30, topRailY, 3);
-      structuralRails.drawCircle(w * 0.30, midRailY, 3);
-      structuralRails.drawCircle(w * 0.78, beamY - h * 0.25, 3);
-      structuralRails.drawCircle(w * 0.78, beamY + h * 0.10, 3);
+      // Junction gussets at intersections (bright filled circles - bolted connections)
+      structuralRails.beginFill(0x60c8e8, 0.55);
+      structuralRails.drawCircle(w * 0.15, topRailY, 4);
+      structuralRails.drawCircle(w * 0.15, midRailY, 4);
+      structuralRails.drawCircle(w * 0.15, bottomRailY, 4);
+      structuralRails.drawCircle(w * 0.30, topRailY, 4);
+      structuralRails.drawCircle(w * 0.30, midRailY, 4);
+      structuralRails.drawCircle(w * 0.78, beamY - h * 0.25, 4);
+      structuralRails.drawCircle(w * 0.78, beamY + h * 0.10, 4);
       structuralRails.endFill();
 
       structuralRails.alpha = 0;
@@ -911,19 +923,24 @@ class FirewallSequence {
 
       // Helper: draw beveled panel with two-tone bevel trick
       const drawBeveledPanel = (px, py, pw, ph, edgeAlpha) => {
-        // Dark filled body
-        hudPanels.beginFill(0x0a1520, 0.85);
+        // FILLED dark body (visible steel-blue, opaque)
+        hudPanels.beginFill(0x14283a, 0.92);
         hudPanels.drawRect(px, py, pw, ph);
         hudPanels.endFill();
-        // Bright top edge (specular highlight)
-        hudPanels.lineStyle(1, 0x00d4ff, edgeAlpha);
+        // Bright top edge (specular highlight from overhead light)
+        hudPanels.lineStyle(1.5, 0x00d4ff, edgeAlpha + 0.15);
         hudPanels.moveTo(px, py);
         hudPanels.lineTo(px + pw, py);
-        // Bright left edge
+        // Bright left edge (secondary highlight)
+        hudPanels.lineStyle(1.5, 0x00d4ff, edgeAlpha + 0.08);
         hudPanels.moveTo(px, py);
         hudPanels.lineTo(px, py + ph);
-        // Subtle bottom shadow
-        hudPanels.lineStyle(1, 0x000508, 0.3);
+        // Dark right edge (shadow)
+        hudPanels.lineStyle(1, 0x000508, 0.4);
+        hudPanels.moveTo(px + pw, py);
+        hudPanels.lineTo(px + pw, py + ph);
+        // Dark bottom edge (shadow)
+        hudPanels.lineStyle(1, 0x000508, 0.4);
         hudPanels.moveTo(px, py + ph);
         hudPanels.lineTo(px + pw, py + ph);
       };
@@ -1012,19 +1029,33 @@ class FirewallSequence {
       const radarCY = beamY - h * 0.22;
       const radarR = Math.min(w, h) * 0.055;
 
-      // Rectangular bezel housing (dark fill + bright edges)
-      radar.beginFill(0x0c1825, 0.9);
-      radar.drawRect(radarCX - radarR - 10, radarCY - radarR - 10, radarR * 2 + 20, radarR * 2 + 20);
+      // Rectangular bezel housing (FILLED visible steel-blue + bright edges)
+      const bezelX = radarCX - radarR - 12;
+      const bezelY = radarCY - radarR - 12;
+      const bezelW = radarR * 2 + 24;
+      const bezelH = radarR * 2 + 24;
+      radar.beginFill(0x182838, 0.93);
+      radar.drawRect(bezelX, bezelY, bezelW, bezelH);
       radar.endFill();
-      radar.lineStyle(1, 0x306080, 0.4);
-      radar.moveTo(radarCX - radarR - 10, radarCY - radarR - 10);
-      radar.lineTo(radarCX + radarR + 10, radarCY - radarR - 10);
-      radar.moveTo(radarCX - radarR - 10, radarCY - radarR - 10);
-      radar.lineTo(radarCX - radarR - 10, radarCY + radarR + 10);
+      // Bright top edge
+      radar.lineStyle(1.5, 0x50a0c0, 0.55);
+      radar.moveTo(bezelX, bezelY);
+      radar.lineTo(bezelX + bezelW, bezelY);
+      // Bright left edge
+      radar.lineStyle(1.5, 0x50a0c0, 0.45);
+      radar.moveTo(bezelX, bezelY);
+      radar.lineTo(bezelX, bezelY + bezelH);
+      // Dark right edge
+      radar.lineStyle(1, 0x000508, 0.4);
+      radar.moveTo(bezelX + bezelW, bezelY);
+      radar.lineTo(bezelX + bezelW, bezelY + bezelH);
+      // Dark bottom edge
+      radar.moveTo(bezelX, bezelY + bezelH);
+      radar.lineTo(bezelX + bezelW, bezelY + bezelH);
 
-      // Screen area (emissive display fill)
-      radar.beginFill(0x081018, 0.95);
-      radar.drawRect(radarCX - radarR - 3, radarCY - radarR - 3, radarR * 2 + 6, radarR * 2 + 6);
+      // Screen area (emissive display fill - slightly brighter interior)
+      radar.beginFill(0x0c1822, 0.96);
+      radar.drawRect(radarCX - radarR - 4, radarCY - radarR - 4, radarR * 2 + 8, radarR * 2 + 8);
       radar.endFill();
 
       // Concentric rings
@@ -1059,18 +1090,22 @@ class FirewallSequence {
       const chevrons = new PIXI.Graphics();
 
       const drawChevron = (cx, cy, chevW, chevH) => {
-        // Dark body
-        chevrons.beginFill(0x0c1a28, 0.85);
+        // FILLED dark body (visible steel-blue, opaque)
+        chevrons.beginFill(0x18303d, 0.9);
         chevrons.drawPolygon([
           cx, cy,                      // left point (arrow tip)
           cx + chevW, cy - chevH / 2,  // top right
           cx + chevW, cy + chevH / 2   // bottom right
         ]);
         chevrons.endFill();
-        // Bright leading edge (top edge)
-        chevrons.lineStyle(1.5, 0x50a0c0, 0.6);
+        // Bright leading edge (top edge - specular highlight)
+        chevrons.lineStyle(2, 0x60c0e0, 0.7);
         chevrons.moveTo(cx, cy);
         chevrons.lineTo(cx + chevW, cy - chevH / 2);
+        // Dark trailing edge (bottom edge - shadow)
+        chevrons.lineStyle(1, 0x000508, 0.5);
+        chevrons.moveTo(cx, cy);
+        chevrons.lineTo(cx + chevW, cy + chevH / 2);
       };
 
       drawChevron(w * 0.04, beamY + h * 0.26, 50, 16);

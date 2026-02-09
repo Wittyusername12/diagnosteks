@@ -266,7 +266,7 @@ class FirewallSequence {
       // TWEAK 7: edgeAlpha +20%, inner ring edgeWidth +1px for sharper specular highlights
       const ringConfigs = [
         // OUTER RINGS — widest bands, darkest bodies, subtle edges
-        { innerR: 0.39, outerR: 0.44, numSegs: 14, gapDeg: 3, bodyColor: 0x152535, bodyAlpha: 0.95, edgeColor: 0x1a5577, edgeAlpha: 0.65, edgeWidth: 1.5, direction: 1, speed: 5.0 },
+        { innerR: 0.39, outerR: 0.44, numSegs: 14, gapDeg: 3, bodyColor: 0x1e3d55, bodyAlpha: 0.95, edgeColor: 0x1a5577, edgeAlpha: 0.65, edgeWidth: 1.5, direction: 1, speed: 5.0 },
         { innerR: 0.35, outerR: 0.38, numSegs: 16, gapDeg: 2.5, bodyColor: 0x0d1a2d, bodyAlpha: 0.95, edgeColor: 0x00a4cc, edgeAlpha: 0.75, edgeWidth: 2, direction: -1, speed: 4.0 },
         // MID RINGS — medium width, brighter edges, most detailed
         { innerR: 0.30, outerR: 0.34, numSegs: 18, gapDeg: 2, bodyColor: 0x0f1e33, bodyAlpha: 0.95, edgeColor: 0x00d4ff, edgeAlpha: 0.85, edgeWidth: 2.5, direction: 1, speed: 3.5 },
@@ -854,7 +854,7 @@ class FirewallSequence {
       // Helper: draw a horizontal rail with dark body + bright top edge
       const drawHRail = (rx, ry, rw) => {
         // FILLED dark body (visible steel-blue, not black)
-        structuralRails.beginFill(0x1e3a4d, 0.92);
+        structuralRails.beginFill(0x284a60, 0.92);
         structuralRails.drawRect(rx, ry, rw, 10);
         structuralRails.endFill();
         // Bright top edge (specular highlight)
@@ -870,7 +870,7 @@ class FirewallSequence {
       // Helper: draw a vertical channel with dark body + bright left edge
       const drawVChannel = (cx, cy, ch) => {
         // FILLED dark body (visible steel-blue)
-        structuralRails.beginFill(0x1e3a4d, 0.92);
+        structuralRails.beginFill(0x284a60, 0.92);
         structuralRails.drawRect(cx, cy, 6, ch);
         structuralRails.endFill();
         // Bright left edge (specular highlight)
@@ -924,7 +924,7 @@ class FirewallSequence {
       // Helper: draw beveled panel with two-tone bevel trick
       const drawBeveledPanel = (px, py, pw, ph, edgeAlpha) => {
         // FILLED dark body (visible steel-blue, opaque)
-        hudPanels.beginFill(0x1a3548, 0.92);
+        hudPanels.beginFill(0x243f5a, 0.92);
         hudPanels.drawRect(px, py, pw, ph);
         hudPanels.endFill();
         // Bright top edge (specular highlight from overhead light)
@@ -975,17 +975,17 @@ class FirewallSequence {
       };
 
       // LEFT UPPER ZONE panels (between top rail and mid rail)
-      drawBeveledPanel(w * 0.16, beamY - h * 0.24, 120, 55, 0.25);
+      drawBeveledPanel(w * 0.16, beamY - h * 0.24, 120, 55, 0.5);
       drawBarChart(w * 0.16 + 8, beamY - h * 0.24 + 8, 104, 40, 8);
 
-      drawBeveledPanel(w * 0.16, beamY - h * 0.15, 100, 40, 0.28);
+      drawBeveledPanel(w * 0.16, beamY - h * 0.15, 100, 40, 0.5);
       drawBarChart(w * 0.16 + 6, beamY - h * 0.15 + 6, 88, 28, 6);
 
       drawBeveledPanel(w * 0.02, beamY - h * 0.14, 80, 30, 0.22);
       drawTextReadout(w * 0.02 + 6, beamY - h * 0.14 + 6, 68, 3);
 
       // LEFT LOWER ZONE panels (between mid rail and bottom rail)
-      drawBeveledPanel(w * 0.02, beamY - h * 0.04, 90, 50, 0.30);
+      drawBeveledPanel(w * 0.02, beamY - h * 0.04, 90, 50, 0.55);
       drawTextReadout(w * 0.02 + 6, beamY - h * 0.04 + 8, 78, 5);
 
       drawBeveledPanel(w * 0.10, beamY + h * 0.02, 60, 35, 0.20);
@@ -1001,7 +1001,7 @@ class FirewallSequence {
         if (s < 3) {
           hudPanels.beginFill(0x00d4ff, 0.4);
         } else {
-          hudPanels.beginFill(0x152535, 0.5);
+          hudPanels.beginFill(0x1e3d55, 0.5);
         }
         hudPanels.drawRect(progX + s * 14, progY, 12, 6);
         hudPanels.endFill();
@@ -1038,11 +1038,11 @@ class FirewallSequence {
       radar.drawRect(bezelX, bezelY, bezelW, bezelH);
       radar.endFill();
       // Bright top edge
-      radar.lineStyle(1.5, 0x50a0c0, 0.55);
+      radar.lineStyle(1.5, 0x50a0c0, 0.7);
       radar.moveTo(bezelX, bezelY);
       radar.lineTo(bezelX + bezelW, bezelY);
       // Bright left edge
-      radar.lineStyle(1.5, 0x50a0c0, 0.45);
+      radar.lineStyle(1.5, 0x50a0c0, 0.7);
       radar.moveTo(bezelX, bezelY);
       radar.lineTo(bezelX, bezelY + bezelH);
       // Dark right edge
@@ -1054,7 +1054,7 @@ class FirewallSequence {
       radar.lineTo(bezelX + bezelW, bezelY + bezelH);
 
       // Screen area (emissive display fill - slightly brighter interior)
-      radar.beginFill(0x142a38, 0.96);
+      radar.beginFill(0x1e3d50, 0.96);
       radar.drawRect(radarCX - radarR - 4, radarCY - radarR - 4, radarR * 2 + 8, radarR * 2 + 8);
       radar.endFill();
 
@@ -1091,7 +1091,7 @@ class FirewallSequence {
 
       const drawChevron = (cx, cy, chevW, chevH) => {
         // FILLED dark body (visible steel-blue, opaque)
-        chevrons.beginFill(0x1e3a4d, 0.9);
+        chevrons.beginFill(0x284a60, 0.9);
         chevrons.drawPolygon([
           cx, cy,                      // left point (arrow tip)
           cx + chevW, cy - chevH / 2,  // top right
@@ -1347,7 +1347,7 @@ class FirewallSequence {
       // =========================================================
 
       // --- 0.0s - 0.3s: FADE IN BACKGROUND (container handles all children) ---
-      timeline.to(backgroundContainer, { alpha: 0.6, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(backgroundContainer, { alpha: 0.9, duration: 0.3, ease: 'power2.out' }, 0);
 
       // --- 0.0s - 0.2s: FADE IN DORMANT BEAM ---
       timeline.to(dormantBeam, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0);

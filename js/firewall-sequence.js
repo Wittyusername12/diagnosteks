@@ -851,36 +851,36 @@ class FirewallSequence {
       // =========================================================
       const structuralRails = new PIXI.Graphics();
 
-      // Helper: draw a horizontal rail with dark body + bright top edge
+      // Helper: draw a horizontal rail with THREE ZONES (bright top + medium face + dark shadow = 14px total)
       const drawHRail = (rx, ry, rw) => {
-        // FILLED dark body (visible steel-blue, not black)
-        structuralRails.beginFill(0x284a60, 0.92);
-        structuralRails.drawRect(rx, ry, rw, 10);
+        // Zone 1: BRIGHT TOP EDGE — specular highlight (2px tall)
+        structuralRails.beginFill(0x4a90b0, 0.85);
+        structuralRails.drawRect(rx, ry, rw, 2);
         structuralRails.endFill();
-        // Bright top edge (specular highlight)
-        structuralRails.lineStyle(2, 0x50b8d8, 0.7);
-        structuralRails.moveTo(rx, ry);
-        structuralRails.lineTo(rx + rw, ry);
-        // Dark bottom edge (shadow)
-        structuralRails.lineStyle(1, 0x000508, 0.4);
-        structuralRails.moveTo(rx, ry + 10);
-        structuralRails.lineTo(rx + rw, ry + 10);
+        // Zone 2: MEDIUM FACE — the visible front of the rail (10px tall)
+        structuralRails.beginFill(0x1e3850, 0.95);
+        structuralRails.drawRect(rx, ry + 2, rw, 10);
+        structuralRails.endFill();
+        // Zone 3: DARK BOTTOM SHADOW (2px tall)
+        structuralRails.beginFill(0x060c14, 0.7);
+        structuralRails.drawRect(rx, ry + 12, rw, 2);
+        structuralRails.endFill();
       };
 
-      // Helper: draw a vertical channel with dark body + bright left edge
+      // Helper: draw a vertical channel with THREE ZONES (bright left + medium face + dark shadow = 10px total)
       const drawVChannel = (cx, cy, ch) => {
-        // FILLED dark body (visible steel-blue)
-        structuralRails.beginFill(0x284a60, 0.92);
-        structuralRails.drawRect(cx, cy, 6, ch);
+        // Zone 1: BRIGHT LEFT EDGE (2px wide)
+        structuralRails.beginFill(0x4a90b0, 0.85);
+        structuralRails.drawRect(cx, cy, 2, ch);
         structuralRails.endFill();
-        // Bright left edge (specular highlight)
-        structuralRails.lineStyle(2, 0x50b8d8, 0.65);
-        structuralRails.moveTo(cx, cy);
-        structuralRails.lineTo(cx, cy + ch);
-        // Dark right edge (shadow)
-        structuralRails.lineStyle(1, 0x000508, 0.4);
-        structuralRails.moveTo(cx + 6, cy);
-        structuralRails.lineTo(cx + 6, cy + ch);
+        // Zone 2: MEDIUM FACE (6px wide)
+        structuralRails.beginFill(0x1e3850, 0.95);
+        structuralRails.drawRect(cx + 2, cy, 6, ch);
+        structuralRails.endFill();
+        // Zone 3: DARK RIGHT SHADOW (2px wide)
+        structuralRails.beginFill(0x060c14, 0.7);
+        structuralRails.drawRect(cx + 8, cy, 2, ch);
+        structuralRails.endFill();
       };
 
       // LEFT SIDE - 3 horizontal rails
@@ -902,8 +902,8 @@ class FirewallSequence {
       // RIGHT SIDE - 1 vertical channel
       drawVChannel(w * 0.78, beamY - h * 0.25, h * 0.35);
 
-      // Junction gussets at intersections (bright filled circles - bolted connections)
-      structuralRails.beginFill(0x60c8e8, 0.55);
+      // Junction gussets at intersections (bright filled circles - bolted connections) - RADIUS 4, ALPHA 0.7
+      structuralRails.beginFill(0x4a90b0, 0.7);
       structuralRails.drawCircle(w * 0.15, topRailY, 4);
       structuralRails.drawCircle(w * 0.15, midRailY, 4);
       structuralRails.drawCircle(w * 0.15, bottomRailY, 4);
@@ -923,40 +923,40 @@ class FirewallSequence {
 
       // Helper: draw beveled panel with two-tone bevel trick
       const drawBeveledPanel = (px, py, pw, ph, edgeAlpha) => {
-        // FILLED dark body (visible steel-blue, opaque)
-        hudPanels.beginFill(0x243f5a, 0.92);
+        // FILLED dark body (visible dark navy blue, opaque)
+        hudPanels.beginFill(0x1a3050, 0.95);
         hudPanels.drawRect(px, py, pw, ph);
         hudPanels.endFill();
-        // Bright top edge (specular highlight from overhead light)
-        hudPanels.lineStyle(1.5, 0x00d4ff, edgeAlpha + 0.15);
+        // Bright top edge (specular highlight from overhead light) - ALPHA 0.7
+        hudPanels.lineStyle(1.5, 0x00d4ff, 0.7);
         hudPanels.moveTo(px, py);
         hudPanels.lineTo(px + pw, py);
-        // Bright left edge (secondary highlight)
-        hudPanels.lineStyle(1.5, 0x00d4ff, edgeAlpha + 0.08);
+        // Bright left edge (secondary highlight) - ALPHA 0.7
+        hudPanels.lineStyle(1.5, 0x00d4ff, 0.7);
         hudPanels.moveTo(px, py);
         hudPanels.lineTo(px, py + ph);
         // Dark right edge (shadow)
-        hudPanels.lineStyle(1, 0x000508, 0.4);
+        hudPanels.lineStyle(1, 0x020508, 0.6);
         hudPanels.moveTo(px + pw, py);
         hudPanels.lineTo(px + pw, py + ph);
         // Dark bottom edge (shadow)
-        hudPanels.lineStyle(1, 0x000508, 0.4);
+        hudPanels.lineStyle(1, 0x020508, 0.6);
         hudPanels.moveTo(px, py + ph);
         hudPanels.lineTo(px + pw, py + ph);
       };
 
-      // Helper: draw bar chart inside panel
+      // Helper: draw bar chart inside panel - BRIGHTER BARS
       const drawBarChart = (bx, by, chartW, chartH, barCount) => {
         for (let i = 0; i < barCount; i++) {
           const barH = chartH * (0.3 + Math.random() * 0.7);
           const barW = (chartW / barCount) * 0.7;
           const barX = bx + i * (chartW / barCount);
           const barY = by + chartH - barH;
-          // Amber accent every 3rd bar
+          // Amber accent every 3rd bar - ALPHA 0.75
           if (i % 3 === 2) {
-            hudPanels.beginFill(0xCC8800, 0.5);
+            hudPanels.beginFill(0xCC8800, 0.75);
           } else {
-            hudPanels.beginFill(0x00d4ff, 0.35);
+            hudPanels.beginFill(0x00d4ff, 0.55);
           }
           hudPanels.drawRect(barX, barY, barW, barH);
           hudPanels.endFill();
@@ -1001,7 +1001,7 @@ class FirewallSequence {
         if (s < 3) {
           hudPanels.beginFill(0x00d4ff, 0.4);
         } else {
-          hudPanels.beginFill(0x1e3d55, 0.5);
+          hudPanels.beginFill(0x1a3050, 0.7);
         }
         hudPanels.drawRect(progX + s * 14, progY, 12, 6);
         hudPanels.endFill();
@@ -1029,12 +1029,12 @@ class FirewallSequence {
       const radarCY = beamY - h * 0.22;
       const radarR = Math.min(w, h) * 0.055;
 
-      // Rectangular bezel housing (FILLED visible steel-blue + bright edges)
+      // Rectangular bezel housing (FILLED visible dark navy + bright edges)
       const bezelX = radarCX - radarR - 12;
       const bezelY = radarCY - radarR - 12;
       const bezelW = radarR * 2 + 24;
       const bezelH = radarR * 2 + 24;
-      radar.beginFill(0x182838, 0.93);
+      radar.beginFill(0x1a3050, 0.95);
       radar.drawRect(bezelX, bezelY, bezelW, bezelH);
       radar.endFill();
       // Bright top edge
@@ -1054,7 +1054,7 @@ class FirewallSequence {
       radar.lineTo(bezelX + bezelW, bezelY + bezelH);
 
       // Screen area (emissive display fill - slightly brighter interior)
-      radar.beginFill(0x1e3d50, 0.96);
+      radar.beginFill(0x122840, 0.96);
       radar.drawRect(radarCX - radarR - 4, radarCY - radarR - 4, radarR * 2 + 8, radarR * 2 + 8);
       radar.endFill();
 
@@ -1090,54 +1090,53 @@ class FirewallSequence {
       const chevrons = new PIXI.Graphics();
 
       const drawChevron = (cx, cy, chevW, chevH) => {
-        // FILLED dark body (visible steel-blue, opaque)
-        chevrons.beginFill(0x284a60, 0.9);
+        // FILLED dark body (visible dark navy, opaque) - 0x1e3850 same as rails
+        chevrons.beginFill(0x1e3850, 0.92);
         chevrons.drawPolygon([
           cx, cy,                      // left point (arrow tip)
           cx + chevW, cy - chevH / 2,  // top right
           cx + chevW, cy + chevH / 2   // bottom right
         ]);
         chevrons.endFill();
-        // Bright leading edge (top edge - specular highlight)
-        chevrons.lineStyle(2, 0x60c0e0, 0.7);
+        // Bright leading edge (top edge - specular highlight) - ALPHA 0.8
+        chevrons.lineStyle(2, 0x4a90b0, 0.8);
         chevrons.moveTo(cx, cy);
         chevrons.lineTo(cx + chevW, cy - chevH / 2);
         // Dark trailing edge (bottom edge - shadow)
-        chevrons.lineStyle(1, 0x000508, 0.5);
+        chevrons.lineStyle(1, 0x060c14, 0.6);
         chevrons.moveTo(cx, cy);
         chevrons.lineTo(cx + chevW, cy + chevH / 2);
       };
 
-      drawChevron(w * 0.04, beamY + h * 0.26, 50, 16);
-      drawChevron(w * 0.04, beamY + h * 0.30, 45, 14);
-      drawChevron(w * 0.04, beamY + h * 0.34, 55, 18);
+      // CHEVRONS 2X LARGER: width 70-90px, height 24px, spacing 30px
+      drawChevron(w * 0.04, beamY + h * 0.26, 80, 24);
+      drawChevron(w * 0.04, beamY + h * 0.30, 70, 24);
+      drawChevron(w * 0.04, beamY + h * 0.34, 90, 24);
 
       chevrons.alpha = 1;
       backgroundContainer.addChild(chevrons);
 
       // =========================================================
-      // LAYER 6: FLOOR REFLECTION (faint mirrored glow below beam)
+      // LAYER 6: FLOOR REFLECTION (BRIGHTER mirrored glow below beam)
       // =========================================================
       const floorReflection = new PIXI.Graphics();
 
-      // Primary reflection band
-      floorReflection.beginFill(0x00d4ff, 0.03);
-      floorReflection.drawRect(0, beamY + 30, w, 20);
+      // Primary reflection band - DOUBLED alpha
+      floorReflection.beginFill(0x00d4ff, 0.06);
+      floorReflection.drawRect(0, beamY + 25, w, 25);
       floorReflection.endFill();
 
-      // Fainter secondary reflection
-      floorReflection.beginFill(0x003355, 0.02);
-      floorReflection.drawRect(0, beamY + 50, w, 40);
+      // Secondary softer reflection - TRIPLED alpha
+      floorReflection.beginFill(0x0a2540, 0.05);
+      floorReflection.drawRect(0, beamY + 50, w, 50);
       floorReflection.endFill();
 
-      // Specular floor dots
-      floorReflection.beginFill(0x00d4ff, 0.12);
-      floorReflection.drawCircle(w * 0.20, beamY + 45, 1.5);
-      floorReflection.drawCircle(w * 0.35, beamY + 55, 1);
-      floorReflection.drawCircle(w * 0.55, beamY + 48, 2);
-      floorReflection.drawCircle(w * 0.70, beamY + 60, 1.5);
-      floorReflection.drawCircle(w * 0.85, beamY + 42, 1);
-      floorReflection.endFill();
+      // Specular floor dots - BRIGHTER and more
+      for (var fdi = 0; fdi < 8; fdi++) {
+        floorReflection.beginFill(0x00d4ff, 0.12 + Math.random() * 0.15);
+        floorReflection.drawCircle(w * 0.1 + Math.random() * w * 0.8, beamY + 35 + Math.random() * 70, 1.5 + Math.random() * 1.5);
+        floorReflection.endFill();
+      }
 
       floorReflection.alpha = 1;
       backgroundContainer.addChild(floorReflection);
@@ -1347,7 +1346,7 @@ class FirewallSequence {
       // =========================================================
 
       // --- 0.0s - 0.3s: FADE IN BACKGROUND (container handles all children) ---
-      timeline.to(backgroundContainer, { alpha: 0.9, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(backgroundContainer, { alpha: 1.0, duration: 0.3, ease: 'power2.out' }, 0);
 
       // --- 0.0s - 0.2s: FADE IN DORMANT BEAM ---
       timeline.to(dormantBeam, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0);

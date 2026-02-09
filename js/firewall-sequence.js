@@ -767,10 +767,336 @@ class FirewallSequence {
   }
 
   /**
-   * Stub - Glitch Burst transition (not yet implemented)
+   * Build Glitch Burst transition — chaotic digital corruption effect
+   * RGB chromatic aberration, horizontal noise bands, static patches, corrupt characters
+   * Reference: transition_glitch_burst.png, transition_animation_descriptions.pdf
    */
   _buildGlitchBurst(timeline) {
-    this._buildPlaceholder('glitch_burst', timeline);
+    // === DOM CONTAINER ===
+    const container = document.createElement('div');
+    container.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:2;';
+    this.content.appendChild(container);
+
+    const label = document.createElement('div');
+    label.className = 'im-transition-fui-label';
+    label.style.cssText = 'bottom:30px;left:50%;transform:translateX(-50%);top:auto;';
+    label.textContent = '◇ GLITCH BURST ◇';
+    container.appendChild(label);
+
+    // === PIXIJS EFFECTS ===
+    const app = window.pixiEffectManager.getApp();
+    const stage = window.pixiEffectManager.getStage();
+
+    if (app && stage) {
+      const w = app.screen.width;
+      const h = app.screen.height;
+
+      // =========================================================
+      // CONTAINERS
+      // =========================================================
+      const glitchContainer = new PIXI.Container();
+      glitchContainer.alpha = 0;
+      stage.addChild(glitchContainer);
+
+      // Sub-container for noise bands (redrawn on ticker)
+      const noiseBandGfx = new PIXI.Graphics();
+      glitchContainer.addChild(noiseBandGfx);
+
+      // Sub-container for scan lines (drawn once)
+      const scanLineGfx = new PIXI.Graphics();
+      glitchContainer.addChild(scanLineGfx);
+
+      // Sub-container for warning triangle
+      const warningGfx = new PIXI.Graphics();
+      glitchContainer.addChild(warningGfx);
+
+      // Screen flash overlay
+      const flashGfx = new PIXI.Graphics();
+      flashGfx.beginFill(0xffffff, 1);
+      flashGfx.drawRect(0, 0, w, h);
+      flashGfx.endFill();
+      flashGfx.alpha = 0;
+      glitchContainer.addChild(flashGfx);
+
+      // =========================================================
+      // FILTERS — RGBSplitFilter + NoiseFilter on STAGE
+      // =========================================================
+      const rgbFilter = new PIXI.filters.RGBSplitFilter([0, 0], [0, 0], [0, 0]);
+
+      // NoiseFilter is in pixi-filters
+      let noiseFilter = null;
+      if (PIXI.filters && PIXI.filters.NoiseFilter) {
+        noiseFilter = new PIXI.filters.NoiseFilter();
+        noiseFilter.noise = 0;
+        noiseFilter.seed = Math.random();
+      }
+
+      // Apply filters to stage
+      if (noiseFilter) {
+        stage.filters = [rgbFilter, noiseFilter];
+      } else {
+        stage.filters = [rgbFilter];
+      }
+
+      // =========================================================
+      // SCAN LINES — drawn once (static)
+      // =========================================================
+      for (let sli = 0; sli < 40; sli++) {
+        const slY = Math.random() * h;
+        const slAlpha = 0.03 + Math.random() * 0.08;
+        scanLineGfx.beginFill(0xffffff, slAlpha);
+        scanLineGfx.drawRect(0, slY, w, 1);
+        scanLineGfx.endFill();
+      }
+
+      // =========================================================
+      // WARNING TRIANGLE — upper right area
+      // =========================================================
+      const triCX = w * 0.72;
+      const triCY = h * 0.22;
+      const triSize = Math.min(w, h) * 0.08;
+
+      // Orange filled triangle
+      warningGfx.beginFill(0xff6b00, 0.9);
+      warningGfx.moveTo(triCX, triCY - triSize);
+      warningGfx.lineTo(triCX + triSize * 0.87, triCY + triSize * 0.5);
+      warningGfx.lineTo(triCX - triSize * 0.87, triCY + triSize * 0.5);
+      warningGfx.closePath();
+      warningGfx.endFill();
+
+      // Dark inner triangle
+      warningGfx.beginFill(0x1a0800, 0.8);
+      warningGfx.moveTo(triCX, triCY - triSize * 0.65);
+      warningGfx.lineTo(triCX + triSize * 0.56, triCY + triSize * 0.32);
+      warningGfx.lineTo(triCX - triSize * 0.56, triCY + triSize * 0.32);
+      warningGfx.closePath();
+      warningGfx.endFill();
+
+      // Exclamation mark (bar + dot)
+      warningGfx.beginFill(0xff6b00, 0.95);
+      warningGfx.drawRect(triCX - 3, triCY - triSize * 0.35, 6, triSize * 0.4);
+      warningGfx.endFill();
+      warningGfx.beginFill(0xff6b00, 0.95);
+      warningGfx.drawRect(triCX - 3, triCY + triSize * 0.12, 6, 6);
+      warningGfx.endFill();
+
+      // =========================================================
+      // CORRUPT CHARACTERS — PIXI.Text objects
+      // =========================================================
+      const glitchChars = '\u2593\u2591\u2592\u2588\u2584\u2580\u25A0\u25A1\u25CA\u25D8\u25CB\u25CF\u2666\u2663\u2660';
+      const charTexts = [];
+      const charColors = [0x00d4ff, 0xff00ff, 0xff6b00, 0x00ff88, 0xffffff, 0xff0044];
+
+      for (let ci = 0; ci < 25; ci++) {
+        const charStr = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+        const charColor = charColors[Math.floor(Math.random() * charColors.length)];
+        const charText = new PIXI.Text(charStr, {
+          fontFamily: 'JetBrains Mono, monospace',
+          fontSize: 14 + Math.random() * 24,
+          fill: charColor,
+          fontWeight: 'bold'
+        });
+        charText.x = Math.random() * w;
+        charText.y = Math.random() * h;
+        charText.alpha = 0;
+        charTexts.push(charText);
+        glitchContainer.addChild(charText);
+      }
+
+      // Large center text — corrupted data string
+      const centerText = new PIXI.Text('< 7FG\u00D7 \u2190 + \u2192 8\u2588@\u25CF >', {
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: Math.min(w * 0.035, 32),
+        fill: 0xffffff,
+        fontWeight: 'bold',
+        letterSpacing: 4
+      });
+      centerText.anchor.set(0.5);
+      centerText.x = w * 0.42;
+      centerText.y = h * 0.58;
+      centerText.alpha = 0;
+      glitchContainer.addChild(centerText);
+
+      // =========================================================
+      // NOISE BAND COLORS — the multicolor chaos
+      // =========================================================
+      const bandColors = [
+        0x00d4ff, 0xff00ff, 0xff0044, 0xff6b00, 0x00ff88,
+        0xffff00, 0x8800ff, 0x00ffcc, 0xff3388, 0x44aaff,
+        0xcc00ff, 0xff8800, 0x00ddaa, 0xff0088, 0x6600ff
+      ];
+
+      // =========================================================
+      // TICKER — redraws noise bands every frame for chaos
+      // =========================================================
+      let frameCount = 0;
+      let glitchActive = true;
+
+      const drawNoiseBands = () => {
+        if (!glitchActive) return;
+        frameCount++;
+        // Only redraw every 3 frames (~20fps) for performance
+        if (frameCount % 3 !== 0) return;
+
+        noiseBandGfx.clear();
+
+        // 15-25 horizontal noise bands at random positions
+        const bandCount = 15 + Math.floor(Math.random() * 10);
+        for (let bi = 0; bi < bandCount; bi++) {
+          const bandY = Math.random() * h;
+          const bandH = 2 + Math.random() * 25;
+          const bandX = (Math.random() - 0.5) * 80;
+          const bandW = w * (0.3 + Math.random() * 0.7);
+          const bandColor = bandColors[Math.floor(Math.random() * bandColors.length)];
+          const bandAlpha = 0.15 + Math.random() * 0.55;
+
+          noiseBandGfx.beginFill(bandColor, bandAlpha);
+          noiseBandGfx.drawRect(bandX, bandY, bandW, bandH);
+          noiseBandGfx.endFill();
+        }
+
+        // 30-50 tiny noise rectangles (the "static" patches)
+        const patchCount = 30 + Math.floor(Math.random() * 20);
+        for (let pi = 0; pi < patchCount; pi++) {
+          const px = Math.random() * w;
+          const py = Math.random() * h;
+          const pw = 2 + Math.random() * 12;
+          const ph = 2 + Math.random() * 8;
+          const pColor = bandColors[Math.floor(Math.random() * bandColors.length)];
+          const pAlpha = 0.2 + Math.random() * 0.6;
+
+          noiseBandGfx.beginFill(pColor, pAlpha);
+          noiseBandGfx.drawRect(px, py, pw, ph);
+          noiseBandGfx.endFill();
+        }
+
+        // Randomize corrupt character positions each update
+        for (let cci = 0; cci < charTexts.length; cci++) {
+          if (Math.random() < 0.3) {
+            charTexts[cci].x = Math.random() * w;
+            charTexts[cci].y = Math.random() * h;
+          }
+        }
+      };
+
+      // Add ticker callback
+      app.ticker.add(drawNoiseBands);
+
+      // =========================================================
+      // GSAP TIMELINE
+      // =========================================================
+
+      // Phase 1: Flash in (0s - 0.1s)
+      timeline.to(flashGfx, { alpha: 0.8, duration: 0.05, ease: 'power4.in' }, 0);
+      timeline.to(flashGfx, { alpha: 0, duration: 0.05, ease: 'power4.out' }, 0.05);
+
+      // Phase 1: Container appears (0s)
+      timeline.to(glitchContainer, { alpha: 1, duration: 0.05, ease: 'none' }, 0);
+
+      // Phase 2: RGB split ramps up (0s - 0.15s)
+      timeline.to(rgbFilter, {
+        duration: 0.15,
+        ease: 'power2.out',
+        onUpdate: function() {
+          const progress = this.progress();
+          const intensity = progress * 20;
+          rgbFilter.red = [-intensity, 0];
+          rgbFilter.blue = [intensity, 0];
+          rgbFilter.green = [0, intensity * 0.3];
+        }
+      }, 0);
+
+      // Phase 2: Noise filter ramps up (0s - 0.1s)
+      if (noiseFilter) {
+        timeline.to(noiseFilter, { noise: 0.35, duration: 0.1, ease: 'power2.out' }, 0);
+      }
+
+      // Phase 3: Corrupt characters flash in/out randomly (0.1s - 1.0s)
+      for (let cci2 = 0; cci2 < charTexts.length; cci2++) {
+        const charDelay = 0.1 + Math.random() * 0.7;
+        const charDur = 0.05 + Math.random() * 0.15;
+        timeline.to(charTexts[cci2], { alpha: 0.7 + Math.random() * 0.3, duration: 0.03 }, charDelay);
+        timeline.to(charTexts[cci2], { alpha: 0, duration: charDur }, charDelay + 0.03 + charDur);
+      }
+
+      // Phase 3: Center text flashes (0.3s - 0.8s)
+      timeline.to(centerText, { alpha: 0.9, duration: 0.03 }, 0.3);
+      timeline.to(centerText, { alpha: 0, duration: 0.1 }, 0.6);
+      timeline.to(centerText, { alpha: 0.8, duration: 0.03 }, 0.75);
+      timeline.to(centerText, { alpha: 0, duration: 0.1 }, 0.85);
+
+      // Phase 3: RGB split oscillates wildly (0.15s - 1.0s)
+      timeline.to(rgbFilter, {
+        duration: 0.85,
+        ease: 'none',
+        onUpdate: function() {
+          const rx = (Math.random() - 0.5) * 40;
+          const bx = (Math.random() - 0.5) * 40;
+          const gy = (Math.random() - 0.5) * 15;
+          rgbFilter.red = [rx, Math.random() * 5];
+          rgbFilter.blue = [bx, -Math.random() * 5];
+          rgbFilter.green = [Math.random() * 3, gy];
+        }
+      }, 0.15);
+
+      // Phase 3: Noise seed changes for animated static
+      if (noiseFilter) {
+        timeline.to(noiseFilter, {
+          duration: 0.85,
+          ease: 'none',
+          onUpdate: function() {
+            noiseFilter.seed = Math.random();
+          }
+        }, 0.15);
+      }
+
+      // Phase 3: Second flash at 0.5s
+      timeline.to(flashGfx, { alpha: 0.5, duration: 0.03 }, 0.5);
+      timeline.to(flashGfx, { alpha: 0, duration: 0.05 }, 0.53);
+
+      // Phase 4: Settle down (1.0s - 1.4s)
+      timeline.to(rgbFilter, {
+        duration: 0.4,
+        ease: 'power2.in',
+        onUpdate: function() {
+          const progress = this.progress();
+          const decay = 1 - progress;
+          const rx = (Math.random() - 0.5) * 20 * decay;
+          const bx = (Math.random() - 0.5) * 20 * decay;
+          rgbFilter.red = [rx, 0];
+          rgbFilter.blue = [bx, 0];
+          rgbFilter.green = [0, 0];
+        }
+      }, 1.0);
+
+      // Phase 4: Noise fades
+      if (noiseFilter) {
+        timeline.to(noiseFilter, { noise: 0, duration: 0.4, ease: 'power2.in' }, 1.0);
+      }
+
+      // Phase 4: Container fades out
+      timeline.to(glitchContainer, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.1);
+
+      // Phase 5: Final cleanup at end of timeline (1.5s)
+      timeline.call(function() {
+        // Stop ticker
+        glitchActive = false;
+        app.ticker.remove(drawNoiseBands);
+
+        // Reset stage filters
+        stage.filters = null;
+
+        // Reset RGB filter
+        rgbFilter.red = [0, 0];
+        rgbFilter.blue = [0, 0];
+        rgbFilter.green = [0, 0];
+      }, null, null, 1.5);
+    }
+
+    // Label fade animation
+    gsap.set(label, { opacity: 0 });
+    timeline.to(label, { opacity: 0.7, duration: 0.3, ease: 'power2.out' }, 0.3);
+    timeline.to(label, { opacity: 0, duration: 0.3, ease: 'power2.in' }, 1.2);
   }
 
   /**

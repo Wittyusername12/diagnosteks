@@ -1953,10 +1953,299 @@ class FirewallSequence {
   }
 
   /**
-   * Stub - Ripple Wave transition (not yet implemented)
+   * Ripple Wave transition - Concentric elliptical energy rings expanding from center
+   * Creates holographic shockwave effect with 3D perspective
    */
   _buildRippleWave(timeline) {
-    this._buildPlaceholder('ripple_wave', timeline);
+    // === DOM CONTAINER ===
+    const container = document.createElement('div');
+    container.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:2;';
+    this.content.appendChild(container);
+
+    const label = document.createElement('div');
+    label.className = 'im-transition-fui-label';
+    label.style.cssText = 'bottom:30px;left:50%;transform:translateX(-50%);top:auto;';
+    label.textContent = '◇ RIPPLE WAVE ◇';
+    container.appendChild(label);
+
+    // === PIXIJS EFFECTS ===
+    const app = window.pixiEffectManager.getApp();
+    const stage = window.pixiEffectManager.getStage();
+
+    if (app && stage) {
+      const w = app.screen.width;
+      const h = app.screen.height;
+      const cx = w / 2;
+      const cy = h / 2;
+
+      // Main container for all ripple effects
+      const rippleContainer = new PIXI.Container();
+      stage.addChild(rippleContainer);
+
+      // =========================================================
+      // LAYER 1: HEXAGONAL BACKGROUND (static, drawn once)
+      // Faint dark blue hex grid covering entire screen.
+      // Per claude_PixiJS_markdown_file.md line 184
+      // =========================================================
+      const hexBg = new PIXI.Graphics();
+      const hexRadius = 30;
+      const hexSpacingX = hexRadius * 1.75;
+      const hexSpacingY = hexRadius * 1.5;
+
+      for (let hexRow = -1; hexRow < (h / hexSpacingY) + 1; hexRow++) {
+        for (let hexCol = -1; hexCol < (w / hexSpacingX) + 1; hexCol++) {
+          const hcx = hexCol * hexSpacingX + (hexRow % 2 === 0 ? 0 : hexSpacingX * 0.5);
+          const hcy = hexRow * hexSpacingY;
+
+          hexBg.lineStyle(1, 0x0a2a4a, 0.25);
+          hexBg.moveTo(hcx + hexRadius * Math.cos(0), hcy + hexRadius * Math.sin(0));
+          for (let hvi = 1; hvi <= 6; hvi++) {
+            hexBg.lineTo(
+              hcx + hexRadius * Math.cos(Math.PI / 3 * hvi),
+              hcy + hexRadius * Math.sin(Math.PI / 3 * hvi)
+            );
+          }
+        }
+      }
+      hexBg.alpha = 0;
+      rippleContainer.addChild(hexBg);
+
+      // =========================================================
+      // LAYER 2: UI PANEL REMNANTS (static, drawn once)
+      // Wireframe globe upper-left, chart bars in corners
+      // =========================================================
+      const uiGfx = new PIXI.Graphics();
+
+      // Wireframe globe — upper-left
+      const globeCX = w * 0.12;
+      const globeCY = h * 0.22;
+      const globeR = Math.min(w, h) * 0.08;
+      uiGfx.lineStyle(1, 0x0a4a6a, 0.30);
+      uiGfx.drawCircle(globeCX, globeCY, globeR);
+      // Latitude lines
+      for (let lat = -2; lat <= 2; lat++) {
+        const latY = globeCY + (lat / 3) * globeR;
+        const latRX = Math.sqrt(Math.max(0, globeR * globeR - (latY - globeCY) * (latY - globeCY)));
+        if (latRX > 5) {
+          uiGfx.lineStyle(0.5, 0x0a4a6a, 0.20);
+          uiGfx.drawEllipse(globeCX, latY, latRX, latRX * 0.15);
+        }
+      }
+      // Longitude arcs
+      uiGfx.lineStyle(0.5, 0x0a4a6a, 0.20);
+      uiGfx.drawEllipse(globeCX, globeCY, globeR * 0.3, globeR);
+      uiGfx.drawEllipse(globeCX, globeCY, globeR * 0.6, globeR);
+      uiGfx.drawEllipse(globeCX, globeCY, globeR, globeR);
+
+      // Chart bars — lower-right
+      const chartX = w * 0.82;
+      const chartY = h * 0.75;
+      for (let bi = 0; bi < 6; bi++) {
+        const barH = 10 + Math.random() * 40;
+        uiGfx.beginFill(0x0a4a6a, 0.25);
+        uiGfx.drawRect(chartX + bi * 12, chartY - barH, 8, barH);
+        uiGfx.endFill();
+      }
+
+      // Data panel outlines — upper-right, lower-left
+      uiGfx.lineStyle(1, 0x0a4a6a, 0.15);
+      uiGfx.drawRect(w * 0.78, h * 0.08, w * 0.18, h * 0.12);
+      uiGfx.drawRect(w * 0.04, h * 0.75, w * 0.15, h * 0.10);
+
+      uiGfx.alpha = 0.6;
+      rippleContainer.addChild(uiGfx);
+
+      // =========================================================
+      // LAYER 3: LIGHT RAYS (static, additive blend)
+      // 16 thin lines radiating from center through the rings
+      // =========================================================
+      const rayContainer = new PIXI.Container();
+      rayContainer.blendMode = PIXI.BLEND_MODES.ADD;
+      const rayGfx = new PIXI.Graphics();
+
+      const maxRayLen = Math.max(w, h) * 0.8;
+
+      for (let ri = 0; ri < 16; ri++) {
+        const angle = (ri / 16) * Math.PI * 2 + (Math.random() * 0.1 - 0.05);
+        const rayLen = maxRayLen * (0.5 + Math.random() * 0.5);
+        const rayAlpha = 0.05 + Math.random() * 0.10;
+
+        rayGfx.lineStyle(1 + Math.random(), 0x00d4ff, rayAlpha);
+        rayGfx.moveTo(cx, cy);
+        rayGfx.lineTo(
+          cx + Math.cos(angle) * rayLen,
+          cy + Math.sin(angle) * rayLen
+        );
+      }
+
+      rayContainer.addChild(rayGfx);
+      rayContainer.alpha = 0;
+      rippleContainer.addChild(rayContainer);
+
+      // =========================================================
+      // LAYER 4: CENTER FLASH (animated)
+      // Bright white circle at the origin that flashes and fades
+      // =========================================================
+      const flashGfx = new PIXI.Graphics();
+      flashGfx.beginFill(0xffffff, 1.0);
+      flashGfx.drawCircle(0, 0, 8);
+      flashGfx.endFill();
+      // Softer glow ring around center
+      flashGfx.beginFill(0x00d4ff, 0.4);
+      flashGfx.drawCircle(0, 0, 25);
+      flashGfx.endFill();
+      flashGfx.x = cx;
+      flashGfx.y = cy;
+      flashGfx.alpha = 0;
+      rippleContainer.addChild(flashGfx);
+
+      // =========================================================
+      // LAYER 5: CONCENTRIC ELLIPTICAL RINGS (5 rings, animated)
+      // CRITICAL: ELLIPSES not circles — 2.5:1 width:height ratio
+      // for 3D holographic perspective
+      // =========================================================
+      const ringContainer = new PIXI.Container();
+      const rings = [];
+      const numRings = 5;
+
+      // Ellipse base dimensions — rings will scale from 0 to 1
+      const baseRX = w * 0.45;  // half-width of largest ring
+      const baseRY = h * 0.20;  // half-height — creates the 2.5:1 ratio
+
+      for (let rni = 0; rni < numRings; rni++) {
+        const ringGfx = new PIXI.Graphics();
+
+        // Main ring stroke — thick cyan
+        ringGfx.lineStyle(3 + Math.random() * 2, 0x00d4ff, 0.85);
+        ringGfx.drawEllipse(0, 0, baseRX, baseRY);
+
+        // Inner detail line 1 — thinner, slightly smaller
+        ringGfx.lineStyle(1, 0x00d4ff, 0.35);
+        ringGfx.drawEllipse(0, 0, baseRX * 0.92, baseRY * 0.92);
+
+        // Inner detail line 2 — even thinner, slightly larger
+        ringGfx.lineStyle(0.5, 0x44eeff, 0.20);
+        ringGfx.drawEllipse(0, 0, baseRX * 1.05, baseRY * 1.05);
+
+        // Sparkle dots along the ring circumference — 12 per ring
+        for (let sdi = 0; sdi < 12; sdi++) {
+          const sparkAngle = (sdi / 12) * Math.PI * 2;
+          const spX = baseRX * Math.cos(sparkAngle);
+          const spY = baseRY * Math.sin(sparkAngle);
+          ringGfx.lineStyle(0);
+          ringGfx.beginFill(0xffffff, 0.4 + Math.random() * 0.4);
+          ringGfx.drawCircle(spX, spY, 1 + Math.random() * 2);
+          ringGfx.endFill();
+        }
+
+        ringGfx.x = cx;
+        ringGfx.y = cy;
+        ringGfx.scale.set(0);
+        ringGfx.alpha = 1;
+
+        ringContainer.addChild(ringGfx);
+        rings.push(ringGfx);
+      }
+
+      rippleContainer.addChild(ringContainer);
+
+      // =========================================================
+      // LAYER 6: RING GLOW DUPLICATES (additive blend)
+      // Thicker, lower-alpha copies for bloom effect
+      // =========================================================
+      const glowContainer = new PIXI.Container();
+      glowContainer.blendMode = PIXI.BLEND_MODES.ADD;
+      const glowRings = [];
+
+      for (let gri = 0; gri < numRings; gri++) {
+        const glowGfx = new PIXI.Graphics();
+        glowGfx.lineStyle(8, 0x00d4ff, 0.20);
+        glowGfx.drawEllipse(0, 0, baseRX, baseRY);
+        glowGfx.lineStyle(15, 0x005577, 0.08);
+        glowGfx.drawEllipse(0, 0, baseRX, baseRY);
+        glowGfx.x = cx;
+        glowGfx.y = cy;
+        glowGfx.scale.set(0);
+        glowGfx.alpha = 1;
+        glowContainer.addChild(glowGfx);
+        glowRings.push(glowGfx);
+      }
+
+      rippleContainer.addChild(glowContainer);
+
+      // =========================================================
+      // LAYER 7: GlowFilter on ring container
+      // =========================================================
+      let glowFilter = null;
+      try {
+        glowFilter = new PIXI.filters.GlowFilter({
+          distance: 15,
+          outerStrength: 2.0,
+          innerStrength: 0.5,
+          color: 0x00d4ff,
+          quality: 0.3
+        });
+        ringContainer.filters = [glowFilter];
+      } catch(e) {
+        console.warn('[RippleWave] GlowFilter not available:', e);
+      }
+
+      // =========================================================
+      // GSAP ANIMATION TIMELINE
+      // All animations added to the passed timeline parameter
+      // =========================================================
+
+      // Hex background fade in then out
+      timeline.fromTo(hexBg, { alpha: 0 }, { alpha: 0.5, duration: 0.4, ease: 'power1.out' }, 0);
+      timeline.to(hexBg, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+      // Center flash: appear, scale up, fade
+      timeline.to(flashGfx, { alpha: 1, duration: 0.05, ease: 'power2.out' }, 0);
+      timeline.to(flashGfx.scale, { x: 3, y: 3, duration: 0.5, ease: 'power2.out' }, 0);
+      timeline.to(flashGfx, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 0.15);
+
+      // Light rays: fade in then out
+      timeline.to(rayContainer, { alpha: 0.7, duration: 0.3, ease: 'power1.out' }, 0);
+      timeline.to(rayContainer, { alpha: 0, duration: 0.6, ease: 'power1.in' }, 1.4);
+
+      // Rings: staggered expansion — each ring starts 0.15s after the previous
+      for (let ani = 0; ani < numRings; ani++) {
+        const ringDelay = 0.1 + ani * 0.15;
+
+        // Ring scale: 0 → 1.0
+        timeline.to(rings[ani].scale, {
+          x: 1.0, y: 1.0,
+          duration: 1.5,
+          ease: 'power2.out'
+        }, ringDelay);
+
+        // Ring alpha: 1 → 0
+        timeline.to(rings[ani], {
+          alpha: 0,
+          duration: 1.3,
+          ease: 'power1.in'
+        }, ringDelay + 0.2);
+
+        // Glow ring matches
+        timeline.to(glowRings[ani].scale, {
+          x: 1.0, y: 1.0,
+          duration: 1.5,
+          ease: 'power2.out'
+        }, ringDelay);
+
+        timeline.to(glowRings[ani], {
+          alpha: 0,
+          duration: 1.3,
+          ease: 'power1.in'
+        }, ringDelay + 0.2);
+      }
+
+      // UI elements fade out at end
+      timeline.to(uiGfx, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+
+      // Container cleanup fade
+      timeline.to(rippleContainer, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.7);
+    }
   }
 
   /**

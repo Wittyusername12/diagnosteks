@@ -1341,6 +1341,9 @@ class FirewallSequence {
       const rgbFilter = new PIXI.filters.RGBSplitFilter([0, 0], [0, 0], [0, 0]);
       stage.filters = [rgbFilter];
 
+      // Add atmospheric effects (glow, particle rain, floor reflection, density panels)
+      this._addScanSweepAtmosphere(beamContainer, backgroundContainer, w, h, beamY, timeline);
+
       // =========================================================
       // GSAP TIMELINE ANIMATIONS
       // =========================================================
@@ -1467,6 +1470,178 @@ class FirewallSequence {
     gsap.set(label, { opacity: 0 });
     timeline.to(label, { opacity: 0.7, duration: 0.3, ease: 'power2.out' }, 0.3);
     timeline.to(label, { opacity: 0, duration: 0.3, ease: 'power2.in' }, 1.6);
+  }
+
+  /**
+   * Add atmospheric effects to Scan Sweep: glow bands, particle rain, floor reflection, extra panels
+   */
+  _addScanSweepAtmosphere(beamContainer, backgroundContainer, w, h, beamY, timeline) {
+    // === ATMOSPHERIC GLOW — goes in beamContainer (ADD blend + bloom) ===
+    var atmoGlow = new PIXI.Graphics();
+
+    // Wide soft haze band (160px tall, centered on beam)
+    atmoGlow.beginFill(0x006688, 0.06);
+    atmoGlow.drawRect(0, beamY - 80, w, 160);
+    atmoGlow.endFill();
+
+    // Medium glow band (80px tall)
+    atmoGlow.beginFill(0x0088aa, 0.08);
+    atmoGlow.drawRect(0, beamY - 40, w, 80);
+    atmoGlow.endFill();
+
+    // Narrow bright core band (20px tall)
+    atmoGlow.beginFill(0x00aacc, 0.12);
+    atmoGlow.drawRect(0, beamY - 10, w, 20);
+    atmoGlow.endFill();
+
+    // Vertical glow column at center (where hotspot passes)
+    atmoGlow.beginFill(0x005577, 0.04);
+    atmoGlow.drawRect(w * 0.35, beamY - 150, w * 0.30, 300);
+    atmoGlow.endFill();
+
+    atmoGlow.alpha = 0;
+    beamContainer.addChild(atmoGlow);
+
+    // Fade in atmospheric glow
+    timeline.to(atmoGlow, { alpha: 1, duration: 0.5, ease: 'power2.out' }, 0.1);
+
+    // === PARTICLE RAIN — hundreds of tiny vertical streaks falling from beam ===
+    var particleRain = new PIXI.Graphics();
+
+    // 120 particles spread across the width, concentrated near center
+    for (var pi = 0; pi < 120; pi++) {
+      // Gaussian-ish distribution: more particles near center
+      var px = w * 0.1 + Math.random() * w * 0.8;
+      var centerDist = Math.abs(px - w * 0.5) / (w * 0.5);
+      if (Math.random() < centerDist * 0.6) continue; // skip more particles far from center
+
+      var rainLen = 8 + Math.random() * 35;  // 8-43px tall streaks
+      var rainY = beamY + 5 + Math.random() * (h * 0.45);  // below beam down to lower area
+      var rainAlpha = 0.15 + Math.random() * 0.45;  // 0.15 - 0.60
+      var rainW = 1 + Math.random() * 1.5;  // 1-2.5px wide
+
+      particleRain.beginFill(0x00ccff, rainAlpha);
+      particleRain.drawRect(px, rainY, rainW, rainLen);
+      particleRain.endFill();
+    }
+
+    // A few amber particles for color variety (matching reference amber accents)
+    for (var ai = 0; ai < 8; ai++) {
+      var ax = w * 0.05 + Math.random() * w * 0.35;  // left side only (near equipment)
+      var ay = beamY + 10 + Math.random() * (h * 0.3);
+      particleRain.beginFill(0xCC8800, 0.2 + Math.random() * 0.3);
+      particleRain.drawCircle(ax, ay, 1 + Math.random() * 1.5);
+      particleRain.endFill();
+    }
+
+    particleRain.alpha = 0;
+    beamContainer.addChild(particleRain);
+
+    // Fade in particles
+    timeline.to(particleRain, { alpha: 1, duration: 0.6, ease: 'power2.out' }, 0.2);
+
+    // === FLOOR REFLECTION — visible reflective surface in bottom portion ===
+    var floorReflect = new PIXI.Graphics();
+
+    // Bright beam reflection line
+    floorReflect.beginFill(0x00bbdd, 0.07);
+    floorReflect.drawRect(0, beamY + 30, w, 4);
+    floorReflect.endFill();
+
+    // Primary reflection gradient band
+    floorReflect.beginFill(0x00aacc, 0.05);
+    floorReflect.drawRect(0, beamY + 34, w, 30);
+    floorReflect.endFill();
+
+    // Secondary softer reflection
+    floorReflect.beginFill(0x004466, 0.04);
+    floorReflect.drawRect(0, beamY + 64, w, 50);
+    floorReflect.endFill();
+
+    // Tertiary very soft floor wash
+    floorReflect.beginFill(0x0a1e30, 0.03);
+    floorReflect.drawRect(0, beamY + 114, w, h - beamY - 114);
+    floorReflect.endFill();
+
+    // 15 bright specular dots on floor
+    for (var fi = 0; fi < 15; fi++) {
+      var fx = w * 0.05 + Math.random() * w * 0.9;
+      var fy = beamY + 35 + Math.random() * 120;
+      var fBright = 0.08 + Math.random() * 0.20;
+      var fRad = 1 + Math.random() * 2.5;
+      floorReflect.beginFill(0x00ccff, fBright);
+      floorReflect.drawCircle(fx, fy, fRad);
+      floorReflect.endFill();
+    }
+
+    floorReflect.alpha = 0;
+    beamContainer.addChild(floorReflect);
+
+    // Fade in floor reflection
+    timeline.to(floorReflect, { alpha: 1, duration: 0.4, ease: 'power2.out' }, 0.15);
+
+    // === EXTRA DENSITY — small panels added to backgroundContainer ===
+    var extraPanels = new PIXI.Graphics();
+
+    // 12 small filler panels in gaps between existing panels
+    var smallPanels = [
+      [w*0.15, beamY-h*0.35, w*0.14, h*0.025],
+      [w*0.01, beamY-h*0.04, w*0.28, h*0.022],
+      [w*0.15, beamY+h*0.04, w*0.08, h*0.04],
+      [w*0.01, beamY+h*0.16, w*0.10, h*0.025],
+      [w*0.01, beamY+h*0.20, w*0.08, h*0.025],
+      [w*0.12, beamY+h*0.08, w*0.06, h*0.03],
+      [w*0.80, beamY-h*0.08, w*0.18, h*0.03],
+      [w*0.85, beamY+h*0.08, w*0.12, h*0.025],
+      [w*0.82, beamY+h*0.15, w*0.10, h*0.04],
+      [w*0.32, beamY+h*0.04, w*0.36, h*0.05],
+      [w*0.35, beamY+h*0.11, w*0.30, h*0.04],
+      [w*0.02, beamY-h*0.12, w*0.06, h*0.03]
+    ];
+
+    for (var spi = 0; spi < smallPanels.length; spi++) {
+      var sp = smallPanels[spi];
+      extraPanels.beginFill(0x1a3050, 0.85);
+      extraPanels.drawRect(sp[0], sp[1], sp[2], sp[3]);
+      extraPanels.endFill();
+      // Top edge highlight
+      extraPanels.lineStyle(1, 0x00d4ff, 0.5);
+      extraPanels.moveTo(sp[0], sp[1]);
+      extraPanels.lineTo(sp[0] + sp[2], sp[1]);
+      extraPanels.lineStyle(0);
+    }
+
+    // Data readout lines inside some panels
+    for (var dri = 0; dri < 8; dri++) {
+      var drX = w*0.33 + Math.random() * w*0.34;
+      var drY = beamY + h*0.05 + dri * 6;
+      var drW = w*0.04 + Math.random() * w*0.14;
+      extraPanels.beginFill(0x00d4ff, 0.06 + Math.random() * 0.10);
+      extraPanels.drawRect(drX, drY, drW, 1.5);
+      extraPanels.endFill();
+    }
+
+    // Progress bar
+    for (var pbi = 0; pbi < 8; pbi++) {
+      var pbFilled = pbi < 5;
+      extraPanels.beginFill(pbFilled ? 0x00d4ff : 0x0a1520, pbFilled ? 0.45 : 0.2);
+      extraPanels.drawRect(w*0.02 + pbi * 13, beamY + h*0.17, 9, 5);
+      extraPanels.endFill();
+    }
+
+    // Amber indicator dots
+    var amberDots = [[w*0.12,beamY-h*0.15],[w*0.25,beamY-h*0.10],[w*0.08,beamY+h*0.09],[w*0.22,beamY+h*0.05]];
+    for (var adi = 0; adi < amberDots.length; adi++) {
+      extraPanels.beginFill(0xCC8800, 0.5);
+      extraPanels.drawCircle(amberDots[adi][0], amberDots[adi][1], 2);
+      extraPanels.endFill();
+    }
+
+    extraPanels.alpha = 0;
+    backgroundContainer.addChild(extraPanels);
+
+    // Fade in extra panels with background
+    timeline.to(extraPanels, { alpha: 1, duration: 0.3, ease: 'power2.out' }, 0);
   }
 
   /**

@@ -1344,6 +1344,9 @@ class FirewallSequence {
       // Add atmospheric effects (glow, particle rain, floor reflection, density panels)
       this._addScanSweepAtmosphere(beamContainer, backgroundContainer, w, h, beamY, timeline);
 
+      // Add visible floor surface (MUST be in backgroundContainer for NORMAL blend, not ADD)
+      this._addScanSweepFloor(backgroundContainer, w, h, beamY, timeline);
+
       // =========================================================
       // GSAP TIMELINE ANIMATIONS
       // =========================================================
@@ -1642,6 +1645,104 @@ class FirewallSequence {
 
     // Fade in extra panels with background
     timeline.to(extraPanels, { alpha: 1, duration: 0.3, ease: 'power2.out' }, 0);
+  }
+
+  /**
+   * Add visible floor surface to Scan Sweep — MUST be in backgroundContainer (NORMAL blend)
+   * NOT beamContainer — ADD blend makes dark fills invisible
+   */
+  _addScanSweepFloor(backgroundContainer, w, h, beamY, timeline) {
+    // =====================================================
+    // FLOOR SURFACE — in backgroundContainer (NORMAL blend)
+    // NOT beamContainer — ADD blend makes dark fills invisible
+    // =====================================================
+    var floorSurface = new PIXI.Graphics();
+
+    // LAYER 1: Full floor base surface — covers bottom 40% of screen
+    // This is the "polished dark floor" that makes it feel like a room
+    // Color 0x0c1820 = RGB(12, 24, 32) — dark teal, NOT black
+    // Alpha 0.55 — high enough to clearly differentiate from pure black background
+    var floorTop = beamY + 25;
+    var floorH = h - floorTop;
+    floorSurface.beginFill(0x0c1820, 0.55);
+    floorSurface.drawRect(0, floorTop, w, floorH);
+    floorSurface.endFill();
+
+    // LAYER 2: Brighter gradient band near beam (beam illuminates nearby floor)
+    // Gradient faked with 3 stacked rects of decreasing alpha
+    floorSurface.beginFill(0x142838, 0.40);
+    floorSurface.drawRect(0, floorTop, w, 40);
+    floorSurface.endFill();
+
+    floorSurface.beginFill(0x102030, 0.25);
+    floorSurface.drawRect(0, floorTop + 40, w, 50);
+    floorSurface.endFill();
+
+    // LAYER 3: Bright beam reflection line (mirror of scan beam)
+    // This is the most visible element — a bright horizontal line on the floor
+    floorSurface.beginFill(0x00ccee, 0.18);
+    floorSurface.drawRect(0, floorTop + 5, w, 3);
+    floorSurface.endFill();
+
+    // Secondary dimmer reflection line
+    floorSurface.beginFill(0x008899, 0.10);
+    floorSurface.drawRect(0, floorTop + 12, w, 2);
+    floorSurface.endFill();
+
+    // LAYER 4: Specular highlights — bright dots scattered on floor
+    // These are points where the polished floor catches direct light
+    var specPositions = [
+      [w * 0.15, floorTop + 20, 2.5, 0.25],
+      [w * 0.30, floorTop + 35, 2.0, 0.20],
+      [w * 0.45, floorTop + 15, 3.0, 0.30],
+      [w * 0.55, floorTop + 25, 2.5, 0.22],
+      [w * 0.65, floorTop + 40, 2.0, 0.18],
+      [w * 0.75, floorTop + 18, 2.5, 0.25],
+      [w * 0.85, floorTop + 30, 2.0, 0.20],
+      [w * 0.20, floorTop + 55, 1.5, 0.15],
+      [w * 0.40, floorTop + 65, 1.5, 0.12],
+      [w * 0.60, floorTop + 50, 2.0, 0.18],
+      [w * 0.80, floorTop + 60, 1.5, 0.14],
+      [w * 0.50, floorTop + 10, 3.5, 0.35],
+      [w * 0.10, floorTop + 45, 1.5, 0.12],
+      [w * 0.90, floorTop + 22, 2.0, 0.20],
+      [w * 0.35, floorTop + 8, 2.0, 0.28]
+    ];
+    for (var si = 0; si < specPositions.length; si++) {
+      var sp = specPositions[si];
+      floorSurface.beginFill(0x00ddff, sp[3]);
+      floorSurface.drawCircle(sp[0], sp[1], sp[2]);
+      floorSurface.endFill();
+    }
+
+    // LAYER 5: Reflected particle streaks on floor (mirror of rain above)
+    // Shorter and dimmer than the actual particles
+    for (var rpi = 0; rpi < 30; rpi++) {
+      var rpx = w * 0.1 + Math.random() * w * 0.8;
+      var rpy = floorTop + 15 + Math.random() * 100;
+      var rpLen = 5 + Math.random() * 15;
+      var rpAlpha = 0.06 + Math.random() * 0.12;
+      floorSurface.beginFill(0x00aacc, rpAlpha);
+      floorSurface.drawRect(rpx, rpy, 1.5, rpLen);
+      floorSurface.endFill();
+    }
+
+    // LAYER 6: Subtle horizontal lines suggesting floor surface texture
+    for (var fli = 0; fli < 5; fli++) {
+      var fly = floorTop + 30 + fli * 25;
+      floorSurface.beginFill(0x00aacc, 0.03);
+      floorSurface.drawRect(0, fly, w, 1);
+      floorSurface.endFill();
+    }
+
+    // Start invisible, fade in
+    floorSurface.alpha = 0;
+
+    // CRITICAL: Add to backgroundContainer (NORMAL blend), NOT beamContainer (ADD blend)
+    backgroundContainer.addChild(floorSurface);
+
+    // Fade in with background
+    timeline.to(floorSurface, { alpha: 1, duration: 0.4, ease: 'power2.out' }, 0.1);
   }
 
   /**

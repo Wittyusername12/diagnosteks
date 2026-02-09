@@ -798,6 +798,9 @@ class FirewallSequence {
       glitchContainer.alpha = 0;
       stage.addChild(glitchContainer);
 
+      // Add static dense background layer FIRST (renders underneath animated layer)
+      this._addGlitchBurstDensity(glitchContainer, w, h);
+
       // Sub-container for noise bands (redrawn on ticker)
       const noiseBandGfx = new PIXI.Graphics();
       glitchContainer.addChild(noiseBandGfx);
@@ -940,23 +943,23 @@ class FirewallSequence {
 
         noiseBandGfx.clear();
 
-        // 15-25 horizontal noise bands at random positions
-        const bandCount = 15 + Math.floor(Math.random() * 10);
+        // 30-45 horizontal noise bands at random positions (doubled for density)
+        const bandCount = 30 + Math.floor(Math.random() * 15);
         for (let bi = 0; bi < bandCount; bi++) {
           const bandY = Math.random() * h;
           const bandH = 2 + Math.random() * 25;
           const bandX = (Math.random() - 0.5) * 80;
           const bandW = w * (0.3 + Math.random() * 0.7);
           const bandColor = bandColors[Math.floor(Math.random() * bandColors.length)];
-          const bandAlpha = 0.15 + Math.random() * 0.55;
+          const bandAlpha = 0.30 + Math.random() * 0.60;
 
           noiseBandGfx.beginFill(bandColor, bandAlpha);
           noiseBandGfx.drawRect(bandX, bandY, bandW, bandH);
           noiseBandGfx.endFill();
         }
 
-        // 30-50 tiny noise rectangles (the "static" patches)
-        const patchCount = 30 + Math.floor(Math.random() * 20);
+        // 60-100 tiny noise rectangles (the "static" patches) - doubled for density
+        const patchCount = 60 + Math.floor(Math.random() * 40);
         for (let pi = 0; pi < patchCount; pi++) {
           const px = Math.random() * w;
           const py = Math.random() * h;
@@ -1097,6 +1100,241 @@ class FirewallSequence {
     gsap.set(label, { opacity: 0 });
     timeline.to(label, { opacity: 0.7, duration: 0.3, ease: 'power2.out' }, 0.3);
     timeline.to(label, { opacity: 0, duration: 0.3, ease: 'power2.in' }, 1.2);
+  }
+
+  /**
+   * Add static dense background to Glitch Burst — drawn ONCE, provides 90% screen coverage
+   * Per ChatGPT PixiJS report: "Graphics fastest when not modified"
+   */
+  _addGlitchBurstDensity(glitchContainer, w, h) {
+    // =============================================================
+    // STATIC DENSE BACKGROUND — drawn ONCE, never redrawn
+    // This layer provides the 90% base density that the reference has
+    // =============================================================
+
+    var denseBg = new PIXI.Graphics();
+
+    // COLOR PALETTE — full spectrum chaos per reference image
+    var colors = [
+        0xff0044, 0xff00ff, 0x00d4ff, 0xff6b00, 0x00ff88,
+        0xffff00, 0x8800ff, 0x00ffcc, 0xff3388, 0x44aaff,
+        0xcc00ff, 0xff8800, 0x00ddaa, 0xff0088, 0x6600ff,
+        0x44ff00, 0xff4444, 0x0088ff, 0xff00aa, 0xaaff00,
+        0xdd00ff, 0x00ffff, 0xff6600, 0x88ff44, 0xff0000,
+        0x0000ff, 0x00ff00, 0xff00cc, 0xccff00, 0x0044ff
+    ];
+
+    // =============================================
+    // LAYER 1: FULL-WIDTH HORIZONTAL NOISE BANDS
+    // These fill the ENTIRE screen height, edge to edge
+    // =============================================
+    var bandY = 0;
+    while (bandY < h) {
+        var bandH = 2 + Math.floor(Math.random() * 35);
+        var bandType = Math.random();
+
+        if (bandType < 0.35) {
+            // DENSE NOISE BAND — bright, multicolor, packed with small blocks
+            var bandColor = colors[Math.floor(Math.random() * colors.length)];
+            var bandAlpha = 0.20 + Math.random() * 0.50;
+            denseBg.beginFill(bandColor, bandAlpha);
+            denseBg.drawRect(0, bandY, w, bandH);
+            denseBg.endFill();
+
+            // Sub-blocks within the band for texture
+            var subBlockCount = Math.floor(w / 12);
+            for (var sb = 0; sb < subBlockCount; sb++) {
+                if (Math.random() < 0.4) {
+                    var sbColor = colors[Math.floor(Math.random() * colors.length)];
+                    var sbAlpha = 0.25 + Math.random() * 0.55;
+                    var sbW = 3 + Math.random() * 18;
+                    var sbX = sb * 12 + Math.random() * 6;
+                    denseBg.beginFill(sbColor, sbAlpha);
+                    denseBg.drawRect(sbX, bandY, sbW, bandH);
+                    denseBg.endFill();
+                }
+            }
+        } else if (bandType < 0.55) {
+            // DARK BAND with scattered pixels — the "quieter" zones
+            denseBg.beginFill(0x0a0a14, 0.7);
+            denseBg.drawRect(0, bandY, w, bandH);
+            denseBg.endFill();
+
+            // Scattered colored pixels within dark band
+            for (var dp = 0; dp < 15; dp++) {
+                var dpColor = colors[Math.floor(Math.random() * colors.length)];
+                denseBg.beginFill(dpColor, 0.15 + Math.random() * 0.35);
+                denseBg.drawRect(Math.random() * w, bandY + Math.random() * bandH, 2 + Math.random() * 6, 1 + Math.random() * 3);
+                denseBg.endFill();
+            }
+        } else if (bandType < 0.75) {
+            // GRADIENT-ISH BAND — color shifts across width
+            var segCount = 8 + Math.floor(Math.random() * 4);
+            var segW = w / segCount;
+            for (var gs = 0; gs < segCount; gs++) {
+                var gsColor = colors[Math.floor(Math.random() * colors.length)];
+                var gsAlpha = 0.15 + Math.random() * 0.45;
+                denseBg.beginFill(gsColor, gsAlpha);
+                denseBg.drawRect(gs * segW, bandY, segW + 2, bandH);
+                denseBg.endFill();
+            }
+        } else {
+            // THIN INTERFERENCE LINE — 1-3px bright streak
+            bandH = 1 + Math.floor(Math.random() * 2);
+            var lineColor = colors[Math.floor(Math.random() * colors.length)];
+            denseBg.beginFill(lineColor, 0.3 + Math.random() * 0.5);
+            denseBg.drawRect(0, bandY, w * (0.3 + Math.random() * 0.7), bandH);
+            denseBg.endFill();
+        }
+
+        bandY += bandH + Math.floor(Math.random() * 3);
+    }
+
+    // =============================================
+    // LAYER 2: BLOCK ARTIFACTS (8x8 and 16x16)
+    // Compression failure blocks — solid colored squares
+    // =============================================
+    for (var ba = 0; ba < 150; ba++) {
+        var blockSize = (Math.random() < 0.6) ? 8 : 16;
+        var bx = Math.floor(Math.random() * (w / blockSize)) * blockSize;
+        var by = Math.floor(Math.random() * (h / blockSize)) * blockSize;
+        var bColor = colors[Math.floor(Math.random() * colors.length)];
+        var bAlpha = 0.25 + Math.random() * 0.60;
+        denseBg.beginFill(bColor, bAlpha);
+        denseBg.drawRect(bx, by, blockSize, blockSize);
+        denseBg.endFill();
+    }
+
+    // =============================================
+    // LAYER 3: SURVIVING UI FRAGMENTS
+    // =============================================
+
+    // RADAR — concentric rings, upper-left area
+    var radarCX = w * 0.18;
+    var radarCY = h * 0.22;
+    var radarR = Math.min(w, h) * 0.10;
+    denseBg.lineStyle(2, 0x00d4ff, 0.35);
+    denseBg.drawCircle(radarCX, radarCY, radarR);
+    denseBg.lineStyle(1.5, 0x00d4ff, 0.25);
+    denseBg.drawCircle(radarCX, radarCY, radarR * 0.7);
+    denseBg.lineStyle(1, 0x00d4ff, 0.20);
+    denseBg.drawCircle(radarCX, radarCY, radarR * 0.4);
+    denseBg.lineStyle(0);
+    denseBg.beginFill(0x00d4ff, 0.5);
+    denseBg.drawCircle(radarCX, radarCY, 3);
+    denseBg.endFill();
+    denseBg.lineStyle(2.5, 0x00d4ff, 0.18);
+    denseBg.arc(radarCX, radarCY, radarR * 0.85, 0.2, 1.4);
+    denseBg.lineStyle(0);
+
+    // BAR CHART — lower-right area
+    var chartX = w * 0.70;
+    var chartY = h * 0.58;
+    var barW = 8;
+    var barSpacing = 12;
+    var chartBars = [0.6, 0.4, 0.8, 0.5, 0.9, 0.3, 0.7, 0.55];
+    for (var cbi = 0; cbi < chartBars.length; cbi++) {
+        var barH = 40 * chartBars[cbi];
+        var barColor = (cbi % 3 === 2) ? 0xff8800 : 0x00d4ff;
+        denseBg.beginFill(barColor, 0.35);
+        denseBg.drawRect(chartX + cbi * barSpacing, chartY + 40 - barH, barW, barH);
+        denseBg.endFill();
+    }
+    denseBg.lineStyle(1, 0x00d4ff, 0.15);
+    denseBg.drawRect(chartX - 4, chartY - 4, chartBars.length * barSpacing + 4, 48);
+    denseBg.lineStyle(0);
+
+    // PANEL OUTLINES — ghostly remnants
+    denseBg.lineStyle(1, 0x00d4ff, 0.06);
+    denseBg.drawRect(w * 0.01, h * 0.05, w * 0.15, h * 0.35);
+    denseBg.drawRect(w * 0.01, h * 0.42, w * 0.12, h * 0.15);
+    denseBg.drawRect(w * 0.82, h * 0.08, w * 0.16, h * 0.30);
+    denseBg.drawRect(w * 0.85, h * 0.65, w * 0.12, h * 0.20);
+    denseBg.lineStyle(0);
+
+    // HEXAGONAL PATTERN — faint hex grid in upper-right
+    denseBg.lineStyle(0.5, 0x00d4ff, 0.04);
+    var hexR = 14;
+    for (var hxi = 0; hxi < 8; hxi++) {
+        for (var hyi = 0; hyi < 5; hyi++) {
+            var hx = w * 0.55 + hxi * hexR * 1.75 + (hyi % 2) * hexR * 0.87;
+            var hy = h * 0.10 + hyi * hexR * 1.5;
+            denseBg.moveTo(hx + hexR, hy);
+            for (var hv = 1; hv <= 6; hv++) {
+                denseBg.lineTo(hx + hexR * Math.cos(Math.PI / 3 * hv), hy + hexR * Math.sin(Math.PI / 3 * hv));
+            }
+        }
+    }
+    denseBg.lineStyle(0);
+
+    // =============================================
+    // LAYER 4: LARGE WHITE CENTER TEXT BLOCK
+    // =============================================
+    var bigText = new PIXI.Text('|||6Ä!||', {
+        fontFamily: 'Orbitron, monospace',
+        fontSize: Math.min(w * 0.08, 72),
+        fill: 0xffffff,
+        fontWeight: '900',
+        letterSpacing: 12
+    });
+    bigText.anchor.set(0.5);
+    bigText.x = w * 0.45;
+    bigText.y = h * 0.42;
+    bigText.alpha = 0.85;
+    glitchContainer.addChild(bigText);
+
+    // Second line of smaller corrupted text
+    var subText = new PIXI.Text('SCANNING... \u2593\u2593\u2593 ERR:0x4F2A \u2593\u2593\u2593', {
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: Math.min(w * 0.018, 16),
+        fill: 0x00d4ff,
+        letterSpacing: 3
+    });
+    subText.anchor.set(0.5);
+    subText.x = w * 0.18;
+    subText.y = h * 0.28;
+    subText.alpha = 0.4;
+    glitchContainer.addChild(subText);
+
+    // =============================================
+    // LAYER 5: ADDITIONAL CORRUPT CHARACTERS (40 more)
+    // =============================================
+    var glitchChars = '\u2593\u2591\u2592\u2588\u2584\u2580\u25A0\u25A1\u25CA\u25D8\u25CB\u25CF\u2666\u2663\u2660\u25B6\u25C0\u25BC\u25B2';
+    var charColors = [0x00d4ff, 0xff00ff, 0xff6b00, 0x00ff88, 0xffffff, 0xff0044, 0xffff00, 0x8800ff];
+
+    for (var eci = 0; eci < 40; eci++) {
+        var ecChar = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+        var ecColor = charColors[Math.floor(Math.random() * charColors.length)];
+        var ecText = new PIXI.Text(ecChar, {
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 10 + Math.random() * 20,
+            fill: ecColor,
+            fontWeight: 'bold'
+        });
+        ecText.x = Math.random() * w;
+        ecText.y = Math.random() * h;
+        ecText.alpha = 0.15 + Math.random() * 0.55;
+        glitchContainer.addChild(ecText);
+    }
+
+    // =============================================
+    // LAYER 6: DENSE SCAN LINES (CRT effect)
+    // =============================================
+    var denseScanLines = new PIXI.Graphics();
+    for (var dsl = 0; dsl < h; dsl += 3) {
+        denseScanLines.beginFill(0x000000, 0.12);
+        denseScanLines.drawRect(0, dsl, w, 1);
+        denseScanLines.endFill();
+    }
+    denseScanLines.alpha = 0.6;
+
+    // =============================================
+    // ADD TO CONTAINER
+    // denseBg goes FIRST (underneath everything)
+    // denseScanLines goes on TOP for CRT effect
+    // =============================================
+    glitchContainer.addChildAt(denseBg, 0);
+    glitchContainer.addChild(denseScanLines);
   }
 
   /**

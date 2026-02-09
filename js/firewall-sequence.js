@@ -819,13 +819,13 @@ class FirewallSequence {
       stage.addChild(beamContainer);
 
       // =========================================================
-      // LAYER 1: HEXAGONAL GRID BACKGROUND (NORMAL blend)
+      // LAYER 1: HEXAGONAL GRID BACKGROUND (denser, NORMAL blend)
       // =========================================================
       const hexGrid = new PIXI.Graphics();
-      const hexRadius = 30;
+      const hexRadius = 20; // Smaller for denser coverage
       const hexW = hexRadius * Math.sqrt(3);
       const hexH = hexRadius * 2;
-      hexGrid.lineStyle(1, 0x0a2a3a, 0.06);
+      hexGrid.lineStyle(1, 0x0a2a3a, 0.08);
 
       for (let row = -2; row < Math.ceil(h / (hexH * 0.75)) + 2; row++) {
         for (let col = -2; col < Math.ceil(w / hexW) + 2; col++) {
@@ -843,78 +843,272 @@ class FirewallSequence {
       hexGrid.alpha = 0;
       backgroundContainer.addChild(hexGrid);
 
+      // beamY defined early for positioning background elements
+      const beamY = h * 0.45;
+
       // =========================================================
-      // LAYER 2: HUD DATA PANELS (left and right edges, NORMAL blend)
+      // LAYER 2: STRUCTURAL FRAMEWORK RAILS (thick rails with top-edge highlights)
+      // =========================================================
+      const structuralRails = new PIXI.Graphics();
+
+      // Helper: draw a horizontal rail with dark body + bright top edge
+      const drawHRail = (rx, ry, rw) => {
+        structuralRails.beginFill(0x0c1a28, 0.9);
+        structuralRails.drawRect(rx, ry, rw, 10);
+        structuralRails.endFill();
+        structuralRails.lineStyle(1.5, 0x40a0c0, 0.6);
+        structuralRails.moveTo(rx, ry);
+        structuralRails.lineTo(rx + rw, ry);
+      };
+
+      // Helper: draw a vertical channel with dark body + bright left edge
+      const drawVChannel = (cx, cy, ch) => {
+        structuralRails.beginFill(0x0c1a28, 0.9);
+        structuralRails.drawRect(cx, cy, 4, ch);
+        structuralRails.endFill();
+        structuralRails.lineStyle(1.5, 0x40a0c0, 0.5);
+        structuralRails.moveTo(cx, cy);
+        structuralRails.lineTo(cx, cy + ch);
+      };
+
+      // LEFT SIDE - 3 horizontal rails
+      const topRailY = beamY - h * 0.28;
+      const midRailY = beamY - h * 0.08;
+      const bottomRailY = beamY + h * 0.12;
+      drawHRail(0, topRailY, w * 0.35);
+      drawHRail(0, midRailY, w * 0.30);
+      drawHRail(0, bottomRailY, w * 0.25);
+
+      // LEFT SIDE - 2 vertical channels
+      drawVChannel(w * 0.15, topRailY, bottomRailY - topRailY);
+      drawVChannel(w * 0.30, topRailY, midRailY - topRailY);
+
+      // RIGHT SIDE - 2 horizontal rails
+      drawHRail(w * 0.72, beamY - h * 0.25, w * 0.28);
+      drawHRail(w * 0.78, beamY + h * 0.10, w * 0.22);
+
+      // RIGHT SIDE - 1 vertical channel
+      drawVChannel(w * 0.78, beamY - h * 0.25, h * 0.35);
+
+      // Junction gussets at intersections (small filled circles)
+      structuralRails.beginFill(0x40a0c0, 0.4);
+      structuralRails.drawCircle(w * 0.15, topRailY, 3);
+      structuralRails.drawCircle(w * 0.15, midRailY, 3);
+      structuralRails.drawCircle(w * 0.15, bottomRailY, 3);
+      structuralRails.drawCircle(w * 0.30, topRailY, 3);
+      structuralRails.drawCircle(w * 0.30, midRailY, 3);
+      structuralRails.drawCircle(w * 0.78, beamY - h * 0.25, 3);
+      structuralRails.drawCircle(w * 0.78, beamY + h * 0.10, 3);
+      structuralRails.endFill();
+
+      structuralRails.alpha = 0;
+      backgroundContainer.addChild(structuralRails);
+
+      // =========================================================
+      // LAYER 3: BEVELED HUD PANELS (filled dark body + bright top/left edges)
       // =========================================================
       const hudPanels = new PIXI.Graphics();
 
-      // Left side panels (8-10 panels)
-      for (let p = 0; p < 9; p++) {
-        const panelX = 15 + Math.random() * 100;
-        const panelY = h * 0.08 + (p / 9) * h * 0.8 + Math.random() * 30;
-        const panelW = 40 + Math.random() * 80;
-        const panelH = 15 + Math.random() * 35;
+      // Helper: draw beveled panel with two-tone bevel trick
+      const drawBeveledPanel = (px, py, pw, ph, edgeAlpha) => {
+        // Dark filled body
+        hudPanels.beginFill(0x0a1520, 0.85);
+        hudPanels.drawRect(px, py, pw, ph);
+        hudPanels.endFill();
+        // Bright top edge (specular highlight)
+        hudPanels.lineStyle(1, 0x00d4ff, edgeAlpha);
+        hudPanels.moveTo(px, py);
+        hudPanels.lineTo(px + pw, py);
+        // Bright left edge
+        hudPanels.moveTo(px, py);
+        hudPanels.lineTo(px, py + ph);
+        // Subtle bottom shadow
+        hudPanels.lineStyle(1, 0x000508, 0.3);
+        hudPanels.moveTo(px, py + ph);
+        hudPanels.lineTo(px + pw, py + ph);
+      };
 
-        hudPanels.lineStyle(1, 0x00d4ff, 0.12 + Math.random() * 0.08);
-        hudPanels.drawRect(panelX, panelY, panelW, panelH);
-
-        // Internal bar lines for some panels
-        if (Math.random() > 0.5) {
-          const barCount = 2 + Math.floor(Math.random() * 4);
-          for (let b = 0; b < barCount; b++) {
-            const barY = panelY + 4 + (b / barCount) * (panelH - 8);
-            const barW = panelW * (0.3 + Math.random() * 0.6);
-            hudPanels.lineStyle(1, 0x00d4ff, 0.08);
-            hudPanels.moveTo(panelX + 3, barY);
-            hudPanels.lineTo(panelX + 3 + barW, barY);
+      // Helper: draw bar chart inside panel
+      const drawBarChart = (bx, by, chartW, chartH, barCount) => {
+        for (let i = 0; i < barCount; i++) {
+          const barH = chartH * (0.3 + Math.random() * 0.7);
+          const barW = (chartW / barCount) * 0.7;
+          const barX = bx + i * (chartW / barCount);
+          const barY = by + chartH - barH;
+          // Amber accent every 3rd bar
+          if (i % 3 === 2) {
+            hudPanels.beginFill(0xCC8800, 0.5);
+          } else {
+            hudPanels.beginFill(0x00d4ff, 0.35);
           }
+          hudPanels.drawRect(barX, barY, barW, barH);
+          hudPanels.endFill();
         }
+      };
+
+      // Helper: draw text readout lines
+      const drawTextReadout = (tx, ty, lineW, lineCount) => {
+        for (let i = 0; i < lineCount; i++) {
+          const thisAlpha = 0.08 + Math.random() * 0.15;
+          const thisW = lineW * (0.5 + Math.random() * 0.5);
+          hudPanels.beginFill(0x00d4ff, thisAlpha);
+          hudPanels.drawRect(tx, ty + i * 8, thisW, 2);
+          hudPanels.endFill();
+        }
+      };
+
+      // LEFT UPPER ZONE panels (between top rail and mid rail)
+      drawBeveledPanel(w * 0.16, beamY - h * 0.24, 120, 55, 0.25);
+      drawBarChart(w * 0.16 + 8, beamY - h * 0.24 + 8, 104, 40, 8);
+
+      drawBeveledPanel(w * 0.16, beamY - h * 0.15, 100, 40, 0.28);
+      drawBarChart(w * 0.16 + 6, beamY - h * 0.15 + 6, 88, 28, 6);
+
+      drawBeveledPanel(w * 0.02, beamY - h * 0.14, 80, 30, 0.22);
+      drawTextReadout(w * 0.02 + 6, beamY - h * 0.14 + 6, 68, 3);
+
+      // LEFT LOWER ZONE panels (between mid rail and bottom rail)
+      drawBeveledPanel(w * 0.02, beamY - h * 0.04, 90, 50, 0.30);
+      drawTextReadout(w * 0.02 + 6, beamY - h * 0.04 + 8, 78, 5);
+
+      drawBeveledPanel(w * 0.10, beamY + h * 0.02, 60, 35, 0.20);
+      drawBeveledPanel(w * 0.02, beamY + h * 0.04, 70, 25, 0.18);
+
+      // BELOW BEAM panels (below bottom rail)
+      drawBeveledPanel(w * 0.02, beamY + h * 0.15, 100, 40, 0.22);
+      drawBeveledPanel(w * 0.12, beamY + h * 0.18, 50, 50, 0.15);
+
+      // Progress bar in lower left panel
+      const progX = w * 0.02 + 8, progY = beamY + h * 0.15 + 12;
+      for (let s = 0; s < 6; s++) {
+        if (s < 3) {
+          hudPanels.beginFill(0x00d4ff, 0.4);
+        } else {
+          hudPanels.beginFill(0x0a1520, 0.5);
+        }
+        hudPanels.drawRect(progX + s * 14, progY, 12, 6);
+        hudPanels.endFill();
       }
 
-      // Right side panels (4-6 panels)
-      for (let p = 0; p < 5; p++) {
-        const panelX = w - 150 + Math.random() * 100;
-        const panelY = h * 0.15 + (p / 5) * h * 0.7 + Math.random() * 40;
-        const panelW = 30 + Math.random() * 60;
-        const panelH = 12 + Math.random() * 25;
+      // RIGHT SIDE panels
+      drawBeveledPanel(w * 0.80, beamY - h * 0.22, 100, 70, 0.22);
+      drawBarChart(w * 0.80 + 8, beamY - h * 0.22 + 10, 84, 50, 7);
 
-        hudPanels.lineStyle(1, 0x00d4ff, 0.1 + Math.random() * 0.08);
-        hudPanels.drawRect(panelX, panelY, panelW, panelH);
-      }
+      drawBeveledPanel(w * 0.82, beamY - h * 0.08, 80, 40, 0.18);
+      drawTextReadout(w * 0.82 + 6, beamY - h * 0.08 + 8, 68, 4);
+
+      drawBeveledPanel(w * 0.85, beamY + h * 0.05, 60, 50, 0.20);
+      drawBeveledPanel(w * 0.80, beamY + h * 0.14, 70, 35, 0.16);
+      drawBeveledPanel(w * 0.88, beamY + h * 0.16, 55, 40, 0.15);
 
       hudPanels.alpha = 0;
       backgroundContainer.addChild(hudPanels);
 
       // =========================================================
-      // LAYER 3: CIRCULAR RADAR ELEMENT (upper-left, NORMAL blend)
+      // LAYER 4: RADAR WITH BEZEL HOUSING
       // =========================================================
       const radar = new PIXI.Graphics();
-      const radarX = 100 + Math.random() * 60;
-      const radarY = 100 + Math.random() * 60;
+      const radarCX = w * 0.07;
+      const radarCY = beamY - h * 0.22;
+      const radarR = Math.min(w, h) * 0.055;
 
-      // Concentric circles
-      radar.lineStyle(1, 0x00d4ff, 0.12);
-      radar.drawCircle(radarX, radarY, 40);
-      radar.drawCircle(radarX, radarY, 60);
-      radar.drawCircle(radarX, radarY, 80);
+      // Rectangular bezel housing (dark fill + bright edges)
+      radar.beginFill(0x0c1825, 0.9);
+      radar.drawRect(radarCX - radarR - 10, radarCY - radarR - 10, radarR * 2 + 20, radarR * 2 + 20);
+      radar.endFill();
+      radar.lineStyle(1, 0x306080, 0.4);
+      radar.moveTo(radarCX - radarR - 10, radarCY - radarR - 10);
+      radar.lineTo(radarCX + radarR + 10, radarCY - radarR - 10);
+      radar.moveTo(radarCX - radarR - 10, radarCY - radarR - 10);
+      radar.lineTo(radarCX - radarR - 10, radarCY + radarR + 10);
+
+      // Screen area (emissive display fill)
+      radar.beginFill(0x081018, 0.95);
+      radar.drawRect(radarCX - radarR - 3, radarCY - radarR - 3, radarR * 2 + 6, radarR * 2 + 6);
+      radar.endFill();
+
+      // Concentric rings
+      radar.lineStyle(1, 0x00d4ff, 0.15);
+      radar.drawCircle(radarCX, radarCY, radarR * 0.4);
+      radar.drawCircle(radarCX, radarCY, radarR * 0.7);
+      radar.drawCircle(radarCX, radarCY, radarR);
 
       // Crosshair
-      radar.lineStyle(1, 0x00d4ff, 0.1);
-      radar.moveTo(radarX - 85, radarY);
-      radar.lineTo(radarX + 85, radarY);
-      radar.moveTo(radarX, radarY - 85);
-      radar.lineTo(radarX, radarY + 85);
+      radar.lineStyle(1, 0x00d4ff, 0.12);
+      radar.moveTo(radarCX - radarR - 2, radarCY);
+      radar.lineTo(radarCX + radarR + 2, radarCY);
+      radar.moveTo(radarCX, radarCY - radarR - 2);
+      radar.lineTo(radarCX, radarCY + radarR + 2);
 
       // Center dot
-      radar.beginFill(0x00d4ff, 0.3);
-      radar.drawCircle(radarX, radarY, 4);
+      radar.beginFill(0x00d4ff, 0.5);
+      radar.drawCircle(radarCX, radarCY, 3);
+      radar.endFill();
+
+      // Sweep indicator (bright dot on ring)
+      radar.beginFill(0x00ffff, 0.6);
+      radar.drawCircle(radarCX + radarR * 0.5, radarCY - radarR * 0.3, 2);
       radar.endFill();
 
       radar.alpha = 0;
       backgroundContainer.addChild(radar);
 
       // =========================================================
-      // LAYER 4: HORIZONTAL INTERFERENCE LINES (subtle, NORMAL blend)
+      // LAYER 5: CHEVRON BRACKETS (angled metal elements, lower-left)
+      // =========================================================
+      const chevrons = new PIXI.Graphics();
+
+      const drawChevron = (cx, cy, chevW, chevH) => {
+        // Dark body
+        chevrons.beginFill(0x0c1a28, 0.85);
+        chevrons.drawPolygon([
+          cx, cy,                      // left point (arrow tip)
+          cx + chevW, cy - chevH / 2,  // top right
+          cx + chevW, cy + chevH / 2   // bottom right
+        ]);
+        chevrons.endFill();
+        // Bright leading edge (top edge)
+        chevrons.lineStyle(1.5, 0x50a0c0, 0.6);
+        chevrons.moveTo(cx, cy);
+        chevrons.lineTo(cx + chevW, cy - chevH / 2);
+      };
+
+      drawChevron(w * 0.04, beamY + h * 0.26, 50, 16);
+      drawChevron(w * 0.04, beamY + h * 0.30, 45, 14);
+      drawChevron(w * 0.04, beamY + h * 0.34, 55, 18);
+
+      chevrons.alpha = 0;
+      backgroundContainer.addChild(chevrons);
+
+      // =========================================================
+      // LAYER 6: FLOOR REFLECTION (faint mirrored glow below beam)
+      // =========================================================
+      const floorReflection = new PIXI.Graphics();
+
+      // Primary reflection band
+      floorReflection.beginFill(0x00d4ff, 0.03);
+      floorReflection.drawRect(0, beamY + 30, w, 20);
+      floorReflection.endFill();
+
+      // Fainter secondary reflection
+      floorReflection.beginFill(0x003355, 0.02);
+      floorReflection.drawRect(0, beamY + 50, w, 40);
+      floorReflection.endFill();
+
+      // Specular floor dots
+      floorReflection.beginFill(0x00d4ff, 0.12);
+      floorReflection.drawCircle(w * 0.20, beamY + 45, 1.5);
+      floorReflection.drawCircle(w * 0.35, beamY + 55, 1);
+      floorReflection.drawCircle(w * 0.55, beamY + 48, 2);
+      floorReflection.drawCircle(w * 0.70, beamY + 60, 1.5);
+      floorReflection.drawCircle(w * 0.85, beamY + 42, 1);
+      floorReflection.endFill();
+
+      floorReflection.alpha = 0;
+      backgroundContainer.addChild(floorReflection);
+
+      // =========================================================
+      // LAYER 7: HORIZONTAL INTERFERENCE LINES (subtle, NORMAL blend)
       // =========================================================
       const interferenceLines = new PIXI.Graphics();
       for (let i = 0; i < 5; i++) {
@@ -927,9 +1121,9 @@ class FirewallSequence {
       backgroundContainer.addChild(interferenceLines);
 
       // =========================================================
-      // LAYER 5: DORMANT BEAM (full width, low intensity, FIXED Y)
+      // LAYER 8: DORMANT BEAM (full width, low intensity, FIXED Y)
       // =========================================================
-      const beamY = h * 0.45; // Fixed vertical position
+      // beamY defined earlier in background section
       const dormantBeam = new PIXI.Container();
       dormantBeam.y = beamY;
 
@@ -953,7 +1147,7 @@ class FirewallSequence {
       beamContainer.addChild(dormantBeam);
 
       // =========================================================
-      // LAYER 6: ACTIVATED BEAM WITH MASK (revealed by hotspot sweep)
+      // LAYER 9: ACTIVATED BEAM WITH MASK (revealed by hotspot sweep)
       // =========================================================
       const activatedBeam = new PIXI.Container();
       activatedBeam.y = beamY;
@@ -985,7 +1179,7 @@ class FirewallSequence {
       beamContainer.addChild(activatedBeam);
 
       // =========================================================
-      // LAYER 7: HOTSPOT (sweeps left to right along the beam)
+      // LAYER 10: HOTSPOT (sweeps left to right along the beam)
       // =========================================================
       const hotspot = new PIXI.Container();
       hotspot.y = beamY;
@@ -1027,7 +1221,7 @@ class FirewallSequence {
       beamContainer.addChild(hotspot);
 
       // =========================================================
-      // LAYER 8: SECONDARY NODES (flash as hotspot passes)
+      // LAYER 11: SECONDARY NODES (flash as hotspot passes)
       // =========================================================
       const secondaryNodes = [];
       const numNodes = 8;
@@ -1065,7 +1259,7 @@ class FirewallSequence {
       }
 
       // =========================================================
-      // LAYER 9: DRIP PARTICLES (digital rain, activated by hotspot X)
+      // LAYER 12: DRIP PARTICLES (digital rain, activated by hotspot X)
       // =========================================================
       const dripParticles = [];
       const numDrips = 50;
@@ -1096,7 +1290,7 @@ class FirewallSequence {
       }
 
       // =========================================================
-      // LAYER 10: FILTERS
+      // LAYER 13: FILTERS
       // =========================================================
       const bloomFilter = new PIXI.filters.AdvancedBloomFilter({
         threshold: 0.4,
@@ -1116,8 +1310,11 @@ class FirewallSequence {
 
       // --- 0.0s - 0.3s: FADE IN BACKGROUND ---
       timeline.to(hexGrid, { alpha: 0.5, duration: 0.3, ease: 'power2.out' }, 0);
-      timeline.to(hudPanels, { alpha: 0.7, duration: 0.3, ease: 'power2.out' }, 0);
-      timeline.to(radar, { alpha: 0.6, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(structuralRails, { alpha: 0.8, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(hudPanels, { alpha: 0.85, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(radar, { alpha: 0.8, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(chevrons, { alpha: 0.7, duration: 0.3, ease: 'power2.out' }, 0);
+      timeline.to(floorReflection, { alpha: 0.6, duration: 0.3, ease: 'power2.out' }, 0);
       timeline.to(interferenceLines, { alpha: 0.5, duration: 0.3, ease: 'power2.out' }, 0);
 
       // --- 0.0s - 0.2s: FADE IN DORMANT BEAM ---
@@ -1220,8 +1417,11 @@ class FirewallSequence {
 
       // --- 1.6s - 2.0s: FADE OUT ---
       timeline.to(hexGrid, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+      timeline.to(structuralRails, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
       timeline.to(hudPanels, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
       timeline.to(radar, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+      timeline.to(chevrons, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
+      timeline.to(floorReflection, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
       timeline.to(interferenceLines, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
       timeline.to(dormantBeam, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.6);
       timeline.to(activatedBeam, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.6);

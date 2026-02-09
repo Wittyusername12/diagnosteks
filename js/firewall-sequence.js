@@ -927,79 +927,145 @@ class FirewallSequence {
       backgroundContainer.addChild(interferenceLines);
 
       // =========================================================
-      // LAYER 5: AFTERGLOW TRAIL (grows as beam sweeps, ADD blend)
+      // LAYER 5: DORMANT BEAM (full width, low intensity, FIXED Y)
       // =========================================================
-      const afterglow = new PIXI.Graphics();
-      afterglow.beginFill(0x002233, 0.08);
-      afterglow.drawRect(0, 0, w, h);
-      afterglow.endFill();
-      afterglow.blendMode = PIXI.BLEND_MODES.ADD;
-      afterglow.alpha = 0;
-      afterglow.scale.y = 0; // Start with no height
-      beamContainer.addChild(afterglow);
+      const beamY = h * 0.45; // Fixed vertical position
+      const dormantBeam = new PIXI.Container();
+      dormantBeam.y = beamY;
+
+      // Dormant secondary glow (very dim)
+      const dormantGlow = new PIXI.Graphics();
+      dormantGlow.beginFill(0x003355, 0.03);
+      dormantGlow.drawRect(0, -30, w, 60);
+      dormantGlow.endFill();
+      dormantGlow.blendMode = PIXI.BLEND_MODES.ADD;
+      dormantBeam.addChild(dormantGlow);
+
+      // Dormant core line (dim cyan)
+      const dormantCore = new PIXI.Graphics();
+      dormantCore.beginFill(0x00d4ff, 0.15);
+      dormantCore.drawRect(0, -1, w, 2);
+      dormantCore.endFill();
+      dormantCore.blendMode = PIXI.BLEND_MODES.ADD;
+      dormantBeam.addChild(dormantCore);
+
+      dormantBeam.alpha = 0;
+      beamContainer.addChild(dormantBeam);
 
       // =========================================================
-      // LAYER 6: THE SCAN BEAM (sweeps top to bottom)
+      // LAYER 6: ACTIVATED BEAM WITH MASK (revealed by hotspot sweep)
       // =========================================================
-      const beamGroup = new PIXI.Container();
+      const activatedBeam = new PIXI.Container();
+      activatedBeam.y = beamY;
 
-      // Secondary glow (wide, soft)
-      const secondaryGlow = new PIXI.Graphics();
-      secondaryGlow.beginFill(0x003355, 0.06);
-      secondaryGlow.drawRect(0, -40, w, 80);
-      secondaryGlow.endFill();
-      secondaryGlow.blendMode = PIXI.BLEND_MODES.ADD;
-      beamGroup.addChild(secondaryGlow);
+      // Activated glow (brighter)
+      const activatedGlow = new PIXI.Graphics();
+      activatedGlow.beginFill(0x00d4ff, 0.12);
+      activatedGlow.drawRect(0, -25, w, 50);
+      activatedGlow.endFill();
+      activatedGlow.blendMode = PIXI.BLEND_MODES.ADD;
+      activatedBeam.addChild(activatedGlow);
 
-      // Main glow band (medium)
-      const glowBand = new PIXI.Graphics();
-      glowBand.beginFill(0x00d4ff, 0.15);
-      glowBand.drawRect(0, -20, w, 40);
-      glowBand.endFill();
-      glowBand.blendMode = PIXI.BLEND_MODES.ADD;
-      beamGroup.addChild(glowBand);
+      // Activated core (white-hot)
+      const activatedCore = new PIXI.Graphics();
+      activatedCore.beginFill(0xffffff, 0.6);
+      activatedCore.drawRect(0, -1.5, w, 3);
+      activatedCore.endFill();
+      activatedCore.blendMode = PIXI.BLEND_MODES.ADD;
+      activatedBeam.addChild(activatedCore);
 
-      // Core line (white-hot, 3px)
-      const coreLine = new PIXI.Graphics();
-      coreLine.beginFill(0xffffff, 0.95);
-      coreLine.drawRect(0, -1.5, w, 3);
-      coreLine.endFill();
-      coreLine.blendMode = PIXI.BLEND_MODES.ADD;
-      beamGroup.addChild(coreLine);
+      // Mask for horizontal reveal (grows rightward)
+      const activatedMask = new PIXI.Graphics();
+      activatedMask.beginFill(0xffffff);
+      activatedMask.drawRect(0, -100, 0, 200); // Start with 0 width
+      activatedMask.endFill();
+      beamContainer.addChild(activatedMask);
+      activatedBeam.mask = activatedMask;
+      activatedBeam.alpha = 0;
+      beamContainer.addChild(activatedBeam);
 
-      // Lens flare hotspot (slightly left of center)
-      const flareX = w * 0.35;
-      const outerFlare = new PIXI.Graphics();
-      outerFlare.beginFill(0x00d4ff, 0.3);
-      outerFlare.drawCircle(flareX, 0, 60);
-      outerFlare.endFill();
-      outerFlare.blendMode = PIXI.BLEND_MODES.ADD;
-      beamGroup.addChild(outerFlare);
+      // =========================================================
+      // LAYER 7: HOTSPOT (sweeps left to right along the beam)
+      // =========================================================
+      const hotspot = new PIXI.Container();
+      hotspot.y = beamY;
+      hotspot.x = -60; // Start off-screen left
 
-      const innerFlare = new PIXI.Graphics();
-      innerFlare.beginFill(0xffffff, 0.8);
-      innerFlare.drawCircle(flareX, 0, 25);
-      innerFlare.endFill();
-      innerFlare.blendMode = PIXI.BLEND_MODES.ADD;
-      beamGroup.addChild(innerFlare);
+      // Outer soft glow
+      const outerGlow = new PIXI.Graphics();
+      outerGlow.beginFill(0x003366, 0.25);
+      outerGlow.drawCircle(0, 0, 80);
+      outerGlow.endFill();
+      outerGlow.blendMode = PIXI.BLEND_MODES.ADD;
+      hotspot.addChild(outerGlow);
 
-      // Edge flares (2-3 small bright spots)
-      for (let ef = 0; ef < 3; ef++) {
-        const edgeFlare = new PIXI.Graphics();
-        const efX = w * (0.1 + Math.random() * 0.8);
-        edgeFlare.beginFill(0x88ddff, 0.4);
-        edgeFlare.drawCircle(efX, 0, 8 + Math.random() * 4);
-        edgeFlare.endFill();
-        edgeFlare.blendMode = PIXI.BLEND_MODES.ADD;
-        beamGroup.addChild(edgeFlare);
+      // Mid glow
+      const midGlow = new PIXI.Graphics();
+      midGlow.beginFill(0x00d4ff, 0.4);
+      midGlow.drawCircle(0, 0, 45);
+      midGlow.endFill();
+      midGlow.blendMode = PIXI.BLEND_MODES.ADD;
+      hotspot.addChild(midGlow);
+
+      // Bright core
+      const hotspotCore = new PIXI.Graphics();
+      hotspotCore.beginFill(0xffffff, 0.9);
+      hotspotCore.drawCircle(0, 0, 20);
+      hotspotCore.endFill();
+      hotspotCore.blendMode = PIXI.BLEND_MODES.ADD;
+      hotspot.addChild(hotspotCore);
+
+      // White-hot center
+      const hotspotCenter = new PIXI.Graphics();
+      hotspotCenter.beginFill(0xffffff, 1);
+      hotspotCenter.drawCircle(0, 0, 8);
+      hotspotCenter.endFill();
+      hotspotCenter.blendMode = PIXI.BLEND_MODES.ADD;
+      hotspot.addChild(hotspotCenter);
+
+      hotspot.alpha = 0;
+      beamContainer.addChild(hotspot);
+
+      // =========================================================
+      // LAYER 8: SECONDARY NODES (flash as hotspot passes)
+      // =========================================================
+      const secondaryNodes = [];
+      const numNodes = 8;
+
+      for (let n = 0; n < numNodes; n++) {
+        const nodeX = w * (0.1 + (n / (numNodes - 1)) * 0.8);
+        const nodeContainer = new PIXI.Container();
+        nodeContainer.x = nodeX;
+        nodeContainer.y = beamY;
+
+        // Node glow
+        const nodeGlow = new PIXI.Graphics();
+        nodeGlow.beginFill(0x00d4ff, 0.5);
+        nodeGlow.drawCircle(0, 0, 12);
+        nodeGlow.endFill();
+        nodeGlow.blendMode = PIXI.BLEND_MODES.ADD;
+        nodeContainer.addChild(nodeGlow);
+
+        // Node core
+        const nodeCore = new PIXI.Graphics();
+        nodeCore.beginFill(0xffffff, 0.8);
+        nodeCore.drawCircle(0, 0, 5);
+        nodeCore.endFill();
+        nodeCore.blendMode = PIXI.BLEND_MODES.ADD;
+        nodeContainer.addChild(nodeCore);
+
+        nodeContainer.alpha = 0;
+        nodeContainer.scale.set(0.3);
+        beamContainer.addChild(nodeContainer);
+
+        secondaryNodes.push({
+          container: nodeContainer,
+          x: nodeX
+        });
       }
 
-      beamGroup.y = -50; // Start above screen
-      beamGroup.alpha = 0;
-      beamContainer.addChild(beamGroup);
-
       // =========================================================
-      // LAYER 7: DRIP PARTICLES (digital rain falling from beam)
+      // LAYER 9: DRIP PARTICLES (digital rain, activated by hotspot X)
       // =========================================================
       const dripParticles = [];
       const numDrips = 50;
@@ -1015,21 +1081,22 @@ class FirewallSequence {
         drip.endFill();
         drip.blendMode = PIXI.BLEND_MODES.ADD;
 
-        drip.x = Math.random() * w;
-        drip.y = -50; // Start off-screen
+        const dripX = Math.random() * w;
+        drip.x = dripX;
+        drip.y = beamY; // Start at beam Y
         drip.alpha = 0;
         beamContainer.addChild(drip);
 
         dripParticles.push({
           graphic: drip,
+          x: dripX,
           fallDistance: 80 + Math.random() * 120,
-          fallDuration: 0.4 + Math.random() * 0.4,
-          startDelay: d / numDrips * 1.4 // Staggered across sweep duration
+          fallDuration: 0.4 + Math.random() * 0.4
         });
       }
 
       // =========================================================
-      // LAYER 8: FILTERS
+      // LAYER 10: FILTERS
       // =========================================================
       const bloomFilter = new PIXI.filters.AdvancedBloomFilter({
         threshold: 0.4,
@@ -1053,36 +1120,77 @@ class FirewallSequence {
       timeline.to(radar, { alpha: 0.6, duration: 0.3, ease: 'power2.out' }, 0);
       timeline.to(interferenceLines, { alpha: 0.5, duration: 0.3, ease: 'power2.out' }, 0);
 
-      // --- 0.0s - 0.2s: FADE IN BEAM ---
-      timeline.to(beamGroup, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0);
+      // --- 0.0s - 0.2s: FADE IN DORMANT BEAM ---
+      timeline.to(dormantBeam, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0);
+      timeline.to(activatedBeam, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0);
+      timeline.to(hotspot, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0);
 
-      // --- 0.1s - 1.6s: BEAM SWEEP (top to bottom) ---
-      timeline.to(beamGroup, {
-        y: h + 50,
-        duration: 1.5,
+      // --- 0.1s - 1.6s: HOTSPOT SWEEP (left to right) ---
+      const sweepStart = -60;
+      const sweepEnd = w + 60;
+      const sweepDuration = 1.5;
+
+      timeline.to(hotspot, {
+        x: sweepEnd,
+        duration: sweepDuration,
         ease: 'none',
         onUpdate: function() {
-          // Sync afterglow height with beam position
-          const progress = (beamGroup.y + 50) / (h + 100);
-          afterglow.scale.y = Math.max(0, progress);
-          afterglow.alpha = 0.5;
+          // Update activated beam mask to reveal beam behind hotspot
+          const progress = (hotspot.x - sweepStart) / (sweepEnd - sweepStart);
+          const maskWidth = Math.max(0, hotspot.x + 30);
+          activatedMask.clear();
+          activatedMask.beginFill(0xffffff);
+          activatedMask.drawRect(0, beamY - 100, maskWidth, 200);
+          activatedMask.endFill();
         }
       }, 0.1);
 
-      // --- 0.1s - 1.5s: DRIP PARTICLES (staggered activation) ---
-      dripParticles.forEach((dp) => {
-        const activationTime = 0.1 + dp.startDelay;
+      // --- SECONDARY NODES: Flash as hotspot passes ---
+      secondaryNodes.forEach((node, i) => {
+        // Calculate when hotspot reaches this node
+        const nodeProgress = (node.x - sweepStart) / (sweepEnd - sweepStart);
+        const flashTime = 0.1 + nodeProgress * sweepDuration;
 
+        // Flash in
+        timeline.to(node.container, {
+          alpha: 1,
+          duration: 0.08,
+          ease: 'power2.out'
+        }, flashTime - 0.04);
+
+        timeline.to(node.container.scale, {
+          x: 1.5,
+          y: 1.5,
+          duration: 0.1,
+          ease: 'power2.out'
+        }, flashTime - 0.04);
+
+        // Settle down
+        timeline.to(node.container.scale, {
+          x: 0.8,
+          y: 0.8,
+          duration: 0.3,
+          ease: 'power2.out'
+        }, flashTime + 0.1);
+
+        timeline.to(node.container, {
+          alpha: 0.5,
+          duration: 0.4,
+          ease: 'power2.out'
+        }, flashTime + 0.15);
+      });
+
+      // --- DRIP PARTICLES: Activate based on hotspot X position ---
+      dripParticles.forEach((dp) => {
+        // Calculate when hotspot reaches this drip's X position
+        const dripProgress = (dp.x - sweepStart) / (sweepEnd - sweepStart);
+        const activationTime = 0.1 + Math.max(0, Math.min(1, dripProgress)) * sweepDuration;
+
+        // Fade in
         timeline.to(dp.graphic, {
           alpha: 0.6,
           duration: 0.05
         }, activationTime);
-
-        // Set initial y position based on beam position at activation time
-        timeline.call(() => {
-          const beamProgress = dp.startDelay / 1.4;
-          dp.graphic.y = -50 + beamProgress * (h + 100);
-        }, null, activationTime);
 
         // Fall downward
         timeline.to(dp.graphic, {
@@ -1115,8 +1223,12 @@ class FirewallSequence {
       timeline.to(hudPanels, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
       timeline.to(radar, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
       timeline.to(interferenceLines, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
-      timeline.to(afterglow, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
-      timeline.to(beamGroup, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.6);
+      timeline.to(dormantBeam, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.6);
+      timeline.to(activatedBeam, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.6);
+      timeline.to(hotspot, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.6);
+      secondaryNodes.forEach(node => {
+        timeline.to(node.container, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.6);
+      });
       timeline.to(bloomFilter, { bloomScale: 0, duration: 0.4, ease: 'power2.in' }, 1.6);
     }
 

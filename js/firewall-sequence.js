@@ -801,6 +801,9 @@ class FirewallSequence {
       // Add static dense background layer FIRST (renders underneath animated layer)
       this._addGlitchBurstDensity(glitchContainer, w, h);
 
+      // Add refinement layer (noise grain, dark band population, UI fragments, brighter radar)
+      this._addGlitchBurstRefinement(glitchContainer, w, h);
+
       // Sub-container for noise bands (redrawn on ticker)
       const noiseBandGfx = new PIXI.Graphics();
       glitchContainer.addChild(noiseBandGfx);
@@ -1335,6 +1338,340 @@ class FirewallSequence {
     // =============================================
     glitchContainer.addChildAt(denseBg, 0);
     glitchContainer.addChild(denseScanLines);
+  }
+
+  /**
+   * Add refinement layer to Glitch Burst — addresses 6 specific visual gaps:
+   * NoiseFilter grain, dark band population, UI fragments, muddy colors, boundary bridging, brighter radar
+   */
+  _addGlitchBurstRefinement(glitchContainer, w, h) {
+    // =============================================================
+    // REFINEMENT LAYER — addresses 6 specific visual gaps
+    // All drawn ONCE, static, per ChatGPT PixiJS report
+    // =============================================================
+
+    var refinementGfx = new PIXI.Graphics();
+
+    // =============================================
+    // FIX 1: NoiseFilter on glitchContainer
+    // GPU shader adds pixel-level grain to ALL children
+    // =============================================
+    var containerNoise = new PIXI.filters.NoiseFilter();
+    containerNoise.noise = 0.18;
+    containerNoise.seed = Math.random();
+
+    var existingContainerFilters = glitchContainer.filters ? glitchContainer.filters.slice() : [];
+    glitchContainer.filters = existingContainerFilters.concat([containerNoise]);
+
+    // =============================================
+    // FIX 2: DARK BAND POPULATION
+    // 200 dim micro-artifacts across the entire screen
+    // =============================================
+    var microColors = [
+        0x00d4ff, 0xff00ff, 0xff0044, 0xff6b00, 0x00ff88,
+        0xffff00, 0x8800ff, 0x44aaff, 0xff3388, 0x00ffcc,
+        0xff0000, 0x00ff00, 0x0000ff, 0xffffff, 0xcccccc
+    ];
+
+    for (var mi = 0; mi < 200; mi++) {
+        var mx = Math.random() * w;
+        var my = Math.random() * h;
+        var mColor = microColors[Math.floor(Math.random() * microColors.length)];
+
+        if (Math.random() < 0.6) {
+            var mSize = 1 + Math.random();
+            var mAlpha = 0.10 + Math.random() * 0.40;
+            refinementGfx.beginFill(mColor, mAlpha);
+            refinementGfx.drawRect(mx, my, mSize, mSize);
+            refinementGfx.endFill();
+        } else {
+            var mbW = 3 + Math.random() * 5;
+            var mbH = 2 + Math.random() * 4;
+            var mbAlpha = 0.08 + Math.random() * 0.25;
+            refinementGfx.beginFill(mColor, mbAlpha);
+            refinementGfx.drawRect(mx, my, mbW, mbH);
+            refinementGfx.endFill();
+        }
+    }
+
+    // Faint color tints in dark zones
+    for (var dti = 0; dti < 12; dti++) {
+        var dtY = Math.random() * h;
+        var dtH = 15 + Math.random() * 40;
+        var dtColor = microColors[Math.floor(Math.random() * microColors.length)];
+        refinementGfx.beginFill(dtColor, 0.02 + Math.random() * 0.04);
+        refinementGfx.drawRect(0, dtY, w, dtH);
+        refinementGfx.endFill();
+    }
+
+    // =============================================
+    // FIX 4: DESATURATED / MUDDY COLOR BLOCKS
+    // 80 blocks in olive, brown, dusty pink, charcoal, navy, dark teal
+    // =============================================
+    var muddyColors = [
+        0x4a3b2a, 0x2a3b4a, 0x3b2a4a, 0x4a4a2a, 0x2a4a3b,
+        0x5a4030, 0x304050, 0x403050, 0x505030, 0x305040,
+        0x6b5040, 0x405060, 0x504060, 0x606040, 0x406050,
+        0x8a7060, 0x607080, 0x706080, 0x808060, 0x608070,
+        0x1a1a2a, 0x2a1a1a, 0x1a2a1a, 0x332244, 0x443322,
+        0x9a8070, 0x708090, 0x807090, 0xaa9080, 0x8090a0,
+        0xccbbaa, 0xaabbcc, 0xbbaacc, 0xddccbb, 0xbbccdd
+    ];
+
+    for (var mdi = 0; mdi < 80; mdi++) {
+        var mdX = Math.random() * w;
+        var mdY = Math.random() * h;
+        var mdW = 4 + Math.random() * 25;
+        var mdH = 3 + Math.random() * 15;
+        var mdColor = muddyColors[Math.floor(Math.random() * muddyColors.length)];
+        var mdAlpha = 0.20 + Math.random() * 0.50;
+        refinementGfx.beginFill(mdColor, mdAlpha);
+        refinementGfx.drawRect(mdX, mdY, mdW, mdH);
+        refinementGfx.endFill();
+    }
+
+    // Near-white blown-out blocks
+    for (var bhi = 0; bhi < 15; bhi++) {
+        var bhX = Math.random() * w;
+        var bhY = Math.random() * h;
+        var bhW = 3 + Math.random() * 20;
+        var bhH = 2 + Math.random() * 6;
+        refinementGfx.beginFill(0xffffff, 0.15 + Math.random() * 0.35);
+        refinementGfx.drawRect(bhX, bhY, bhW, bhH);
+        refinementGfx.endFill();
+    }
+
+    // Near-black dead-zone blocks
+    for (var nbi = 0; nbi < 20; nbi++) {
+        var nbX = Math.random() * w;
+        var nbY = Math.random() * h;
+        var nbW = 5 + Math.random() * 30;
+        var nbH = 3 + Math.random() * 12;
+        refinementGfx.beginFill(0x050508, 0.40 + Math.random() * 0.50);
+        refinementGfx.drawRect(nbX, nbY, nbW, nbH);
+        refinementGfx.endFill();
+    }
+
+    // =============================================
+    // FIX 5: BOUNDARY-CROSSING BLOCKS
+    // 50+ blocks that deliberately span band boundaries
+    // =============================================
+
+    // Vertical bridging streaks
+    for (var vbi = 0; vbi < 30; vbi++) {
+        var vbX = Math.random() * w;
+        var vbY = Math.random() * h;
+        var vbW = 1 + Math.random() * 3;
+        var vbH = 10 + Math.random() * 40;
+        var vbColor = microColors[Math.floor(Math.random() * microColors.length)];
+        refinementGfx.beginFill(vbColor, 0.10 + Math.random() * 0.30);
+        refinementGfx.drawRect(vbX, vbY, vbW, vbH);
+        refinementGfx.endFill();
+    }
+
+    // Wider boundary overlap blocks
+    for (var obi = 0; obi < 20; obi++) {
+        var obX = Math.random() * w * 0.8;
+        var obY = Math.random() * h;
+        var obW = 15 + Math.random() * 60;
+        var obH = 3 + Math.random() * 8;
+        var obColor = microColors[Math.floor(Math.random() * microColors.length)];
+        refinementGfx.beginFill(obColor, 0.12 + Math.random() * 0.25);
+        refinementGfx.drawRect(obX, obY, obW, obH);
+        refinementGfx.endFill();
+    }
+
+    // Boundary bleed
+    for (var bbi = 0; bbi < 25; bbi++) {
+        var bbY = Math.random() * h;
+        var bbColor = microColors[Math.floor(Math.random() * microColors.length)];
+        refinementGfx.beginFill(bbColor, 0.04 + Math.random() * 0.08);
+        refinementGfx.drawRect(0, bbY, w * (0.4 + Math.random() * 0.6), 2);
+        refinementGfx.endFill();
+    }
+
+    glitchContainer.addChild(refinementGfx);
+
+    // =============================================
+    // FIX 6: BRIGHTER RADAR OVERLAY
+    // =============================================
+    var radarGfx = new PIXI.Graphics();
+    var rCX = w * 0.18;
+    var rCY = h * 0.22;
+    var rR = Math.min(w, h) * 0.10;
+
+    // Bright cyan outer ring
+    radarGfx.lineStyle(2.5, 0x00d4ff, 0.55);
+    radarGfx.arc(rCX, rCY, rR, 0, Math.PI * 1.4);
+    radarGfx.moveTo(rCX + rR * 0.7 * Math.cos(4.8), rCY + rR * 0.7 * Math.sin(4.8));
+    radarGfx.lineStyle(2, 0x00d4ff, 0.45);
+    radarGfx.arc(rCX, rCY, rR * 0.7, 4.8, Math.PI * 2 + 0.5);
+
+    // Green-shifted corrupted arc
+    radarGfx.moveTo(rCX + rR * 0.85 * Math.cos(2.0), rCY + rR * 0.85 * Math.sin(2.0));
+    radarGfx.lineStyle(2, 0x00ff44, 0.40);
+    radarGfx.arc(rCX, rCY, rR * 0.85, 2.0, 3.2);
+
+    // Red-shifted corrupted arc
+    radarGfx.moveTo(rCX + rR * 0.55 * Math.cos(0.5), rCY + rR * 0.55 * Math.sin(0.5));
+    radarGfx.lineStyle(1.5, 0xff3344, 0.35);
+    radarGfx.arc(rCX, rCY, rR * 0.55, 0.5, 1.8);
+
+    // Inner ring
+    radarGfx.moveTo(rCX + rR * 0.4, rCY);
+    radarGfx.lineStyle(1.5, 0x00d4ff, 0.40);
+    radarGfx.arc(rCX, rCY, rR * 0.4, 0, Math.PI * 2);
+
+    // Bright center dot
+    radarGfx.lineStyle(0);
+    radarGfx.beginFill(0x00eeff, 0.70);
+    radarGfx.drawCircle(rCX, rCY, 4);
+    radarGfx.endFill();
+
+    // Radial tick marks
+    for (var rti = 0; rti < 8; rti++) {
+        var rtAngle = (Math.PI * 2 / 8) * rti;
+        var rtInner = rR * 0.92;
+        var rtOuter = rR * 1.02;
+        radarGfx.lineStyle(1, 0x00d4ff, 0.30);
+        radarGfx.moveTo(rCX + rtInner * Math.cos(rtAngle), rCY + rtInner * Math.sin(rtAngle));
+        radarGfx.lineTo(rCX + rtOuter * Math.cos(rtAngle), rCY + rtOuter * Math.sin(rtAngle));
+    }
+    radarGfx.lineStyle(0);
+
+    // Cyan glow behind radar
+    var radarGlow = new PIXI.Graphics();
+    radarGlow.beginFill(0x003344, 0.25);
+    radarGlow.drawCircle(rCX, rCY, rR * 1.15);
+    radarGlow.endFill();
+    radarGlow.beginFill(0x004455, 0.15);
+    radarGlow.drawCircle(rCX, rCY, rR * 1.4);
+    radarGlow.endFill();
+
+    glitchContainer.addChild(radarGlow);
+    glitchContainer.addChild(radarGfx);
+
+    // =============================================
+    // FIX 3: MORE SURVIVING UI ELEMENTS
+    // =============================================
+
+    // BAR CHART (lower-right)
+    var chartGfx = new PIXI.Graphics();
+    var cX = w * 0.72;
+    var cY = h * 0.60;
+    var barW = 10;
+    var barGap = 14;
+    var barHeights = [28, 18, 35, 22, 40, 14, 32, 25];
+    var barBroken = [false, false, true, false, false, true, false, false];
+
+    chartGfx.lineStyle(1, 0x00d4ff, 0.25);
+    chartGfx.drawRect(cX - 6, cY - 45, barHeights.length * barGap + 10, 52);
+    chartGfx.lineStyle(0);
+
+    for (var cbi2 = 0; cbi2 < barHeights.length; cbi2++) {
+        if (barBroken[cbi2]) {
+            chartGfx.beginFill(0xff6b00, 0.40);
+            chartGfx.drawRect(cX + cbi2 * barGap, cY - barHeights[cbi2], barW, barHeights[cbi2] * 0.5);
+            chartGfx.endFill();
+        } else {
+            var cColor = (cbi2 % 3 === 0) ? 0xff8800 : 0x00d4ff;
+            chartGfx.beginFill(cColor, 0.50);
+            chartGfx.drawRect(cX + cbi2 * barGap, cY - barHeights[cbi2], barW, barHeights[cbi2]);
+            chartGfx.endFill();
+        }
+    }
+    glitchContainer.addChild(chartGfx);
+
+    // LINE GRAPH / WAVEFORM (pink/red)
+    var waveGfx = new PIXI.Graphics();
+    waveGfx.lineStyle(1.5, 0xff3388, 0.45);
+    var waveStartX = w * 0.72;
+    var waveStartY = h * 0.66;
+    waveGfx.moveTo(waveStartX, waveStartY);
+    for (var wvi = 1; wvi <= 12; wvi++) {
+        var wvX = waveStartX + wvi * 10;
+        var wvY = waveStartY - 8 + Math.random() * 16;
+        if (wvi === 5 || wvi === 9) {
+            waveGfx.moveTo(wvX + 8, wvY);
+        } else {
+            waveGfx.lineTo(wvX, wvY);
+        }
+    }
+    waveGfx.lineStyle(0);
+    glitchContainer.addChild(waveGfx);
+
+    // SMALL TEXT LABEL FRAGMENTS
+    var labelTexts = [
+        { str: 'ERR_0x4F2A', x: 0.08, y: 0.45, color: 0xff6b00, size: 10, alpha: 0.50 },
+        { str: 'BUFFER OVERFLOW', x: 0.55, y: 0.12, color: 0xff0044, size: 9, alpha: 0.35 },
+        { str: 'SYS_HALT', x: 0.82, y: 0.48, color: 0x00ff88, size: 11, alpha: 0.45 },
+        { str: 'DATA LOSS: 94%', x: 0.30, y: 0.72, color: 0xff6b00, size: 10, alpha: 0.40 },
+        { str: '/// CRITICAL ///', x: 0.62, y: 0.78, color: 0xff0044, size: 9, alpha: 0.30 },
+        { str: 'SECTOR 7-G BREACH', x: 0.12, y: 0.88, color: 0x00d4ff, size: 10, alpha: 0.35 },
+        { str: '0xDEAD 0xBEEF', x: 0.75, y: 0.35, color: 0x00ff88, size: 8, alpha: 0.30 },
+        { str: 'CHECKSUM FAIL', x: 0.40, y: 0.15, color: 0xffff00, size: 9, alpha: 0.40 }
+    ];
+
+    for (var lti = 0; lti < labelTexts.length; lti++) {
+        var lt = labelTexts[lti];
+        var labelText = new PIXI.Text(lt.str, {
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: lt.size,
+            fill: lt.color,
+            fontWeight: 'bold',
+            letterSpacing: 1
+        });
+        labelText.x = w * lt.x;
+        labelText.y = h * lt.y;
+        labelText.alpha = lt.alpha;
+        glitchContainer.addChild(labelText);
+    }
+
+    // PROGRESS BAR fragment (lower-left)
+    var progGfx = new PIXI.Graphics();
+    var pX = w * 0.05;
+    var pY = h * 0.75;
+    var pW = w * 0.20;
+    var pH = 6;
+
+    progGfx.lineStyle(1, 0x00d4ff, 0.20);
+    progGfx.drawRect(pX, pY, pW, pH);
+    progGfx.lineStyle(0);
+
+    progGfx.beginFill(0x00d4ff, 0.35);
+    progGfx.drawRect(pX + 1, pY + 1, pW * 0.6, pH - 2);
+    progGfx.endFill();
+
+    progGfx.beginFill(0x00eeff, 0.60);
+    progGfx.drawRect(pX + pW * 0.58, pY, 4, pH);
+    progGfx.endFill();
+
+    glitchContainer.addChild(progGfx);
+
+    // MEDIA CONTROL ARROWS (lower-center)
+    var arrowGfx = new PIXI.Graphics();
+    var arX = w * 0.48;
+    var arY = h * 0.85;
+
+    arrowGfx.beginFill(0xcccccc, 0.30);
+    arrowGfx.moveTo(arX, arY);
+    arrowGfx.lineTo(arX - 8, arY + 6);
+    arrowGfx.lineTo(arX, arY + 12);
+    arrowGfx.closePath();
+    arrowGfx.endFill();
+
+    arrowGfx.beginFill(0xcccccc, 0.35);
+    arrowGfx.moveTo(arX + 15, arY);
+    arrowGfx.lineTo(arX + 23, arY + 6);
+    arrowGfx.lineTo(arX + 15, arY + 12);
+    arrowGfx.closePath();
+    arrowGfx.endFill();
+
+    arrowGfx.beginFill(0xffffff, 0.25);
+    arrowGfx.drawCircle(arX + 8, arY + 6, 2);
+    arrowGfx.endFill();
+
+    glitchContainer.addChild(arrowGfx);
   }
 
   /**

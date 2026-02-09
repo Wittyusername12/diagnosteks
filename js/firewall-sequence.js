@@ -266,7 +266,7 @@ class FirewallSequence {
       // TWEAK 7: edgeAlpha +20%, inner ring edgeWidth +1px for sharper specular highlights
       const ringConfigs = [
         // OUTER RINGS — widest bands, darkest bodies, subtle edges
-        { innerR: 0.39, outerR: 0.44, numSegs: 14, gapDeg: 3, bodyColor: 0x0a1520, bodyAlpha: 0.95, edgeColor: 0x1a5577, edgeAlpha: 0.65, edgeWidth: 1.5, direction: 1, speed: 5.0 },
+        { innerR: 0.39, outerR: 0.44, numSegs: 14, gapDeg: 3, bodyColor: 0x152535, bodyAlpha: 0.95, edgeColor: 0x1a5577, edgeAlpha: 0.65, edgeWidth: 1.5, direction: 1, speed: 5.0 },
         { innerR: 0.35, outerR: 0.38, numSegs: 16, gapDeg: 2.5, bodyColor: 0x0d1a2d, bodyAlpha: 0.95, edgeColor: 0x00a4cc, edgeAlpha: 0.75, edgeWidth: 2, direction: -1, speed: 4.0 },
         // MID RINGS — medium width, brighter edges, most detailed
         { innerR: 0.30, outerR: 0.34, numSegs: 18, gapDeg: 2, bodyColor: 0x0f1e33, bodyAlpha: 0.95, edgeColor: 0x00d4ff, edgeAlpha: 0.85, edgeWidth: 2.5, direction: 1, speed: 3.5 },
@@ -840,7 +840,7 @@ class FirewallSequence {
           hexGrid.drawPolygon(points);
         }
       }
-      hexGrid.alpha = 0;
+      hexGrid.alpha = 1;
       backgroundContainer.addChild(hexGrid);
 
       // beamY defined early for positioning background elements
@@ -854,7 +854,7 @@ class FirewallSequence {
       // Helper: draw a horizontal rail with dark body + bright top edge
       const drawHRail = (rx, ry, rw) => {
         // FILLED dark body (visible steel-blue, not black)
-        structuralRails.beginFill(0x18303d, 0.92);
+        structuralRails.beginFill(0x1e3a4d, 0.92);
         structuralRails.drawRect(rx, ry, rw, 10);
         structuralRails.endFill();
         // Bright top edge (specular highlight)
@@ -870,7 +870,7 @@ class FirewallSequence {
       // Helper: draw a vertical channel with dark body + bright left edge
       const drawVChannel = (cx, cy, ch) => {
         // FILLED dark body (visible steel-blue)
-        structuralRails.beginFill(0x18303d, 0.92);
+        structuralRails.beginFill(0x1e3a4d, 0.92);
         structuralRails.drawRect(cx, cy, 6, ch);
         structuralRails.endFill();
         // Bright left edge (specular highlight)
@@ -913,7 +913,7 @@ class FirewallSequence {
       structuralRails.drawCircle(w * 0.78, beamY + h * 0.10, 4);
       structuralRails.endFill();
 
-      structuralRails.alpha = 0;
+      structuralRails.alpha = 1;
       backgroundContainer.addChild(structuralRails);
 
       // =========================================================
@@ -924,7 +924,7 @@ class FirewallSequence {
       // Helper: draw beveled panel with two-tone bevel trick
       const drawBeveledPanel = (px, py, pw, ph, edgeAlpha) => {
         // FILLED dark body (visible steel-blue, opaque)
-        hudPanels.beginFill(0x14283a, 0.92);
+        hudPanels.beginFill(0x1a3548, 0.92);
         hudPanels.drawRect(px, py, pw, ph);
         hudPanels.endFill();
         // Bright top edge (specular highlight from overhead light)
@@ -1001,7 +1001,7 @@ class FirewallSequence {
         if (s < 3) {
           hudPanels.beginFill(0x00d4ff, 0.4);
         } else {
-          hudPanels.beginFill(0x0a1520, 0.5);
+          hudPanels.beginFill(0x152535, 0.5);
         }
         hudPanels.drawRect(progX + s * 14, progY, 12, 6);
         hudPanels.endFill();
@@ -1018,7 +1018,7 @@ class FirewallSequence {
       drawBeveledPanel(w * 0.80, beamY + h * 0.14, 70, 35, 0.16);
       drawBeveledPanel(w * 0.88, beamY + h * 0.16, 55, 40, 0.15);
 
-      hudPanels.alpha = 0;
+      hudPanels.alpha = 1;
       backgroundContainer.addChild(hudPanels);
 
       // =========================================================
@@ -1054,7 +1054,7 @@ class FirewallSequence {
       radar.lineTo(bezelX + bezelW, bezelY + bezelH);
 
       // Screen area (emissive display fill - slightly brighter interior)
-      radar.beginFill(0x0c1822, 0.96);
+      radar.beginFill(0x142a38, 0.96);
       radar.drawRect(radarCX - radarR - 4, radarCY - radarR - 4, radarR * 2 + 8, radarR * 2 + 8);
       radar.endFill();
 
@@ -1081,7 +1081,7 @@ class FirewallSequence {
       radar.drawCircle(radarCX + radarR * 0.5, radarCY - radarR * 0.3, 2);
       radar.endFill();
 
-      radar.alpha = 0;
+      radar.alpha = 1;
       backgroundContainer.addChild(radar);
 
       // =========================================================
@@ -1091,7 +1091,7 @@ class FirewallSequence {
 
       const drawChevron = (cx, cy, chevW, chevH) => {
         // FILLED dark body (visible steel-blue, opaque)
-        chevrons.beginFill(0x18303d, 0.9);
+        chevrons.beginFill(0x1e3a4d, 0.9);
         chevrons.drawPolygon([
           cx, cy,                      // left point (arrow tip)
           cx + chevW, cy - chevH / 2,  // top right
@@ -1112,7 +1112,7 @@ class FirewallSequence {
       drawChevron(w * 0.04, beamY + h * 0.30, 45, 14);
       drawChevron(w * 0.04, beamY + h * 0.34, 55, 18);
 
-      chevrons.alpha = 0;
+      chevrons.alpha = 1;
       backgroundContainer.addChild(chevrons);
 
       // =========================================================
@@ -1139,7 +1139,7 @@ class FirewallSequence {
       floorReflection.drawCircle(w * 0.85, beamY + 42, 1);
       floorReflection.endFill();
 
-      floorReflection.alpha = 0;
+      floorReflection.alpha = 1;
       backgroundContainer.addChild(floorReflection);
 
       // =========================================================
@@ -1152,29 +1152,11 @@ class FirewallSequence {
         interferenceLines.drawRect(0, lineY, w, 1);
         interferenceLines.endFill();
       }
-      interferenceLines.alpha = 0;
+      interferenceLines.alpha = 1;
       backgroundContainer.addChild(interferenceLines);
 
-      // === TEMPORARY DIAGNOSTIC ===
-      console.log('=== SCAN SWEEP BACKGROUND DIAGNOSTIC ===');
-      console.log('backgroundContainer children:', backgroundContainer.children.length);
-      backgroundContainer.children.forEach(function(child, i) {
-          if (child.geometry) {
-              console.log('Child ' + i + ':', {
-                  type: child.constructor.name,
-                  alpha: child.alpha,
-                  visible: child.visible,
-                  blendMode: child.blendMode,
-                  fillCount: child.geometry.graphicsData ? child.geometry.graphicsData.filter(function(d) { return d.fillStyle && d.fillStyle.alpha > 0; }).length : 'N/A',
-                  strokeCount: child.geometry.graphicsData ? child.geometry.graphicsData.filter(function(d) { return d.lineStyle && d.lineStyle.width > 0; }).length : 'N/A'
-              });
-          }
-      });
-      console.log('backgroundContainer alpha:', backgroundContainer.alpha);
-      console.log('backgroundContainer visible:', backgroundContainer.visible);
-      console.log('backgroundContainer blendMode:', backgroundContainer.blendMode);
-      console.log('backgroundContainer filters:', backgroundContainer.filters);
-      console.log('=== END DIAGNOSTIC ===');
+      // Container starts invisible, will fade in via animation
+      backgroundContainer.alpha = 0;
 
       // =========================================================
       // LAYER 8: DORMANT BEAM (full width, low intensity, FIXED Y)
@@ -1364,14 +1346,8 @@ class FirewallSequence {
       // GSAP TIMELINE ANIMATIONS
       // =========================================================
 
-      // --- 0.0s - 0.3s: FADE IN BACKGROUND ---
-      timeline.to(hexGrid, { alpha: 0.5, duration: 0.3, ease: 'power2.out' }, 0);
-      timeline.to(structuralRails, { alpha: 0.8, duration: 0.3, ease: 'power2.out' }, 0);
-      timeline.to(hudPanels, { alpha: 0.85, duration: 0.3, ease: 'power2.out' }, 0);
-      timeline.to(radar, { alpha: 0.8, duration: 0.3, ease: 'power2.out' }, 0);
-      timeline.to(chevrons, { alpha: 0.7, duration: 0.3, ease: 'power2.out' }, 0);
-      timeline.to(floorReflection, { alpha: 0.6, duration: 0.3, ease: 'power2.out' }, 0);
-      timeline.to(interferenceLines, { alpha: 0.5, duration: 0.3, ease: 'power2.out' }, 0);
+      // --- 0.0s - 0.3s: FADE IN BACKGROUND (container handles all children) ---
+      timeline.to(backgroundContainer, { alpha: 0.6, duration: 0.3, ease: 'power2.out' }, 0);
 
       // --- 0.0s - 0.2s: FADE IN DORMANT BEAM ---
       timeline.to(dormantBeam, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0);

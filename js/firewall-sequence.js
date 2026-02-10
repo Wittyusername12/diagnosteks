@@ -2193,6 +2193,9 @@ class FirewallSequence {
       // Add refinement layer (blazing core, god-rays, particles, panels, haze)
       this._addRippleWaveRefinement(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline);
 
+      // Add intensify layer (hex grid, ring thickness, Fresnel, brackets, more particles)
+      this._addRippleWaveIntensify(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline);
+
       // =========================================================
       // GSAP ANIMATION TIMELINE
       // All animations added to the passed timeline parameter
@@ -2703,6 +2706,488 @@ class FirewallSequence {
     // Layer 7: Floor reflections
     timeline.to(floorGfx, { alpha: 0.5, duration: 0.5, ease: 'power1.out' }, 0.15);
     timeline.to(floorGfx, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 1.5);
+  }
+
+  /**
+   * Ripple Wave intensify layer - Round 3 enhancements
+   * Adds 9 visual layers to increase intensity and FUI detail
+   * Target: ~60-65% toward reference image
+   */
+  _addRippleWaveIntensify(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline) {
+    // =============================================================
+    // 9 LAYERS TO INTENSIFY VISUAL IMPACT
+    // All Graphics drawn ONCE (per ChatGPT PixiJS report guidance)
+    // NO new PixiJS filters — all glow via drawn ellipses + ADD blend
+    // =============================================================
+
+    // =============================================
+    // LAYER 1: PROMINENT HEXAGONAL GRID
+    // The Round 1 hex grid is buried under haze.
+    // Draw new hex grid at HIGHER alpha, ON TOP of all Round 2 layers.
+    // Proximity-based brightness simulates core illumination.
+    // =============================================
+    const hexGridIntense = new PIXI.Graphics();
+    const hexRadius = 35;
+    const hexSpacingX = hexRadius * 1.75;
+    const hexSpacingY = hexRadius * 1.5;
+
+    for (let hexRow = -1; hexRow < (h / hexSpacingY) + 1; hexRow++) {
+      for (let hexCol = -1; hexCol < (w / hexSpacingX) + 1; hexCol++) {
+        const hcx = hexCol * hexSpacingX + (hexRow % 2 === 0 ? 0 : hexSpacingX * 0.5);
+        const hcy = hexRow * hexSpacingY;
+
+        // Calculate distance from hex center to screen center for proximity dimming
+        const distToCenter = Math.sqrt((hcx - cx) * (hcx - cx) + (hcy - cy) * (hcy - cy));
+        const maxDist = Math.sqrt(cx * cx + cy * cy);
+        let hexAlpha = 0.45;
+        if (distToCenter < w * 0.35) {
+          hexAlpha = 0.55; // Brighter near center
+        } else if (distToCenter > w * 0.55) {
+          hexAlpha = 0.30; // Dimmer at edges
+        }
+
+        hexGridIntense.lineStyle(1.0, 0x0a4a8a, hexAlpha);
+        hexGridIntense.moveTo(hcx + hexRadius * Math.cos(0), hcy + hexRadius * Math.sin(0));
+        for (let hvi = 1; hvi <= 6; hvi++) {
+          hexGridIntense.lineTo(
+            hcx + hexRadius * Math.cos(Math.PI / 3 * hvi),
+            hcy + hexRadius * Math.sin(Math.PI / 3 * hvi)
+          );
+        }
+      }
+    }
+    hexGridIntense.alpha = 0;
+    rippleContainer.addChild(hexGridIntense);
+
+    // =============================================
+    // LAYER 2: RING THICKNESS BANDS
+    // Transform thin lines into luminous bands
+    // Wide glow + medium band per ring
+    // =============================================
+    const thickBandContainer = new PIXI.Container();
+    thickBandContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    const thickBandGraphics = [];
+
+    for (let tbi = 0; tbi < 5; tbi++) {
+      const bandGfx = new PIXI.Graphics();
+
+      // Wide glow band
+      bandGfx.lineStyle(12, 0x005577, 0.12);
+      bandGfx.drawEllipse(0, 0, baseRX, baseRY);
+
+      // Medium band
+      bandGfx.lineStyle(6, 0x00aacc, 0.20);
+      bandGfx.drawEllipse(0, 0, baseRX, baseRY);
+
+      bandGfx.x = cx;
+      bandGfx.y = cy;
+      bandGfx.scale.set(0);
+      bandGfx.alpha = 1;
+
+      thickBandContainer.addChild(bandGfx);
+      thickBandGraphics.push(bandGfx);
+    }
+    rippleContainer.addChild(thickBandContainer);
+
+    // =============================================
+    // LAYER 3: NEAR-SIDE RING BRIGHTNESS (Fresnel effect)
+    // Partial elliptical arc covering only bottom 180°
+    // Creates depth cue - near side brighter than far side
+    // =============================================
+    const fresnelContainer = new PIXI.Container();
+    fresnelContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    const fresnelGraphics = [];
+
+    for (let fri = 0; fri < 5; fri++) {
+      const fresnelGfx = new PIXI.Graphics();
+
+      // Draw ~30 dots along bottom arc (0.1*PI to 0.9*PI)
+      for (let fdi = 0; fdi < 30; fdi++) {
+        const angle = Math.PI * (0.1 + (fdi / 30) * 0.8);
+        const fx = baseRX * Math.cos(angle);
+        const fy = baseRY * Math.sin(angle);
+
+        const dotSize = 2 + Math.random() * 1.5;
+        const dotAlpha = 0.30 + Math.random() * 0.15;
+        fresnelGfx.beginFill(0x44eeff, dotAlpha);
+        fresnelGfx.drawCircle(fx, fy, dotSize);
+        fresnelGfx.endFill();
+      }
+
+      fresnelGfx.x = cx;
+      fresnelGfx.y = cy;
+      fresnelGfx.scale.set(0);
+      fresnelGfx.alpha = 1;
+
+      fresnelContainer.addChild(fresnelGfx);
+      fresnelGraphics.push(fresnelGfx);
+    }
+    rippleContainer.addChild(fresnelContainer);
+
+    // =============================================
+    // LAYER 4: FUI CORNER BRACKETS ON PANELS
+    // L-shaped bright brackets at each corner
+    // Classic Iron Man HUD element
+    // =============================================
+    const bracketGfx = new PIXI.Graphics();
+    const bracketArm = 10;
+    const bracketLineWidth = 1.5;
+    const bracketColor = 0x00d4ff;
+    const bracketAlpha = 0.65;
+
+    // Panel positions from _addRippleWaveRefinement
+    const panels = [
+      { x: w * 0.03, y: h * 0.10, width: w * 0.18, height: h * 0.38 },   // Left panel
+      { x: w * 0.80, y: h * 0.08, width: w * 0.17, height: h * 0.32 },   // Right panel
+      { x: w * 0.04, y: h * 0.75, width: w * 0.12, height: h * 0.12 },   // Bottom-left
+      { x: w * 0.84, y: h * 0.78, width: w * 0.12, height: h * 0.10 },   // Bottom-right
+    ];
+
+    panels.forEach(panel => {
+      const px = panel.x;
+      const py = panel.y;
+      const pw = panel.width;
+      const ph = panel.height;
+
+      bracketGfx.lineStyle(bracketLineWidth, bracketColor, bracketAlpha);
+
+      // Top-left bracket
+      bracketGfx.moveTo(px, py + bracketArm);
+      bracketGfx.lineTo(px, py);
+      bracketGfx.lineTo(px + bracketArm, py);
+
+      // Top-right bracket
+      bracketGfx.moveTo(px + pw - bracketArm, py);
+      bracketGfx.lineTo(px + pw, py);
+      bracketGfx.lineTo(px + pw, py + bracketArm);
+
+      // Bottom-left bracket
+      bracketGfx.moveTo(px, py + ph - bracketArm);
+      bracketGfx.lineTo(px, py + ph);
+      bracketGfx.lineTo(px + bracketArm, py + ph);
+
+      // Bottom-right bracket
+      bracketGfx.moveTo(px + pw - bracketArm, py + ph);
+      bracketGfx.lineTo(px + pw, py + ph);
+      bracketGfx.lineTo(px + pw, py + ph - bracketArm);
+
+      // Corner node dots
+      bracketGfx.lineStyle(0);
+      bracketGfx.beginFill(bracketColor, 0.50);
+      bracketGfx.drawCircle(px, py, 2);
+      bracketGfx.drawCircle(px + pw, py, 2);
+      bracketGfx.drawCircle(px, py + ph, 2);
+      bracketGfx.drawCircle(px + pw, py + ph, 2);
+      bracketGfx.endFill();
+    });
+
+    bracketGfx.alpha = 0;
+    rippleContainer.addChild(bracketGfx);
+
+    // =============================================
+    // LAYER 5: ADDITIONAL SCATTERED PARTICLES
+    // 150 more particles for 3x density boost
+    // =============================================
+    const extraParticlesGfx = new PIXI.Graphics();
+
+    for (let epi = 0; epi < 150; epi++) {
+      // Density gradient: 60% within central 50% of screen
+      let epX, epY;
+      if (Math.random() < 0.6) {
+        epX = cx + (Math.random() - 0.5) * w * 0.5;
+        epY = cy + (Math.random() - 0.5) * h * 0.5;
+      } else {
+        epX = Math.random() * w;
+        epY = Math.random() * h;
+      }
+
+      // Vary size and brightness
+      const isBright = Math.random() < 0.07;
+      const epSize = isBright ? (4 + Math.random() * 2) : (1 + Math.random() * 2);
+      const epAlpha = isBright ? (0.5 + Math.random() * 0.2) : (0.10 + Math.random() * 0.30);
+
+      // Color distribution: 65% white, 25% cyan, 10% blue
+      const colorRoll = Math.random();
+      const epColor = colorRoll < 0.65 ? 0xffffff : (colorRoll < 0.90 ? 0x00d4ff : 0x4488ff);
+
+      extraParticlesGfx.beginFill(epColor, epAlpha);
+      extraParticlesGfx.drawCircle(epX, epY, epSize);
+      extraParticlesGfx.endFill();
+    }
+
+    extraParticlesGfx.alpha = 0;
+    rippleContainer.addChild(extraParticlesGfx);
+
+    // =============================================
+    // LAYER 6: RADIAL STREAK ARTIFACTS
+    // Short line segments radiating from center
+    // Creates "ejected matter" impression
+    // =============================================
+    const streakGfx = new PIXI.Graphics();
+    streakGfx.blendMode = PIXI.BLEND_MODES.ADD;
+
+    // 30 normal streaks
+    for (let sti = 0; sti < 30; sti++) {
+      const streakAngle = Math.random() * Math.PI * 2;
+      const streakDist = 100 + Math.random() * 300;
+      const streakLen = 10 + Math.random() * 30;
+      const streakAlpha = 0.10 + Math.random() * 0.15;
+
+      const startX = cx + Math.cos(streakAngle) * streakDist;
+      const startY = cy + Math.sin(streakAngle) * streakDist * (baseRY / baseRX); // Elliptical path
+      const endX = startX + Math.cos(streakAngle) * streakLen;
+      const endY = startY + Math.sin(streakAngle) * streakLen * (baseRY / baseRX);
+
+      streakGfx.lineStyle(1, 0x00d4ff, streakAlpha);
+      streakGfx.moveTo(startX, startY);
+      streakGfx.lineTo(endX, endY);
+    }
+
+    // 5 brighter, longer streaks
+    for (let bsi = 0; bsi < 5; bsi++) {
+      const streakAngle = Math.random() * Math.PI * 2;
+      const streakDist = 80 + Math.random() * 250;
+      const streakLen = 40 + Math.random() * 40;
+
+      const startX = cx + Math.cos(streakAngle) * streakDist;
+      const startY = cy + Math.sin(streakAngle) * streakDist * (baseRY / baseRX);
+      const endX = startX + Math.cos(streakAngle) * streakLen;
+      const endY = startY + Math.sin(streakAngle) * streakLen * (baseRY / baseRX);
+
+      streakGfx.lineStyle(2, 0x00d4ff, 0.35);
+      streakGfx.moveTo(startX, startY);
+      streakGfx.lineTo(endX, endY);
+    }
+
+    streakGfx.alpha = 0;
+    rippleContainer.addChild(streakGfx);
+
+    // =============================================
+    // LAYER 7: CORE INTENSITY BOOST
+    // Additional filled ellipses + star-spike cross
+    // =============================================
+    const coreBoostContainer = new PIXI.Container();
+    coreBoostContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    const coreBoostGfx = new PIXI.Graphics();
+
+    // Outer boost ellipse
+    coreBoostGfx.beginFill(0x88eeff, 0.20);
+    coreBoostGfx.drawEllipse(cx, cy, 60, 24);
+    coreBoostGfx.endFill();
+
+    // Inner boost ellipse
+    coreBoostGfx.beginFill(0xffffff, 0.40);
+    coreBoostGfx.drawEllipse(cx, cy, 25, 10);
+    coreBoostGfx.endFill();
+
+    // Star-spike cross pattern — 4 thin bright lines through center
+    const spikeLength = 80;
+    coreBoostGfx.lineStyle(1.5, 0xffffff, 0.50);
+    // Vertical spike
+    coreBoostGfx.moveTo(cx, cy - spikeLength);
+    coreBoostGfx.lineTo(cx, cy + spikeLength);
+    // Horizontal spike
+    coreBoostGfx.moveTo(cx - spikeLength, cy);
+    coreBoostGfx.lineTo(cx + spikeLength, cy);
+
+    coreBoostContainer.addChild(coreBoostGfx);
+    coreBoostContainer.alpha = 0;
+    rippleContainer.addChild(coreBoostContainer);
+
+    // =============================================
+    // LAYER 8: PANEL ILLUMINATION GRADIENT
+    // Subtle gradient overlay - brighter side facing center
+    // =============================================
+    const panelIllumGfx = new PIXI.Graphics();
+
+    panels.forEach(panel => {
+      const px = panel.x;
+      const py = panel.y;
+      const pw = panel.width;
+      const ph = panel.height;
+
+      // Determine which side faces center
+      const panelCenterX = px + pw / 2;
+      const facingLeft = panelCenterX > cx;
+
+      // Draw 4 vertical strips with gradient alpha
+      const stripWidth = pw / 4;
+      for (let si = 0; si < 4; si++) {
+        // If panel is to the right of center, left side is brighter
+        // If panel is to the left of center, right side is brighter
+        let stripAlpha;
+        if (facingLeft) {
+          stripAlpha = 0.06 - si * 0.01; // Left strips brighter
+        } else {
+          stripAlpha = 0.03 + si * 0.01; // Right strips brighter
+        }
+
+        panelIllumGfx.beginFill(0x00d4ff, stripAlpha);
+        panelIllumGfx.drawRect(px + si * stripWidth, py, stripWidth, ph);
+        panelIllumGfx.endFill();
+      }
+    });
+
+    panelIllumGfx.alpha = 0;
+    rippleContainer.addChild(panelIllumGfx);
+
+    // =============================================
+    // LAYER 9: ADDITIONAL PANEL FUI DETAIL
+    // Text readout lines, tick marks, radar sweep, waveform
+    // =============================================
+    const panelDetailGfx = new PIXI.Graphics();
+
+    // Left panel (globe panel) details — at w*0.03, h*0.10
+    const lpX = w * 0.03;
+    const lpY = h * 0.10;
+    const lpW = w * 0.18;
+    const lpH = h * 0.38;
+
+    // 4 thin horizontal lines (simulating text readouts)
+    panelDetailGfx.lineStyle(0.5, 0x00aacc, 0.20);
+    for (let tli = 0; tli < 4; tli++) {
+      const lineY = lpY + lpH * 0.52 + tli * 12;
+      const lineLen = lpW * (0.4 + Math.random() * 0.2);
+      panelDetailGfx.moveTo(lpX + 10, lineY);
+      panelDetailGfx.lineTo(lpX + 10 + lineLen, lineY);
+    }
+
+    // Tick marks around globe equator
+    const globeCX = lpX + lpW * 0.5;
+    const globeCY = lpY + lpH * 0.30;
+    const globeR = Math.min(lpW, lpH) * 0.25;
+    panelDetailGfx.lineStyle(0.5, 0x00aacc, 0.25);
+    for (let ti = 0; ti < 12; ti++) {
+      const tickAngle = (ti / 12) * Math.PI * 2;
+      const tickInner = globeR * 0.85;
+      const tickOuter = globeR * 0.95;
+      panelDetailGfx.moveTo(
+        globeCX + tickInner * Math.cos(tickAngle),
+        globeCY + tickInner * Math.sin(tickAngle)
+      );
+      panelDetailGfx.lineTo(
+        globeCX + tickOuter * Math.cos(tickAngle),
+        globeCY + tickOuter * Math.sin(tickAngle)
+      );
+    }
+
+    // Right panel (vessel panel) details — at w*0.80, h*0.08
+    const rpX = w * 0.80;
+    const rpY = h * 0.08;
+    const rpW = w * 0.17;
+    const rpH = h * 0.32;
+
+    // Small radar sweep indicator
+    const radarCX = rpX + rpW * 0.75;
+    const radarCY = rpY + rpH * 0.72;
+    const radarR = 12;
+    panelDetailGfx.lineStyle(1, 0x00aacc, 0.25);
+    panelDetailGfx.drawCircle(radarCX, radarCY, radarR);
+    panelDetailGfx.lineStyle(0);
+    panelDetailGfx.beginFill(0x00aacc, 0.15);
+    panelDetailGfx.moveTo(radarCX, radarCY);
+    panelDetailGfx.arc(radarCX, radarCY, radarR * 0.9, -Math.PI * 0.5, Math.PI * 0.17);
+    panelDetailGfx.lineTo(radarCX, radarCY);
+    panelDetailGfx.endFill();
+
+    // Bottom-left panel waveform — at w*0.04, h*0.75
+    const blpX = w * 0.04;
+    const blpY = h * 0.75;
+    const blpW = w * 0.12;
+    const blpH = h * 0.12;
+
+    panelDetailGfx.lineStyle(1, 0x00aacc, 0.20);
+    panelDetailGfx.moveTo(blpX + 8, blpY + blpH * 0.45);
+    for (let wfi = 0; wfi < 10; wfi++) {
+      const wfx = blpX + 8 + wfi * (blpW - 16) / 10;
+      const wfy = blpY + blpH * 0.45 + (Math.random() - 0.5) * 15;
+      panelDetailGfx.lineTo(wfx, wfy);
+    }
+
+    // Red/amber accent bar
+    panelDetailGfx.lineStyle(0);
+    panelDetailGfx.beginFill(0xff4444, 0.35);
+    panelDetailGfx.drawRect(blpX + blpW - 18, blpY + 8, 10, 4);
+    panelDetailGfx.endFill();
+
+    // Bottom-right panel — at w*0.84, h*0.78
+    const brpX = w * 0.84;
+    const brpY = h * 0.78;
+    const brpW = w * 0.12;
+    const brpH = h * 0.10;
+
+    // Additional waveform in bottom-right
+    panelDetailGfx.lineStyle(0.5, 0x00aacc, 0.18);
+    panelDetailGfx.moveTo(brpX + 8, brpY + brpH * 0.60);
+    for (let wfi = 0; wfi < 8; wfi++) {
+      const wfx = brpX + 8 + wfi * (brpW - 16) / 8;
+      const wfy = brpY + brpH * 0.60 + (Math.random() - 0.5) * 10;
+      panelDetailGfx.lineTo(wfx, wfy);
+    }
+
+    panelDetailGfx.alpha = 0;
+    rippleContainer.addChild(panelDetailGfx);
+
+    // =============================================
+    // GSAP ANIMATIONS FOR INTENSIFY LAYERS
+    // =============================================
+
+    // Layer 1: Hex grid - fade in then out
+    timeline.to(hexGridIntense, { alpha: 0.7, duration: 0.4, ease: 'power1.out' }, 0);
+    timeline.to(hexGridIntense, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layer 2 + 3: Ring thickness bands + Fresnel dots expand with ring stagger
+    for (let ani = 0; ani < 5; ani++) {
+      const ringDelay = 0.1 + ani * 0.15;
+
+      // Thickness bands
+      timeline.to(thickBandGraphics[ani].scale, {
+        x: 1.0, y: 1.0,
+        duration: 1.5,
+        ease: 'power2.out'
+      }, ringDelay);
+      timeline.to(thickBandGraphics[ani], {
+        alpha: 0,
+        duration: 1.3,
+        ease: 'power1.in'
+      }, ringDelay + 0.2);
+
+      // Fresnel dots
+      timeline.to(fresnelGraphics[ani].scale, {
+        x: 1.0, y: 1.0,
+        duration: 1.5,
+        ease: 'power2.out'
+      }, ringDelay);
+      timeline.to(fresnelGraphics[ani], {
+        alpha: 0,
+        duration: 1.3,
+        ease: 'power1.in'
+      }, ringDelay + 0.2);
+    }
+
+    // Layer 4: Corner brackets visible immediately
+    timeline.to(bracketGfx, { alpha: 0.8, duration: 0.3, ease: 'power1.out' }, 0);
+    timeline.to(bracketGfx, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 1.6);
+
+    // Layer 5: Additional particles fade in
+    timeline.to(extraParticlesGfx, { alpha: 0.85, duration: 0.4, ease: 'power1.out' }, 0.15);
+    timeline.to(extraParticlesGfx, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layer 6: Radial streaks fade in
+    timeline.to(streakGfx, { alpha: 0.8, duration: 0.4, ease: 'power1.out' }, 0.15);
+    timeline.to(streakGfx, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layer 7: Core boost appears after initial flash
+    timeline.to(coreBoostContainer, { alpha: 1, duration: 0.1, ease: 'power2.out' }, 0.05);
+    timeline.to(coreBoostContainer, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layer 8: Panel illumination gradient fades in
+    timeline.to(panelIllumGfx, { alpha: 0.7, duration: 0.4, ease: 'power1.out' }, 0.20);
+    timeline.to(panelIllumGfx, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 1.6);
+
+    // Layer 9: Panel detail visible with panels
+    timeline.to(panelDetailGfx, { alpha: 0.9, duration: 0.4, ease: 'power1.out' }, 0.2);
+    timeline.to(panelDetailGfx, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 1.6);
   }
 
   /**

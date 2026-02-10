@@ -775,7 +775,7 @@ class FirewallSequence {
     var H = window.pixiEffectManager.getHeight();
     this._addDataCascade(stage, W, H, timeline);
     this._addDataCascadeEnhance(stage, W, H, timeline);
-    this._addDataCascadeWall(stage, W, H, timeline);
+    this._addDataCascadeFinal(stage, W, H, timeline);
   }
 
   /**
@@ -1911,388 +1911,535 @@ class FirewallSequence {
   }
 
   /**
-   * Data Cascade Round 4: ADD blend at alpha 1.0 (correct approach)
-   * Creates 150 streams using ADD blend mode at full alpha.
+   * Data Cascade Round 5: Unified rain canvas + massive PIXI.Graphics FUI elements
    *
-   * KEY FIX: ADD blend at alpha 1.0 avoids the double-alpha penalty (1.0 × 1.0 = 1.0).
-   * Trail fill uses PURE BLACK rgba(0,0,0,trailAlpha) — in ADD blend, black adds nothing
-   * (effectively transparent), so all existing layers show through perfectly.
-   * Bright characters add their full color at full strength.
+   * Strategy A: ONE simplified rain canvas (ADD + alpha 1.0 + pure black trail)
+   * Strategy B: MASSIVE PIXI.Graphics FUI elements drawn directly — guaranteed visible
+   *
+   * FUI elements: scan lines, rotating arcs, corner brackets, tick marks, data boxes,
+   * grid lines, sparkles — inspired by JARVIS HUD design vocabulary.
+   * Graphics objects use the normal PixiJS rendering pipeline and always render correctly.
    *
    * @param {PIXI.Container} stage - The PixiJS stage
    * @param {number} W - Stage width
    * @param {number} H - Stage height
    * @param {gsap.core.Timeline} tl - GSAP timeline
    */
-  _addDataCascadeWall(stage, W, H, tl) {
+  _addDataCascadeFinal(stage, W, H, tl) {
     var self = this;
 
-    // Character set: 90%+ digits for legibility
-    var wallCharset = '0123456789012345678901234567890#&';
+    // =========================================================
+    // MASTER CONTAINER — holds all Round 5 layers
+    // =========================================================
+    var finalContainer = new PIXI.Container();
+    stage.addChild(finalContainer);
 
     // =========================================================
-    // MASTER WALL CONTAINER — holds all Round 4 layers
+    // SECTION 1: UNIFIED RAIN CANVAS (165 streams: bg 70 + mid 50 + fg 45)
     // =========================================================
-    var wallContainer = new PIXI.Container();
-    wallContainer.alpha = 0;
-    stage.addChild(wallContainer);
 
-    // =========================================================
-    // HELPER: Create wall stream objects
-    // =========================================================
-    function createWallStreams(count, minSpeed, maxSpeed, charSize, xOffset) {
-      var streams = [];
-      for (var i = 0; i < count; i++) {
-        var streamX = Math.floor(i * (W / count)) + Math.floor(Math.random() * 10 - 5) + (xOffset || 0);
-        var streamLength = 10 + Math.floor(Math.random() * 14);
-        var stream = {
-          x: streamX,
-          y: -(Math.random() * H) - streamLength * charSize,
-          speed: minSpeed + Math.random() * (maxSpeed - minSpeed),
-          length: streamLength,
-          charSize: charSize,
-          chars: [],
-          charset: wallCharset
-        };
-        for (var c = 0; c < stream.length; c++) {
-          stream.chars.push(stream.charset[Math.floor(Math.random() * stream.charset.length)]);
-        }
-        streams.push(stream);
+    var rainCanvas = document.createElement('canvas');
+    rainCanvas.width = W;
+    rainCanvas.height = H;
+    var rainCtx = rainCanvas.getContext('2d');
+    rainCtx.fillStyle = '#000000';
+    rainCtx.fillRect(0, 0, W, H);
+
+    // BACKGROUND STREAMS (70 streams — dim, slow, small)
+    var bgStreams = [];
+    for (var i = 0; i < 70; i++) {
+      var streamLen = 10 + Math.floor(Math.random() * 10);
+      var stream = {
+        x: Math.floor(i * (W / 70)) + Math.floor(Math.random() * 8 - 4),
+        y: -(Math.random() * H),
+        speed: 1.0 + Math.random() * 1.5,
+        charSize: 10,
+        length: streamLen,
+        tier: 'bg',
+        charset: '0123456789',
+        chars: []
+      };
+      for (var c = 0; c < streamLen; c++) {
+        stream.chars.push(stream.charset[Math.floor(Math.random() * stream.charset.length)]);
       }
-      return streams;
+      bgStreams.push(stream);
     }
 
-    // =========================================================
-    // HELPER: Render wall rain frame on canvas
-    // Uses PURE BLACK trail fill — critical for ADD blend transparency
-    // =========================================================
-    function renderWallRain(ctx, streams, cW, cH, charSize, trailAlpha, brightScale) {
-      // *** PURE BLACK trail fill — this is critical for ADD blend transparency ***
-      ctx.fillStyle = 'rgba(0, 0, 0, ' + trailAlpha + ')';
-      ctx.fillRect(0, 0, cW, cH);
+    // MIDGROUND STREAMS (50 streams — medium brightness, medium speed)
+    var midStreams = [];
+    for (var i = 0; i < 50; i++) {
+      var streamLen = 14 + Math.floor(Math.random() * 8);
+      var stream = {
+        x: Math.floor(8 + i * (W / 50)) + Math.floor(Math.random() * 10 - 5),
+        y: -(Math.random() * H * 0.5),
+        speed: 2.0 + Math.random() * 3.0,
+        charSize: 14,
+        length: streamLen,
+        tier: 'mid',
+        charset: '01234567890#',
+        chars: []
+      };
+      for (var c = 0; c < streamLen; c++) {
+        stream.chars.push(stream.charset[Math.floor(Math.random() * stream.charset.length)]);
+      }
+      midStreams.push(stream);
+    }
 
-      ctx.font = charSize + 'px "JetBrains Mono", "Courier New", monospace';
-      ctx.textBaseline = 'top';
+    // FOREGROUND STREAMS (45 streams — bright, fast, large legible digits)
+    var fgStreams = [];
+    for (var i = 0; i < 45; i++) {
+      var streamLen = 16 + Math.floor(Math.random() * 10);
+      var stream = {
+        x: Math.floor(16 + i * (W / 45)) + Math.floor(Math.random() * 14 - 7),
+        y: -(Math.random() * H * 0.3),
+        speed: 3.5 + Math.random() * 5.0,
+        charSize: 18,
+        length: streamLen,
+        tier: 'fg',
+        charset: '0123456789012345678#&',
+        chars: []
+      };
+      for (var c = 0; c < streamLen; c++) {
+        stream.chars.push(stream.charset[Math.floor(Math.random() * stream.charset.length)]);
+      }
+      fgStreams.push(stream);
+    }
+
+    // Combine all streams (165 total)
+    var allStreams = bgStreams.concat(midStreams).concat(fgStreams);
+
+    var rainBaseTex = new PIXI.BaseTexture(rainCanvas);
+    var rainTex = new PIXI.Texture(rainBaseTex);
+    var rainSprite = new PIXI.Sprite(rainTex);
+    rainSprite.blendMode = PIXI.BLEND_MODES.ADD;
+    rainSprite.alpha = 1.0;
+    finalContainer.addChild(rainSprite);
+
+    // RENDERING FUNCTION (called each frame via GSAP onUpdate)
+    function renderAllRain(ctx, streams, cW, cH) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';  // PURE BLACK trail
+      ctx.fillRect(0, 0, cW, cH);
 
       for (var s = 0; s < streams.length; s++) {
         var stream = streams[s];
         stream.y += stream.speed;
-        if (stream.y - stream.length * charSize > cH) {
-          stream.y = -(stream.length * charSize) - (Math.random() * cH * 0.3);
+        if (stream.y - stream.length * stream.charSize > cH) {
+          stream.y = -(stream.length * stream.charSize) - (Math.random() * cH * 0.3);
         }
 
-        for (var i = 0; i < stream.length; i++) {
-          var cy = Math.floor(stream.y - i * charSize);
-          if (cy < -charSize || cy > cH) continue;
+        ctx.font = stream.charSize + 'px "JetBrains Mono", "Courier New", monospace';
+        ctx.textBaseline = 'top';
 
-          // Random char mutation
-          if (Math.random() < 0.07) {
+        for (var i = 0; i < stream.length; i++) {
+          var cy = Math.floor(stream.y - i * stream.charSize);
+          if (cy < -stream.charSize || cy > cH) continue;
+
+          if (Math.random() < 0.06) {
             stream.chars[i] = stream.charset[Math.floor(Math.random() * stream.charset.length)];
           }
 
-          // Head-to-tail brightness with exponential decay
-          var decay = Math.pow(0.80, i);
+          // Brightness depends on tier AND position in stream
+          var decay = Math.pow(0.82, i);
           var r, g, b, a;
-          if (i === 0) { r = 220; g = 255; b = 255; a = 0.95 * brightScale; }
-          else if (i === 1) { r = 150; g = 240; b = 255; a = 0.80 * brightScale; }
-          else if (i <= 3) { r = 50; g = 200; b = 255; a = 0.60 * decay * brightScale; }
-          else if (i <= 7) { r = 0; g = 150; b = 220; a = 0.42 * decay * brightScale; }
-          else { r = 0; g = 80 + Math.floor(60 * decay); b = 160 + Math.floor(40 * decay); a = 0.30 * decay * brightScale; }
+
+          if (stream.tier === 'bg') {
+            // Background: dim
+            if (i === 0) { r = 60; g = 160; b = 190; a = 0.45; }
+            else { r = 0; g = 60 + Math.floor(50 * decay); b = 100 + Math.floor(40 * decay); a = 0.25 * decay; }
+          } else if (stream.tier === 'mid') {
+            // Midground: medium
+            if (i === 0) { r = 120; g = 220; b = 240; a = 0.70; }
+            else if (i === 1) { r = 60; g = 180; b = 220; a = 0.55; }
+            else { r = 0; g = 100 + Math.floor(60 * decay); b = 160 + Math.floor(40 * decay); a = 0.38 * decay; }
+          } else {
+            // Foreground: bright
+            if (i === 0) { r = 220; g = 255; b = 255; a = 0.95; }
+            else if (i === 1) { r = 140; g = 235; b = 255; a = 0.78; }
+            else if (i <= 3) { r = 40; g = 200; b = 255; a = 0.55 * decay; }
+            else { r = 0; g = 100 + Math.floor(80 * decay); b = 170 + Math.floor(50 * decay); a = 0.40 * decay; }
+          }
 
           if (a < 0.02) continue;
-          ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + Math.min(a, 1.0).toFixed(3) + ')';
+          ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + a.toFixed(3) + ')';
           ctx.fillText(stream.chars[i], Math.floor(stream.x), cy);
         }
       }
 
-      // Bright flash on random heads
-      if (brightScale > 0.5 && Math.random() < 0.28) {
+      // Bright flash on foreground heads
+      if (Math.random() < 0.30) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.90)';
-        for (var f = 0; f < 5; f++) {
-          var rs = streams[Math.floor(Math.random() * streams.length)];
-          var hy = Math.floor(rs.y);
-          if (hy >= 0 && hy <= cH) {
-            ctx.fillText(rs.chars[0], Math.floor(rs.x), hy);
+        for (var f = 0; f < 6; f++) {
+          var idx = Math.floor(Math.random() * streams.length);
+          var rs = streams[idx];
+          if (rs.tier === 'fg' || rs.tier === 'mid') {
+            var hy = Math.floor(rs.y);
+            if (hy >= 0 && hy <= cH) {
+              ctx.font = rs.charSize + 'px "JetBrains Mono", "Courier New", monospace';
+              ctx.fillText(rs.chars[0], Math.floor(rs.x), hy);
+            }
           }
         }
       }
     }
 
     // =========================================================
-    // LAYER 1: BACKGROUND RAIN CANVAS (80 streams, dim, blurred — "data fog")
+    // SECTION 2: FUI GRAPHICS EXTRAVAGANZA (the zhuzz)
     // =========================================================
-    var bgCanvas = document.createElement('canvas');
-    bgCanvas.width = W;
-    bgCanvas.height = H;
-    var bgCtx = bgCanvas.getContext('2d');
-    // Fill canvas with pure black initially
-    bgCtx.fillStyle = '#000000';
-    bgCtx.fillRect(0, 0, W, H);
 
-    var bgStreams = createWallStreams(80, 1.0, 3.0, 11, 0);
+    // --- FUI ELEMENT 1: EDGE TICK MARKS (top, bottom, left, right edges) ---
+    var edgeTicks = new PIXI.Graphics();
+    edgeTicks.blendMode = PIXI.BLEND_MODES.ADD;
 
-    var bgBaseTex = new PIXI.BaseTexture(bgCanvas);
-    var bgTex = new PIXI.Texture(bgBaseTex);
-    var bgSprite = new PIXI.Sprite(bgTex);
-    // *** ADD blend at alpha 1.0 — black background adds nothing, shows through ***
-    bgSprite.blendMode = PIXI.BLEND_MODES.ADD;
-    bgSprite.alpha = 1.0;
+    // Top edge: 60 tick marks
+    for (var t = 0; t < 60; t++) {
+      var tx = Math.floor(t * (W / 60));
+      var tHeight = (t % 5 === 0) ? 12 : 6;
+      var tAlpha = (t % 5 === 0) ? 0.40 : 0.20;
+      edgeTicks.lineStyle(1, 0x00bbdd, tAlpha);
+      edgeTicks.moveTo(tx, 0);
+      edgeTicks.lineTo(tx, tHeight);
+    }
+    // Bottom edge: 60 tick marks
+    for (var t = 0; t < 60; t++) {
+      var tx = Math.floor(t * (W / 60));
+      var tHeight = (t % 5 === 0) ? 12 : 6;
+      var tAlpha = (t % 5 === 0) ? 0.35 : 0.15;
+      edgeTicks.lineStyle(1, 0x00bbdd, tAlpha);
+      edgeTicks.moveTo(tx, H);
+      edgeTicks.lineTo(tx, H - tHeight);
+    }
+    // Left edge: 40 tick marks
+    for (var t = 0; t < 40; t++) {
+      var ty = Math.floor(t * (H / 40));
+      var tWidth = (t % 5 === 0) ? 10 : 5;
+      var tAlpha = (t % 5 === 0) ? 0.35 : 0.15;
+      edgeTicks.lineStyle(1, 0x00bbdd, tAlpha);
+      edgeTicks.moveTo(0, ty);
+      edgeTicks.lineTo(tWidth, ty);
+    }
+    // Right edge: 40 tick marks
+    for (var t = 0; t < 40; t++) {
+      var ty = Math.floor(t * (H / 40));
+      var tWidth = (t % 5 === 0) ? 10 : 5;
+      var tAlpha = (t % 5 === 0) ? 0.35 : 0.15;
+      edgeTicks.lineStyle(1, 0x00bbdd, tAlpha);
+      edgeTicks.moveTo(W, ty);
+      edgeTicks.lineTo(W - tWidth, ty);
+    }
+    finalContainer.addChild(edgeTicks);
 
-    try {
-      var bgBlur = new PIXI.filters.BlurFilter(3);
-      bgSprite.filters = [bgBlur];
-    } catch (e) {
-      console.warn('[DataCascadeWall] BlurFilter not available for bg:', e);
+    // --- FUI ELEMENT 2: CORNER BRACKET DECORATIONS (all 4 corners) ---
+    var corners = new PIXI.Graphics();
+    corners.lineStyle(2, 0x00d4ff, 0.60);
+
+    // Top-left corner bracket
+    corners.moveTo(0, 40); corners.lineTo(0, 0); corners.lineTo(40, 0);
+    // Top-right
+    corners.moveTo(W - 40, 0); corners.lineTo(W, 0); corners.lineTo(W, 40);
+    // Bottom-left
+    corners.moveTo(0, H - 40); corners.lineTo(0, H); corners.lineTo(40, H);
+    // Bottom-right
+    corners.moveTo(W - 40, H); corners.lineTo(W, H); corners.lineTo(W, H - 40);
+
+    // Inner corner brackets (offset 15px inward, slightly smaller)
+    corners.lineStyle(1, 0x00aacc, 0.35);
+    corners.moveTo(15, 45); corners.lineTo(15, 15); corners.lineTo(45, 15);
+    corners.moveTo(W - 45, 15); corners.lineTo(W - 15, 15); corners.lineTo(W - 15, 45);
+    corners.moveTo(15, H - 45); corners.lineTo(15, H - 15); corners.lineTo(45, H - 15);
+    corners.moveTo(W - 45, H - 15); corners.lineTo(W - 15, H - 15); corners.lineTo(W - 15, H - 45);
+
+    finalContainer.addChild(corners);
+
+    // --- FUI ELEMENT 3: HORIZONTAL SCAN LINE (animated sweep) ---
+    var scanLine = new PIXI.Graphics();
+    scanLine.blendMode = PIXI.BLEND_MODES.ADD;
+    // Thin bright horizontal line
+    scanLine.lineStyle(1, 0x00d4ff, 0.50);
+    scanLine.moveTo(0, 0); scanLine.lineTo(W, 0);
+    // Wider dim glow band above and below
+    scanLine.beginFill(0x004466, 0.08);
+    scanLine.drawRect(0, -8, W, 16);
+    scanLine.endFill();
+    scanLine.y = -20; // Start above viewport
+    finalContainer.addChild(scanLine);
+
+    // --- FUI ELEMENT 4: VERTICAL SCAN LINE (animated sweep, delayed) ---
+    var vScanLine = new PIXI.Graphics();
+    vScanLine.blendMode = PIXI.BLEND_MODES.ADD;
+    vScanLine.lineStyle(1, 0x00bbcc, 0.35);
+    vScanLine.moveTo(0, 0); vScanLine.lineTo(0, H);
+    vScanLine.beginFill(0x003344, 0.06);
+    vScanLine.drawRect(-6, 0, 12, H);
+    vScanLine.endFill();
+    vScanLine.x = -10;
+    finalContainer.addChild(vScanLine);
+
+    // --- FUI ELEMENT 5: ROTATING ARC SEGMENTS (around center breach point) ---
+    var cx = Math.floor(W * 0.5);
+    var cy = Math.floor(H * 0.50);
+
+    var arcsOuter = new PIXI.Graphics();
+    arcsOuter.blendMode = PIXI.BLEND_MODES.ADD;
+    // 4 arc segments at radius 80, each spanning ~50 degrees, spaced 90 degrees apart
+    for (var a = 0; a < 4; a++) {
+      var startAngle = (a * Math.PI / 2) + 0.2;
+      var endAngle = startAngle + 0.85;
+      arcsOuter.lineStyle(2, 0x00d4ff, 0.45);
+      arcsOuter.arc(cx, cy, 80, startAngle, endAngle);
+      arcsOuter.moveTo(cx + 80 * Math.cos(endAngle), cy + 80 * Math.sin(endAngle));
+    }
+    arcsOuter.pivot.set(cx, cy);
+    arcsOuter.position.set(cx, cy);
+    finalContainer.addChild(arcsOuter);
+
+    var arcsInner = new PIXI.Graphics();
+    arcsInner.blendMode = PIXI.BLEND_MODES.ADD;
+    // 3 arc segments at radius 50, spanning ~40 degrees
+    for (var a = 0; a < 3; a++) {
+      var startAngle = (a * Math.PI * 2 / 3) + 0.3;
+      var endAngle = startAngle + 0.70;
+      arcsInner.lineStyle(1.5, 0x00aacc, 0.35);
+      arcsInner.arc(cx, cy, 50, startAngle, endAngle);
+      arcsInner.moveTo(cx + 50 * Math.cos(endAngle), cy + 50 * Math.sin(endAngle));
+    }
+    arcsInner.pivot.set(cx, cy);
+    arcsInner.position.set(cx, cy);
+    finalContainer.addChild(arcsInner);
+
+    // Small tick marks on outer ring (12 ticks at 30-degree intervals)
+    var ringTicks = new PIXI.Graphics();
+    ringTicks.blendMode = PIXI.BLEND_MODES.ADD;
+    for (var t = 0; t < 12; t++) {
+      var angle = t * Math.PI / 6;
+      var innerR = 75;
+      var outerR = (t % 3 === 0) ? 90 : 83;
+      ringTicks.lineStyle(1, 0x00d4ff, (t % 3 === 0) ? 0.45 : 0.20);
+      ringTicks.moveTo(cx + innerR * Math.cos(angle), cy + innerR * Math.sin(angle));
+      ringTicks.lineTo(cx + outerR * Math.cos(angle), cy + outerR * Math.sin(angle));
+    }
+    finalContainer.addChild(ringTicks);
+
+    // --- FUI ELEMENT 6: DATA READOUT BOXES (4 small info panels) ---
+    function drawDataBox(graphics, bx, by, bw, bh) {
+      // Border
+      graphics.lineStyle(1, 0x00bbdd, 0.40);
+      graphics.drawRect(bx, by, bw, bh);
+      // Fill
+      graphics.beginFill(0x001a25, 0.25);
+      graphics.drawRect(bx, by, bw, bh);
+      graphics.endFill();
+      // Header bar
+      graphics.beginFill(0x00d4ff, 0.12);
+      graphics.drawRect(bx, by, bw, 10);
+      graphics.endFill();
+      // 3 text line placeholders
+      for (var line = 0; line < 3; line++) {
+        var lw = bw * (0.4 + Math.random() * 0.45);
+        graphics.beginFill(0x00aacc, 0.15 + Math.random() * 0.15);
+        graphics.drawRect(bx + 4, by + 16 + line * 11, lw, 3);
+        graphics.endFill();
+      }
+      // Small blinking indicator dot
+      graphics.beginFill(0x00ffaa, 0.50);
+      graphics.drawCircle(bx + bw - 6, by + 5, 2);
+      graphics.endFill();
     }
 
-    wallContainer.addChild(bgSprite);
+    var dataBoxes = new PIXI.Graphics();
+    dataBoxes.blendMode = PIXI.BLEND_MODES.ADD;
 
-    // =========================================================
-    // LAYER 2: FOREGROUND RAIN CANVAS (60 streams, bright, sharp — hero layer)
-    // =========================================================
-    var fgCanvas = document.createElement('canvas');
-    fgCanvas.width = W;
-    fgCanvas.height = H;
-    var fgCtx = fgCanvas.getContext('2d');
-    fgCtx.fillStyle = '#000000';
-    fgCtx.fillRect(0, 0, W, H);
+    // Top-left data box
+    drawDataBox(dataBoxes, 55, 55, 120, 55);
+    // Top-right data box
+    drawDataBox(dataBoxes, W - 180, 50, 125, 50);
+    // Bottom-left data box (above floor zone)
+    drawDataBox(dataBoxes, 60, Math.floor(H * 0.62), 110, 50);
+    // Bottom-right data box
+    drawDataBox(dataBoxes, W - 175, Math.floor(H * 0.60), 120, 55);
 
-    var fgStreams = createWallStreams(60, 3.0, 8.0, 18, 16);
+    finalContainer.addChild(dataBoxes);
 
-    var fgBaseTex = new PIXI.BaseTexture(fgCanvas);
-    var fgTex = new PIXI.Texture(fgBaseTex);
-    var fgSprite = new PIXI.Sprite(fgTex);
-    // *** ADD blend at alpha 1.0 ***
-    fgSprite.blendMode = PIXI.BLEND_MODES.ADD;
-    fgSprite.alpha = 1.0;
+    // --- FUI ELEMENT 7: HORIZONTAL DATA BANDS (thin status bars) ---
+    var dataBands = new PIXI.Graphics();
+    dataBands.blendMode = PIXI.BLEND_MODES.ADD;
 
-    wallContainer.addChild(fgSprite);
+    // Band 1: near top (y = 15% height)
+    dataBands.lineStyle(1, 0x00aacc, 0.18);
+    dataBands.moveTo(Math.floor(W * 0.05), Math.floor(H * 0.15));
+    dataBands.lineTo(Math.floor(W * 0.35), Math.floor(H * 0.15));
 
-    // =========================================================
-    // LAYER 3: FLOOR REFLECTIONS
-    // =========================================================
-    var floorReflect = new PIXI.Sprite(fgTex);
+    // Band 2: upper area (y = 25%)
+    dataBands.lineStyle(1, 0x00bbdd, 0.22);
+    dataBands.moveTo(Math.floor(W * 0.55), Math.floor(H * 0.22));
+    dataBands.lineTo(Math.floor(W * 0.92), Math.floor(H * 0.22));
+
+    // Band 3: lower area (y = 65%)
+    dataBands.lineStyle(1, 0x008899, 0.15);
+    dataBands.moveTo(Math.floor(W * 0.10), Math.floor(H * 0.65));
+    dataBands.lineTo(Math.floor(W * 0.40), Math.floor(H * 0.65));
+
+    // Band 4: near bottom (y = 72%)
+    dataBands.lineStyle(1, 0x009aab, 0.18);
+    dataBands.moveTo(Math.floor(W * 0.60), Math.floor(H * 0.70));
+    dataBands.lineTo(Math.floor(W * 0.88), Math.floor(H * 0.70));
+
+    // Small filled segments on bands (like progress indicators)
+    dataBands.beginFill(0x00d4ff, 0.20);
+    dataBands.drawRect(Math.floor(W * 0.05), Math.floor(H * 0.15) - 2, Math.floor(W * 0.12), 4);
+    dataBands.endFill();
+    dataBands.beginFill(0x00d4ff, 0.18);
+    dataBands.drawRect(Math.floor(W * 0.55), Math.floor(H * 0.22) - 2, Math.floor(W * 0.15), 4);
+    dataBands.endFill();
+
+    finalContainer.addChild(dataBands);
+
+    // --- FUI ELEMENT 8: GRID HASH MARKS (subtle background grid) ---
+    var gridLines = new PIXI.Graphics();
+    gridLines.blendMode = PIXI.BLEND_MODES.ADD;
+    gridLines.lineStyle(1, 0x002a3a, 0.08);
+
+    // Vertical grid lines every ~120px
+    for (var gx = 0; gx < W; gx += 120) {
+      gridLines.moveTo(gx, 0);
+      gridLines.lineTo(gx, H);
+    }
+    // Horizontal grid lines every ~100px
+    for (var gy = 0; gy < H; gy += 100) {
+      gridLines.moveTo(0, gy);
+      gridLines.lineTo(W, gy);
+    }
+    finalContainer.addChild(gridLines);
+
+    // Move grid to back (index 0)
+    finalContainer.setChildIndex(gridLines, 0);
+
+    // --- FUI ELEMENT 9: FLOOR REFLECTION + HORIZON ---
+    var floorReflect = new PIXI.Sprite(rainTex);
     floorReflect.anchor.set(0, 1);
     floorReflect.position.set(0, H);
-    floorReflect.scale.y = -0.28;
-    floorReflect.alpha = 0.18;
+    floorReflect.scale.y = -0.25;
+    floorReflect.alpha = 0.15;
     floorReflect.blendMode = PIXI.BLEND_MODES.ADD;
-
     try {
-      var floorBlur = new PIXI.filters.BlurFilter(2);
-      floorReflect.filters = [floorBlur];
+      floorReflect.filters = [new PIXI.filters.BlurFilter(2)];
     } catch (e) {}
+    finalContainer.addChild(floorReflect);
 
-    wallContainer.addChild(floorReflect);
+    // Horizon glow
+    var horizon = new PIXI.Graphics();
+    horizon.blendMode = PIXI.BLEND_MODES.ADD;
+    horizon.beginFill(0x001a2a, 0.06);
+    horizon.drawRect(0, Math.floor(H * 0.74), W, Math.floor(H * 0.06));
+    horizon.endFill();
+    horizon.beginFill(0x00bbdd, 0.14);
+    horizon.drawRect(0, Math.floor(H * 0.77), W, 2);
+    horizon.endFill();
+    finalContainer.addChild(horizon);
 
-    // Floor horizon glow
-    var floorGlow = new PIXI.Graphics();
-    floorGlow.blendMode = PIXI.BLEND_MODES.ADD;
-    // Soft wide band
-    floorGlow.beginFill(0x001a2a, 0.07);
-    floorGlow.drawRect(0, Math.floor(H * 0.74), W, Math.floor(H * 0.07));
-    floorGlow.endFill();
-    // Thin bright horizon line
-    floorGlow.beginFill(0x00bbdd, 0.15);
-    floorGlow.drawRect(0, Math.floor(H * 0.77), W, 2);
-    floorGlow.endFill();
-    wallContainer.addChild(floorGlow);
-
-    // Floor center flare (breach point reflection on floor)
-    var floorFlare = new PIXI.Graphics();
-    floorFlare.blendMode = PIXI.BLEND_MODES.ADD;
-    floorFlare.beginFill(0x005577, 0.18);
-    floorFlare.drawEllipse(Math.floor(W * 0.5), Math.floor(H * 0.82), 100, 25);
-    floorFlare.endFill();
-    floorFlare.beginFill(0x00aacc, 0.12);
-    floorFlare.drawEllipse(Math.floor(W * 0.5), Math.floor(H * 0.80), 45, 10);
-    floorFlare.endFill();
-    wallContainer.addChild(floorFlare);
-
-    // =========================================================
-    // LAYER 4: FIXED BREACH/ACCESS TEXT
-    // Positioned BETWEEN panels for visibility
-    // =========================================================
-    var breachText2 = new PIXI.Text('BREACH', {
+    // --- FUI ELEMENT 10: BREACH/ACCESS TEXT (properly positioned) ---
+    var breachTxt = new PIXI.Text('BREACH', {
       fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontSize: 68,
+      fontSize: 64,
       fill: 0xccffff,
       fontWeight: 'bold',
       letterSpacing: 5,
       dropShadow: true,
-      dropShadowColor: 0x00aaff,
-      dropShadowBlur: 12,
+      dropShadowColor: 0x0088cc,
+      dropShadowBlur: 15,
       dropShadowDistance: 0
     });
-    breachText2.anchor.set(0.5);
-    breachText2.x = Math.floor(W * 0.33);
-    breachText2.y = Math.floor(H * 0.40);
-    breachText2.alpha = 0;
-
+    breachTxt.anchor.set(0.5);
+    breachTxt.x = Math.floor(W * 0.33);
+    breachTxt.y = Math.floor(H * 0.40);
+    breachTxt.alpha = 0;
     try {
-      var breachGlow = new PIXI.filters.GlowFilter({
-        distance: 18,
-        outerStrength: 2.5,
-        innerStrength: 1.0,
-        color: 0x00bbff,
-        quality: 0.3
-      });
-      breachText2.filters = [breachGlow];
-    } catch (e) {
-      console.warn('[DataCascadeWall] GlowFilter not available for BREACH:', e);
-    }
+      breachTxt.filters = [new PIXI.filters.GlowFilter({ distance: 20, outerStrength: 2.5, innerStrength: 1.0, color: 0x00aaff, quality: 0.3 })];
+    } catch (e) {}
+    finalContainer.addChild(breachTxt);
 
-    wallContainer.addChild(breachText2);
-
-    var accessText2 = new PIXI.Text('ACCESS', {
+    var accessTxt = new PIXI.Text('ACCESS', {
       fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontSize: 68,
+      fontSize: 64,
       fill: 0xccffff,
       fontWeight: 'bold',
       letterSpacing: 5,
       dropShadow: true,
-      dropShadowColor: 0x00aaff,
-      dropShadowBlur: 12,
+      dropShadowColor: 0x0088cc,
+      dropShadowBlur: 15,
       dropShadowDistance: 0
     });
-    accessText2.anchor.set(0.5);
-    accessText2.x = Math.floor(W * 0.67);
-    accessText2.y = Math.floor(H * 0.36);
-    accessText2.alpha = 0;
-
+    accessTxt.anchor.set(0.5);
+    accessTxt.x = Math.floor(W * 0.67);
+    accessTxt.y = Math.floor(H * 0.36);
+    accessTxt.alpha = 0;
     try {
-      var accessGlow = new PIXI.filters.GlowFilter({
-        distance: 18,
-        outerStrength: 2.5,
-        innerStrength: 1.0,
-        color: 0x00bbff,
-        quality: 0.3
-      });
-      accessText2.filters = [accessGlow];
-    } catch (e) {
-      console.warn('[DataCascadeWall] GlowFilter not available for ACCESS:', e);
-    }
+      accessTxt.filters = [new PIXI.filters.GlowFilter({ distance: 20, outerStrength: 2.5, innerStrength: 1.0, color: 0x00aaff, quality: 0.3 })];
+    } catch (e) {}
+    finalContainer.addChild(accessTxt);
 
-    wallContainer.addChild(accessText2);
-
-    // =========================================================
-    // LAYER 5: OVERLAY RAIN (10 sparse streams in front of text)
-    // =========================================================
-    var overlayCanvas = document.createElement('canvas');
-    overlayCanvas.width = W;
-    overlayCanvas.height = H;
-    var overlayCtx = overlayCanvas.getContext('2d');
-    overlayCtx.fillStyle = '#000000';
-    overlayCtx.fillRect(0, 0, W, H);
-
-    // 10 streams in center 50% of width
-    var overlayStreams = [];
-    for (var oi = 0; oi < 10; oi++) {
-      var ox = Math.floor(W * 0.25 + oi * (W * 0.5 / 10)) + Math.floor(Math.random() * 20 - 10);
-      var oLen = 10 + Math.floor(Math.random() * 6);
-      var oStream = {
-        x: ox,
-        y: -(Math.random() * H * 0.5) - oLen * 20,
-        speed: 5.0 + Math.random() * 5.0,
-        length: oLen,
-        charSize: 20,
-        chars: [],
-        charset: wallCharset
-      };
-      for (var oc = 0; oc < oLen; oc++) {
-        oStream.chars.push(wallCharset[Math.floor(Math.random() * wallCharset.length)]);
-      }
-      overlayStreams.push(oStream);
-    }
-
-    var overlayBaseTex = new PIXI.BaseTexture(overlayCanvas);
-    var overlayTex = new PIXI.Texture(overlayBaseTex);
-    var overlaySprite = new PIXI.Sprite(overlayTex);
-    overlaySprite.blendMode = PIXI.BLEND_MODES.ADD;
-    overlaySprite.alpha = 1.0;
-    wallContainer.addChild(overlaySprite);
-
-    // =========================================================
-    // LAYER 6: EXTRA SPARKLE NODES
-    // =========================================================
+    // --- FUI ELEMENT 11: SPARKLE FLARE NODES ---
     var sparkles = new PIXI.Graphics();
     sparkles.blendMode = PIXI.BLEND_MODES.ADD;
-
-    for (var si = 0; si < 40; si++) {
+    for (var sp = 0; sp < 50; sp++) {
       var sx = Math.random() * W;
-      var sy = Math.random() * H * 0.75;
+      var sy = Math.random() * H * 0.78;
+      var sr = 1 + Math.random() * 2.5;
       var pick = Math.random();
-      var sr, sCol, sAlpha;
-
-      if (pick < 0.15) {
-        // Blazing white
-        sr = 2 + Math.random() * 2;
-        sCol = 0xffffff;
-        sAlpha = 0.65 + Math.random() * 0.20;
-      } else if (pick < 0.40) {
-        // Bright cyan
-        sr = 2 + Math.random();
-        sCol = 0x80eeff;
-        sAlpha = 0.45 + Math.random() * 0.25;
-      } else {
-        // Subtle
-        sr = 1 + Math.random();
-        sCol = 0x00bbdd;
-        sAlpha = 0.20 + Math.random() * 0.20;
-      }
-
-      sparkles.beginFill(sCol, sAlpha);
+      if (pick < 0.12) { sparkles.beginFill(0xffffff, 0.6 + Math.random() * 0.3); }
+      else if (pick < 0.35) { sparkles.beginFill(0x80eeff, 0.4 + Math.random() * 0.3); }
+      else { sparkles.beginFill(0x00bbdd, 0.15 + Math.random() * 0.25); }
       sparkles.drawCircle(Math.floor(sx), Math.floor(sy), sr);
       sparkles.endFill();
     }
-
-    wallContainer.addChild(sparkles);
+    finalContainer.addChild(sparkles);
 
     // =========================================================
     // GSAP ANIMATION TIMELINE
     // =========================================================
 
-    // Master container fade-in
-    tl.fromTo(wallContainer, { alpha: 0 }, { alpha: 1, duration: 0.5, ease: 'power2.out' }, 0);
-
-    // Rain animation loop (drives all 3 canvases)
+    // Rain animation loop
     tl.to({ frame: 0 }, {
       frame: 1,
       duration: 3.0,
       ease: 'none',
       onUpdate: function() {
-        // Background rain: dim fog tier (brightScale 0.35)
-        renderWallRain(bgCtx, bgStreams, W, H, 11, 0.06, 0.35);
-        bgBaseTex.update();
-
-        // Foreground rain: full brightness hero tier
-        renderWallRain(fgCtx, fgStreams, W, H, 18, 0.08, 1.0);
-        fgBaseTex.update();
-
-        // Overlay rain: slightly less than foreground so text shows through
-        renderWallRain(overlayCtx, overlayStreams, W, H, 20, 0.08, 0.8);
-        overlayBaseTex.update();
+        renderAllRain(rainCtx, allStreams, W, H);
+        rainBaseTex.update();
       }
     }, 0);
 
-    // BREACH text fade-in/out
-    tl.to(breachText2, { alpha: 0.95, duration: 0.5, ease: 'power2.in' }, 0.6);
-    tl.to(breachText2, { alpha: 0, duration: 0.4, ease: 'power2.out' }, 2.6);
+    // Scan line sweeps
+    tl.to(scanLine, { y: H + 20, duration: 2.5, ease: 'power1.inOut' }, 0.2);
+    tl.to(scanLine, { alpha: 0, duration: 0.3 }, 2.7);
+    tl.to(vScanLine, { x: W + 10, duration: 2.0, ease: 'power1.inOut' }, 0.8);
+    tl.to(vScanLine, { alpha: 0, duration: 0.3 }, 2.8);
 
-    // ACCESS text fade-in/out
-    tl.to(accessText2, { alpha: 0.95, duration: 0.5, ease: 'power2.in' }, 1.0);
-    tl.to(accessText2, { alpha: 0, duration: 0.4, ease: 'power2.out' }, 2.6);
+    // Rotating arcs
+    tl.to(arcsOuter, { pixi: { rotation: 120 }, duration: 3.0, ease: 'none' }, 0);
+    tl.to(arcsInner, { pixi: { rotation: -90 }, duration: 3.0, ease: 'none' }, 0);
 
-    // Floor elements fade
-    tl.fromTo(floorGlow, { alpha: 0 }, { alpha: 1, duration: 0.6 }, 0.3);
-    tl.fromTo(floorFlare, { alpha: 0 }, { alpha: 1, duration: 0.6 }, 0.4);
-    tl.fromTo(floorReflect, { alpha: 0 }, { alpha: 0.18, duration: 0.6 }, 0.3);
+    // Text fade-in/out
+    tl.to(breachTxt, { alpha: 0.95, duration: 0.5, ease: 'power2.in' }, 0.5);
+    tl.to(breachTxt, { alpha: 0, duration: 0.4, ease: 'power2.out' }, 2.6);
+    tl.to(accessTxt, { alpha: 0.95, duration: 0.5, ease: 'power2.in' }, 0.9);
+    tl.to(accessTxt, { alpha: 0, duration: 0.4, ease: 'power2.out' }, 2.6);
 
-    // Sparkle pulse animation
-    tl.fromTo(sparkles, { alpha: 0.5 }, { alpha: 1, duration: 0.6, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 0.3);
+    // Sparkle pulsing
+    tl.fromTo(sparkles, { alpha: 0.5 }, { alpha: 1.0, duration: 0.5, yoyo: true, repeat: 4, ease: 'sine.inOut' }, 0.2);
+
+    // Corner brackets and edge ticks fade in
+    tl.fromTo(corners, { alpha: 0 }, { alpha: 1, duration: 0.4 }, 0.1);
+    tl.fromTo(edgeTicks, { alpha: 0 }, { alpha: 1, duration: 0.5 }, 0.15);
+
+    // Data boxes and bands stagger in
+    tl.fromTo(dataBoxes, { alpha: 0 }, { alpha: 1, duration: 0.5 }, 0.3);
+    tl.fromTo(dataBands, { alpha: 0 }, { alpha: 1, duration: 0.6 }, 0.2);
+
+    // Floor elements
+    tl.fromTo(floorReflect, { alpha: 0 }, { alpha: 0.15, duration: 0.5 }, 0.3);
 
     // Master container fade-out
-    tl.to(wallContainer, { alpha: 0, duration: 0.5, ease: 'power2.out' }, 3.0);
+    tl.to(finalContainer, { alpha: 0, duration: 0.5, ease: 'power2.out' }, 3.0);
   }
 
   /**

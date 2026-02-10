@@ -113,17 +113,15 @@ window.HUD_CONFIG = {
     // ScrambleText character set - exact string from Brief's FirewallSequence example
     scrambleChars: '01!<>-_\\/[]{}=+*^?#',
 
-    // Pool of 8 transition types matching renamed image files
+    // Pool of 5 transition types for random selection
     // Reference: Brief Section "Full-Screen Cinematic Transitions"
+    // Note: glitch_burst removed - now used exclusively for Widow via playWidowGlitch()
     transitionPool: [
       'arc_reactor_pulse',
-      'shatter_effect',
       'scan_sweep',
-      'glitch_burst',
       'ripple_wave',
       'access_granted',
-      'data_cascade',
-      'progress_bar_surge'
+      'data_cascade'
     ]
   },
 

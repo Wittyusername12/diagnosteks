@@ -2785,6 +2785,333 @@ class FirewallSequence {
   }
 
   /**
+   * Build Black Widow Glitch transition — crimson/black digital security breach effect
+   * Horizontal glitch bars, crimson noise, scanline interference, data corruption
+   * Called independently via playWidowGlitch(), never through random transition pool
+   */
+  _buildWidowGlitch(timeline) {
+    // === PIXIJS EFFECTS ===
+    const app = window.pixiEffectManager.getApp();
+    const stage = window.pixiEffectManager.getStage();
+
+    if (app && stage) {
+      const w = app.screen.width;
+      const h = app.screen.height;
+
+      // =========================================================
+      // CRIMSON COLOR PALETTE — Black Widow theme
+      // =========================================================
+      const widowColors = [
+        0xcc0000,  // Primary crimson
+        0x8b0000,  // Shadow/dark
+        0xff1a1a,  // Glow/highlight
+        0x660000,  // Deep dark
+        0xff0000,  // Pure red
+        0x990000,  // Mid crimson
+        0x440000,  // Very dark
+        0xaa0000   // Alternate crimson
+      ];
+
+      // =========================================================
+      // CONTAINERS
+      // =========================================================
+      const glitchContainer = new PIXI.Container();
+      glitchContainer.alpha = 0;
+      stage.addChild(glitchContainer);
+
+      // =========================================================
+      // STATIC BACKGROUND — Dense crimson noise bands (drawn once)
+      // =========================================================
+      const denseBg = new PIXI.Graphics();
+
+      // Fill with near-black background
+      denseBg.beginFill(0x0a0a0a, 1);
+      denseBg.drawRect(0, 0, w, h);
+      denseBg.endFill();
+
+      // Horizontal crimson noise bands covering the screen
+      let bandY = 0;
+      while (bandY < h) {
+        const bandH = 2 + Math.floor(Math.random() * 30);
+        const bandType = Math.random();
+
+        if (bandType < 0.4) {
+          // Dense crimson band
+          const bandColor = widowColors[Math.floor(Math.random() * widowColors.length)];
+          const bandAlpha = 0.15 + Math.random() * 0.35;
+          denseBg.beginFill(bandColor, bandAlpha);
+          denseBg.drawRect(0, bandY, w, bandH);
+          denseBg.endFill();
+
+          // Sub-blocks within the band
+          const subBlockCount = Math.floor(w / 15);
+          for (let sb = 0; sb < subBlockCount; sb++) {
+            if (Math.random() < 0.35) {
+              const sbColor = widowColors[Math.floor(Math.random() * widowColors.length)];
+              const sbAlpha = 0.2 + Math.random() * 0.45;
+              const sbW = 3 + Math.random() * 15;
+              const sbX = sb * 15 + Math.random() * 8;
+              denseBg.beginFill(sbColor, sbAlpha);
+              denseBg.drawRect(sbX, bandY, sbW, bandH);
+              denseBg.endFill();
+            }
+          }
+        } else if (bandType < 0.7) {
+          // Dark gap band
+          denseBg.beginFill(0x0a0a0a, 0.9);
+          denseBg.drawRect(0, bandY, w, bandH);
+          denseBg.endFill();
+        }
+        // else skip - creates visual breathing room
+
+        bandY += bandH + Math.floor(Math.random() * 3);
+      }
+
+      // Scattered crimson static patches
+      for (let p = 0; p < 80; p++) {
+        const px = Math.random() * w;
+        const py = Math.random() * h;
+        const pw = 3 + Math.random() * 20;
+        const ph = 2 + Math.random() * 10;
+        const pColor = widowColors[Math.floor(Math.random() * widowColors.length)];
+        const pAlpha = 0.15 + Math.random() * 0.4;
+        denseBg.beginFill(pColor, pAlpha);
+        denseBg.drawRect(px, py, pw, ph);
+        denseBg.endFill();
+      }
+
+      glitchContainer.addChild(denseBg);
+
+      // =========================================================
+      // ANIMATED NOISE BANDS (redrawn on ticker)
+      // =========================================================
+      const noiseBandGfx = new PIXI.Graphics();
+      glitchContainer.addChild(noiseBandGfx);
+
+      // =========================================================
+      // SCAN LINES — crimson tint (drawn once)
+      // =========================================================
+      const scanLineGfx = new PIXI.Graphics();
+      for (let sli = 0; sli < 50; sli++) {
+        const slY = Math.random() * h;
+        const slAlpha = 0.02 + Math.random() * 0.06;
+        scanLineGfx.beginFill(0xcc0000, slAlpha);
+        scanLineGfx.drawRect(0, slY, w, 1);
+        scanLineGfx.endFill();
+      }
+      glitchContainer.addChild(scanLineGfx);
+
+      // =========================================================
+      // SCREEN FLASH OVERLAY — crimson flash
+      // =========================================================
+      const flashGfx = new PIXI.Graphics();
+      flashGfx.beginFill(0xcc0000, 1);
+      flashGfx.drawRect(0, 0, w, h);
+      flashGfx.endFill();
+      flashGfx.alpha = 0;
+      glitchContainer.addChild(flashGfx);
+
+      // =========================================================
+      // CORRUPT CHARACTERS — crimson themed
+      // =========================================================
+      const glitchChars = '\u2593\u2591\u2592\u2588\u2584\u2580\u25A0\u25A1\u25CA\u25D8\u25CB\u25CF\u2666';
+      const charTexts = [];
+      const charColors = [0xcc0000, 0xff1a1a, 0x8b0000, 0xff0000, 0xaa0000];
+
+      for (let ci = 0; ci < 20; ci++) {
+        const charStr = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+        const charColor = charColors[Math.floor(Math.random() * charColors.length)];
+        const charText = new PIXI.Text(charStr, {
+          fontFamily: 'JetBrains Mono, monospace',
+          fontSize: 14 + Math.random() * 24,
+          fill: charColor,
+          fontWeight: 'bold'
+        });
+        charText.x = Math.random() * w;
+        charText.y = Math.random() * h;
+        charText.alpha = 0;
+        charTexts.push(charText);
+        glitchContainer.addChild(charText);
+      }
+
+      // =========================================================
+      // FILTERS — RGBSplitFilter + NoiseFilter on STAGE
+      // =========================================================
+      const rgbFilter = new PIXI.filters.RGBSplitFilter([0, 0], [0, 0], [0, 0]);
+
+      let noiseFilter = null;
+      if (PIXI.filters && PIXI.filters.NoiseFilter) {
+        noiseFilter = new PIXI.filters.NoiseFilter();
+        noiseFilter.noise = 0;
+        noiseFilter.seed = Math.random();
+      }
+
+      if (noiseFilter) {
+        stage.filters = [rgbFilter, noiseFilter];
+      } else {
+        stage.filters = [rgbFilter];
+      }
+
+      // =========================================================
+      // TICKER — redraws noise bands every frame
+      // =========================================================
+      let frameCount = 0;
+      let glitchActive = true;
+
+      const drawNoiseBands = () => {
+        if (!glitchActive) return;
+        frameCount++;
+        if (frameCount % 3 !== 0) return;
+
+        noiseBandGfx.clear();
+
+        // Horizontal noise bands
+        const bandCount = 25 + Math.floor(Math.random() * 15);
+        for (let bi = 0; bi < bandCount; bi++) {
+          const bandY = Math.random() * h;
+          const bandH = 2 + Math.random() * 20;
+          const bandX = (Math.random() - 0.5) * 60;
+          const bandW = w * (0.25 + Math.random() * 0.75);
+          const bandColor = widowColors[Math.floor(Math.random() * widowColors.length)];
+          const bandAlpha = 0.25 + Math.random() * 0.5;
+
+          noiseBandGfx.beginFill(bandColor, bandAlpha);
+          noiseBandGfx.drawRect(bandX, bandY, bandW, bandH);
+          noiseBandGfx.endFill();
+        }
+
+        // Small static patches
+        const patchCount = 50 + Math.floor(Math.random() * 30);
+        for (let pi = 0; pi < patchCount; pi++) {
+          const px = Math.random() * w;
+          const py = Math.random() * h;
+          const pw = 2 + Math.random() * 10;
+          const ph = 2 + Math.random() * 6;
+          const pColor = widowColors[Math.floor(Math.random() * widowColors.length)];
+          const pAlpha = 0.2 + Math.random() * 0.5;
+
+          noiseBandGfx.beginFill(pColor, pAlpha);
+          noiseBandGfx.drawRect(px, py, pw, ph);
+          noiseBandGfx.endFill();
+        }
+
+        // Randomize corrupt character positions
+        for (let cci = 0; cci < charTexts.length; cci++) {
+          if (Math.random() < 0.25) {
+            charTexts[cci].x = Math.random() * w;
+            charTexts[cci].y = Math.random() * h;
+          }
+        }
+      };
+
+      app.ticker.add(drawNoiseBands);
+
+      // =========================================================
+      // GSAP TIMELINE — 2.5 second duration
+      // =========================================================
+
+      // Phase 1: Crimson flash in (0s - 0.15s)
+      timeline.to(flashGfx, { alpha: 0.7, duration: 0.07, ease: 'power4.in' }, 0);
+      timeline.to(flashGfx, { alpha: 0, duration: 0.08, ease: 'power4.out' }, 0.07);
+
+      // Phase 1: Container appears
+      timeline.to(glitchContainer, { alpha: 1, duration: 0.05, ease: 'none' }, 0);
+
+      // Phase 2: RGB split ramps up with red emphasis (0s - 0.2s)
+      timeline.to(rgbFilter, {
+        duration: 0.2,
+        ease: 'power2.out',
+        onUpdate: function() {
+          const progress = this.progress();
+          const intensity = progress * 25;
+          rgbFilter.red = [intensity, 0];
+          rgbFilter.blue = [-intensity * 0.3, 0];
+          rgbFilter.green = [0, intensity * 0.2];
+        }
+      }, 0);
+
+      // Phase 2: Noise filter ramps up
+      if (noiseFilter) {
+        timeline.to(noiseFilter, { noise: 0.4, duration: 0.15, ease: 'power2.out' }, 0);
+      }
+
+      // Phase 3: Corrupt characters flash randomly (0.15s - 1.8s)
+      for (let cci2 = 0; cci2 < charTexts.length; cci2++) {
+        const charDelay = 0.15 + Math.random() * 1.2;
+        const charDur = 0.05 + Math.random() * 0.2;
+        timeline.to(charTexts[cci2], { alpha: 0.6 + Math.random() * 0.4, duration: 0.04 }, charDelay);
+        timeline.to(charTexts[cci2], { alpha: 0, duration: charDur }, charDelay + 0.04 + charDur);
+      }
+
+      // Phase 3: RGB split oscillates with red bias (0.2s - 1.8s)
+      timeline.to(rgbFilter, {
+        duration: 1.6,
+        ease: 'none',
+        onUpdate: function() {
+          const rx = 15 + (Math.random() - 0.3) * 35;
+          const bx = (Math.random() - 0.5) * 20;
+          const gy = (Math.random() - 0.5) * 10;
+          rgbFilter.red = [rx, Math.random() * 4];
+          rgbFilter.blue = [bx, -Math.random() * 3];
+          rgbFilter.green = [Math.random() * 2, gy];
+        }
+      }, 0.2);
+
+      // Phase 3: Noise seed animates
+      if (noiseFilter) {
+        timeline.to(noiseFilter, {
+          duration: 1.6,
+          ease: 'none',
+          onUpdate: function() {
+            noiseFilter.seed = Math.random();
+          }
+        }, 0.2);
+      }
+
+      // Phase 3: Second flash at 0.8s
+      timeline.to(flashGfx, { alpha: 0.4, duration: 0.04 }, 0.8);
+      timeline.to(flashGfx, { alpha: 0, duration: 0.06 }, 0.84);
+
+      // Phase 3: Third flash at 1.4s
+      timeline.to(flashGfx, { alpha: 0.3, duration: 0.03 }, 1.4);
+      timeline.to(flashGfx, { alpha: 0, duration: 0.05 }, 1.43);
+
+      // Phase 4: Settle down (1.8s - 2.3s)
+      timeline.to(rgbFilter, {
+        duration: 0.5,
+        ease: 'power2.in',
+        onUpdate: function() {
+          const progress = this.progress();
+          const decay = 1 - progress;
+          const rx = 10 * decay + (Math.random() - 0.5) * 15 * decay;
+          const bx = (Math.random() - 0.5) * 10 * decay;
+          rgbFilter.red = [rx, 0];
+          rgbFilter.blue = [bx, 0];
+          rgbFilter.green = [0, 0];
+        }
+      }, 1.8);
+
+      // Phase 4: Noise fades
+      if (noiseFilter) {
+        timeline.to(noiseFilter, { noise: 0, duration: 0.5, ease: 'power2.in' }, 1.8);
+      }
+
+      // Phase 4: Container fades out
+      timeline.to(glitchContainer, { alpha: 0, duration: 0.4, ease: 'power2.in' }, 2.0);
+
+      // Phase 5: Cleanup at end (2.5s)
+      timeline.call(function() {
+        glitchActive = false;
+        app.ticker.remove(drawNoiseBands);
+        stage.filters = null;
+        rgbFilter.red = [0, 0];
+        rgbFilter.blue = [0, 0];
+        rgbFilter.green = [0, 0];
+      }, null, null, 2.5);
+    }
+  }
+
+  /**
    * Add static dense background to Glitch Burst — drawn ONCE, provides 90% screen coverage
    * Per ChatGPT PixiJS report: "Graphics fastest when not modified"
    */
@@ -7120,6 +7447,79 @@ class FirewallSequence {
 
       // Fire callback
       if (onComplete) onComplete(type);
+    });
+
+    // Store and play
+    this.activeTimeline = timeline;
+    timeline.play();
+  }
+
+  /**
+   * Play Black Widow glitch transition — crimson/black security breach effect
+   * Called independently for Widow intro, never through random transition pool
+   * @param {function} callback - Callback when transition ends
+   */
+  playWidowGlitch(callback) {
+    // Guard against double-triggers
+    if (this.isPlaying) {
+      console.warn('[TransitionEngine] Transition already playing, ignoring Widow glitch request');
+      return;
+    }
+
+    // Validate DOM
+    if (!this.overlay || !this.content) {
+      console.error('[TransitionEngine] Cannot play Widow glitch: DOM elements missing');
+      if (callback) callback();
+      return;
+    }
+
+    this.isPlaying = true;
+    console.log('[TransitionEngine] Playing Widow glitch');
+
+    // Build GSAP timeline
+    const timeline = gsap.timeline({ paused: true });
+
+    // Step 1: Activate overlay
+    timeline.call(() => { this.overlay.classList.add('active'); }, null, 0);
+
+    // Step 2: Fade in overlay
+    timeline.to(this.overlay, {
+      opacity: 1,
+      duration: 0.2,
+      ease: 'power2.in'
+    }, 0);
+
+    // Initialize PixiJS canvas
+    if (window.pixiEffectManager) {
+      window.pixiEffectManager.init(this.content);
+    }
+
+    // Build Widow glitch content
+    this._buildWidowGlitch(timeline);
+
+    // Step 3: Fade out overlay (after glitch animation ~2.5s)
+    timeline.to(this.overlay, {
+      opacity: 0,
+      duration: 0.3,
+      ease: 'power2.out'
+    }, 2.6);
+
+    // Step 4: Cleanup
+    timeline.call(() => {
+      this.overlay.classList.remove('active');
+      gsap.set(this.overlay, { clearProps: 'opacity' });
+
+      if (window.pixiEffectManager) {
+        window.pixiEffectManager.reset();
+      }
+
+      this.content.innerHTML = '';
+      this.isPlaying = false;
+      this.activeTimeline = null;
+
+      console.log('[TransitionEngine] Widow glitch complete');
+
+      if (callback) callback();
     });
 
     // Store and play

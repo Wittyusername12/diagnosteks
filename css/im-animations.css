@@ -747,7 +747,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  pointer-events: all;
+  pointer-events: none;   /* Safe default - JS sets to 'all' when active */
+  visibility: hidden;     /* Hidden until GSAP shows it */
   opacity: 0;
 }
 

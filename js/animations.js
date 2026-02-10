@@ -408,6 +408,12 @@ class AnimationController {
     // PHASE 1: SCREEN TAKEOVER (0s to 0.8s)
     // ========================================
 
+    // Make overlay visible and block pointer events
+    timeline.set(overlay, {
+      visibility: 'visible',
+      pointerEvents: 'all'
+    }, 0);
+
     // Fade in overlay immediately
     timeline.to(overlay, {
       opacity: 1,

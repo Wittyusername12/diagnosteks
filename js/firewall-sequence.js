@@ -775,7 +775,7 @@ class FirewallSequence {
     var H = window.pixiEffectManager.getHeight();
     this._addDataCascade(stage, W, H, timeline);
     this._addDataCascadeEnhance(stage, W, H, timeline);
-    this._addDataCascadeDensity(stage, W, H, timeline);
+    this._addDataCascadeWall(stage, W, H, timeline);
   }
 
   /**
@@ -1911,36 +1911,36 @@ class FirewallSequence {
   }
 
   /**
-   * Data Cascade Round 3: Fix ADD blend double-alpha bug
-   * Creates 150 NORMAL-blend streams with legible digits, fixes text clipping,
-   * adds floor reflections and sparkles.
+   * Data Cascade Round 4: ADD blend at alpha 1.0 (correct approach)
+   * Creates 150 streams using ADD blend mode at full alpha.
    *
-   * KEY FIX: PixiJS GitHub issue #2248 documents that ADD blend mode applies alpha TWICE.
-   * Round 2's ADD blend sprites at alpha 0.25-0.70 render at 6%-49% effective brightness.
-   * This round uses NORMAL blend at alpha 1.0 for full visibility.
+   * KEY FIX: ADD blend at alpha 1.0 avoids the double-alpha penalty (1.0 × 1.0 = 1.0).
+   * Trail fill uses PURE BLACK rgba(0,0,0,trailAlpha) — in ADD blend, black adds nothing
+   * (effectively transparent), so all existing layers show through perfectly.
+   * Bright characters add their full color at full strength.
    *
    * @param {PIXI.Container} stage - The PixiJS stage
    * @param {number} W - Stage width
    * @param {number} H - Stage height
    * @param {gsap.core.Timeline} tl - GSAP timeline
    */
-  _addDataCascadeDensity(stage, W, H, tl) {
+  _addDataCascadeWall(stage, W, H, tl) {
     var self = this;
 
-    // Character set: 90% digits for legibility (Wachowski requirement)
-    var densityCharset = '012345678901234567890123456789#$&';
+    // Character set: 90%+ digits for legibility
+    var wallCharset = '0123456789012345678901234567890#&';
 
     // =========================================================
-    // MASTER DENSITY CONTAINER
+    // MASTER WALL CONTAINER — holds all Round 4 layers
     // =========================================================
-    var densityContainer = new PIXI.Container();
-    densityContainer.alpha = 0;
-    stage.addChild(densityContainer);
+    var wallContainer = new PIXI.Container();
+    wallContainer.alpha = 0;
+    stage.addChild(wallContainer);
 
     // =========================================================
-    // HELPER: Create stream objects for density rain
+    // HELPER: Create wall stream objects
     // =========================================================
-    function createDensityStreams(count, minSpeed, maxSpeed, charSize, spacing, xOffset) {
+    function createWallStreams(count, minSpeed, maxSpeed, charSize, xOffset) {
       var streams = [];
       for (var i = 0; i < count; i++) {
         var streamX = Math.floor(i * (W / count)) + Math.floor(Math.random() * 10 - 5) + (xOffset || 0);
@@ -1952,7 +1952,7 @@ class FirewallSequence {
           length: streamLength,
           charSize: charSize,
           chars: [],
-          charset: densityCharset
+          charset: wallCharset
         };
         for (var c = 0; c < stream.length; c++) {
           stream.chars.push(stream.charset[Math.floor(Math.random() * stream.charset.length)]);
@@ -1963,62 +1963,55 @@ class FirewallSequence {
     }
 
     // =========================================================
-    // HELPER: Update density rain frame on canvas
-    // brightnessScale: 1.0 for foreground, 0.33 for background
+    // HELPER: Render wall rain frame on canvas
+    // Uses PURE BLACK trail fill — critical for ADD blend transparency
     // =========================================================
-    function updateDensityRain(ctx, streams, canvasW, canvasH, charSize, trailAlpha, brightnessScale, doFlash) {
-      ctx.fillStyle = 'rgba(0, 3, 10, ' + trailAlpha + ')';
-      ctx.fillRect(0, 0, canvasW, canvasH);
+    function renderWallRain(ctx, streams, cW, cH, charSize, trailAlpha, brightScale) {
+      // *** PURE BLACK trail fill — this is critical for ADD blend transparency ***
+      ctx.fillStyle = 'rgba(0, 0, 0, ' + trailAlpha + ')';
+      ctx.fillRect(0, 0, cW, cH);
+
       ctx.font = charSize + 'px "JetBrains Mono", "Courier New", monospace';
       ctx.textBaseline = 'top';
 
       for (var s = 0; s < streams.length; s++) {
         var stream = streams[s];
         stream.y += stream.speed;
-
-        if (stream.y - stream.length * charSize > canvasH) {
-          stream.y = -(stream.length * charSize) - (Math.random() * canvasH * 0.3);
+        if (stream.y - stream.length * charSize > cH) {
+          stream.y = -(stream.length * charSize) - (Math.random() * cH * 0.3);
         }
 
         for (var i = 0; i < stream.length; i++) {
-          var charY = Math.floor(stream.y - i * charSize);
-          if (charY < -charSize || charY > canvasH) continue;
+          var cy = Math.floor(stream.y - i * charSize);
+          if (cy < -charSize || cy > cH) continue;
 
-          // Character mutation — 7% chance per frame
+          // Random char mutation
           if (Math.random() < 0.07) {
             stream.chars[i] = stream.charset[Math.floor(Math.random() * stream.charset.length)];
           }
 
-          // HEAD-TO-TAIL BRIGHTNESS GRADIENT with exponential decay
-          var headFactor = Math.pow(0.82, i);
+          // Head-to-tail brightness with exponential decay
+          var decay = Math.pow(0.80, i);
           var r, g, b, a;
-
-          if (i === 0) {
-            r = 220; g = 255; b = 255; a = 0.92 * brightnessScale;
-          } else if (i === 1) {
-            r = 150; g = 240; b = 255; a = 0.78 * brightnessScale;
-          } else if (i <= 3) {
-            r = 40; g = 200; b = 255; a = 0.60 * headFactor * brightnessScale;
-          } else {
-            r = 0;
-            g = Math.floor(120 + 60 * headFactor);
-            b = Math.floor(180 + 40 * headFactor);
-            a = 0.45 * headFactor * brightnessScale;
-          }
+          if (i === 0) { r = 220; g = 255; b = 255; a = 0.95 * brightScale; }
+          else if (i === 1) { r = 150; g = 240; b = 255; a = 0.80 * brightScale; }
+          else if (i <= 3) { r = 50; g = 200; b = 255; a = 0.60 * decay * brightScale; }
+          else if (i <= 7) { r = 0; g = 150; b = 220; a = 0.42 * decay * brightScale; }
+          else { r = 0; g = 80 + Math.floor(60 * decay); b = 160 + Math.floor(40 * decay); a = 0.30 * decay * brightScale; }
 
           if (a < 0.02) continue;
-          ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + a.toFixed(2) + ')';
-          ctx.fillText(stream.chars[i], Math.floor(stream.x), charY);
+          ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + Math.min(a, 1.0).toFixed(3) + ')';
+          ctx.fillText(stream.chars[i], Math.floor(stream.x), cy);
         }
       }
 
-      // Bright flash sparks on stream heads
-      if (doFlash && Math.random() < 0.30) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+      // Bright flash on random heads
+      if (brightScale > 0.5 && Math.random() < 0.28) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.90)';
         for (var f = 0; f < 5; f++) {
           var rs = streams[Math.floor(Math.random() * streams.length)];
           var hy = Math.floor(rs.y);
-          if (hy >= 0 && hy <= canvasH) {
+          if (hy >= 0 && hy <= cH) {
             ctx.fillText(rs.chars[0], Math.floor(rs.x), hy);
           }
         }
@@ -2026,160 +2019,201 @@ class FirewallSequence {
     }
 
     // =========================================================
-    // LAYER 1: DENSE BACKGROUND RAIN CANVAS (the "data fog")
-    // 80 streams, dim, blurred, small characters — NORMAL blend
+    // LAYER 1: BACKGROUND RAIN CANVAS (80 streams, dim, blurred — "data fog")
     // =========================================================
-    var bgRainCanvas = document.createElement('canvas');
-    bgRainCanvas.width = W;
-    bgRainCanvas.height = H;
-    var bgRainCtx = bgRainCanvas.getContext('2d');
-    bgRainCtx.fillStyle = 'rgba(0, 3, 10, 1)';
-    bgRainCtx.fillRect(0, 0, W, H);
+    var bgCanvas = document.createElement('canvas');
+    bgCanvas.width = W;
+    bgCanvas.height = H;
+    var bgCtx = bgCanvas.getContext('2d');
+    // Fill canvas with pure black initially
+    bgCtx.fillStyle = '#000000';
+    bgCtx.fillRect(0, 0, W, H);
 
-    var bgStreams = createDensityStreams(80, 1.5, 4.0, 11, 24, 0);
+    var bgStreams = createWallStreams(80, 1.0, 3.0, 11, 0);
 
-    var bgBaseTexture = new PIXI.BaseTexture(bgRainCanvas);
-    var bgTexture = new PIXI.Texture(bgBaseTexture);
-    var bgRainSprite = new PIXI.Sprite(bgTexture);
-    // *** CRITICAL: NORMAL blend mode, NOT ADD ***
-    bgRainSprite.blendMode = PIXI.BLEND_MODES.NORMAL;
-    // *** CRITICAL: Full alpha ***
-    bgRainSprite.alpha = 1.0;
+    var bgBaseTex = new PIXI.BaseTexture(bgCanvas);
+    var bgTex = new PIXI.Texture(bgBaseTex);
+    var bgSprite = new PIXI.Sprite(bgTex);
+    // *** ADD blend at alpha 1.0 — black background adds nothing, shows through ***
+    bgSprite.blendMode = PIXI.BLEND_MODES.ADD;
+    bgSprite.alpha = 1.0;
 
     try {
       var bgBlur = new PIXI.filters.BlurFilter(3);
-      bgRainSprite.filters = [bgBlur];
+      bgSprite.filters = [bgBlur];
     } catch (e) {
-      console.warn('[DataCascadeDensity] BlurFilter not available for bg:', e);
+      console.warn('[DataCascadeWall] BlurFilter not available for bg:', e);
     }
 
-    densityContainer.addChild(bgRainSprite);
+    wallContainer.addChild(bgSprite);
 
     // =========================================================
-    // LAYER 2: DENSE FOREGROUND RAIN CANVAS (the hero layer)
-    // 60 streams, bright, sharp, large legible digits — NORMAL blend
+    // LAYER 2: FOREGROUND RAIN CANVAS (60 streams, bright, sharp — hero layer)
     // =========================================================
-    var fgRainCanvas = document.createElement('canvas');
-    fgRainCanvas.width = W;
-    fgRainCanvas.height = H;
-    var fgRainCtx = fgRainCanvas.getContext('2d');
-    fgRainCtx.fillStyle = 'rgba(0, 4, 12, 1)';
-    fgRainCtx.fillRect(0, 0, W, H);
+    var fgCanvas = document.createElement('canvas');
+    fgCanvas.width = W;
+    fgCanvas.height = H;
+    var fgCtx = fgCanvas.getContext('2d');
+    fgCtx.fillStyle = '#000000';
+    fgCtx.fillRect(0, 0, W, H);
 
-    var fgStreams = createDensityStreams(60, 3.5, 9.0, 18, 32, 16);
+    var fgStreams = createWallStreams(60, 3.0, 8.0, 18, 16);
 
-    var fgBaseTexture = new PIXI.BaseTexture(fgRainCanvas);
-    var fgTexture = new PIXI.Texture(fgBaseTexture);
-    var fgRainSprite = new PIXI.Sprite(fgTexture);
-    // *** CRITICAL: NORMAL blend mode, NOT ADD ***
-    fgRainSprite.blendMode = PIXI.BLEND_MODES.NORMAL;
-    // *** CRITICAL: Full alpha ***
-    fgRainSprite.alpha = 1.0;
+    var fgBaseTex = new PIXI.BaseTexture(fgCanvas);
+    var fgTex = new PIXI.Texture(fgBaseTex);
+    var fgSprite = new PIXI.Sprite(fgTex);
+    // *** ADD blend at alpha 1.0 ***
+    fgSprite.blendMode = PIXI.BLEND_MODES.ADD;
+    fgSprite.alpha = 1.0;
 
-    densityContainer.addChild(fgRainSprite);
+    wallContainer.addChild(fgSprite);
 
     // =========================================================
-    // LAYER 3: FLOOR REFLECTIONS (from foreground rain canvas)
+    // LAYER 3: FLOOR REFLECTIONS
     // =========================================================
-    var floorSprite = new PIXI.Sprite(fgTexture);
-    floorSprite.anchor.set(0, 1.0);
-    floorSprite.y = H;
-    floorSprite.scale.y = -0.30;
-    floorSprite.alpha = 0.20;
-    floorSprite.blendMode = PIXI.BLEND_MODES.ADD; // ADD is fine for faint reflections
+    var floorReflect = new PIXI.Sprite(fgTex);
+    floorReflect.anchor.set(0, 1);
+    floorReflect.position.set(0, H);
+    floorReflect.scale.y = -0.28;
+    floorReflect.alpha = 0.18;
+    floorReflect.blendMode = PIXI.BLEND_MODES.ADD;
 
     try {
       var floorBlur = new PIXI.filters.BlurFilter(2);
-      floorSprite.filters = [floorBlur];
+      floorReflect.filters = [floorBlur];
     } catch (e) {}
 
-    densityContainer.addChild(floorSprite);
+    wallContainer.addChild(floorReflect);
 
-    // Floor brightness band
+    // Floor horizon glow
     var floorGlow = new PIXI.Graphics();
     floorGlow.blendMode = PIXI.BLEND_MODES.ADD;
-    floorGlow.beginFill(0x002233, 0.08);
-    floorGlow.drawRect(0, H * 0.73, W, H * 0.08);
+    // Soft wide band
+    floorGlow.beginFill(0x001a2a, 0.07);
+    floorGlow.drawRect(0, Math.floor(H * 0.74), W, Math.floor(H * 0.07));
     floorGlow.endFill();
-    floorGlow.beginFill(0x00d4ff, 0.12);
-    floorGlow.drawRect(0, H * 0.77, W, 2);
+    // Thin bright horizon line
+    floorGlow.beginFill(0x00bbdd, 0.15);
+    floorGlow.drawRect(0, Math.floor(H * 0.77), W, 2);
     floorGlow.endFill();
-    densityContainer.addChild(floorGlow);
+    wallContainer.addChild(floorGlow);
 
-    // Floor center flare (reflection of the breach point)
+    // Floor center flare (breach point reflection on floor)
     var floorFlare = new PIXI.Graphics();
     floorFlare.blendMode = PIXI.BLEND_MODES.ADD;
-    floorFlare.beginFill(0x006688, 0.20);
-    floorFlare.drawEllipse(W * 0.5, H * 0.82, 100, 25);
+    floorFlare.beginFill(0x005577, 0.18);
+    floorFlare.drawEllipse(Math.floor(W * 0.5), Math.floor(H * 0.82), 100, 25);
     floorFlare.endFill();
-    floorFlare.beginFill(0x00aacc, 0.15);
-    floorFlare.drawEllipse(W * 0.5, H * 0.80, 50, 12);
+    floorFlare.beginFill(0x00aacc, 0.12);
+    floorFlare.drawEllipse(Math.floor(W * 0.5), Math.floor(H * 0.80), 45, 10);
     floorFlare.endFill();
-    densityContainer.addChild(floorFlare);
+    wallContainer.addChild(floorFlare);
 
     // =========================================================
-    // LAYER 4: FIXED BREACH/ACCESS TEXT (brighter, properly positioned)
-    // BREACH x MUST be > left monitor right edge (W*0.175 + margin)
-    // ACCESS x MUST be < right monitor left edge (W*0.83 - margin)
+    // LAYER 4: FIXED BREACH/ACCESS TEXT
+    // Positioned BETWEEN panels for visibility
     // =========================================================
-    var breachText = new PIXI.Text('BREACH', {
+    var breachText2 = new PIXI.Text('BREACH', {
       fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontSize: 72,
+      fontSize: 68,
       fill: 0xccffff,
       fontWeight: 'bold',
-      letterSpacing: 6
+      letterSpacing: 5,
+      dropShadow: true,
+      dropShadowColor: 0x00aaff,
+      dropShadowBlur: 12,
+      dropShadowDistance: 0
     });
-    breachText.anchor.set(0.5, 0.5);
-    // Position well inside panels: W*0.32 = 614px at 1920, safely right of left monitor edge at 336px
-    breachText.x = W * 0.32;
-    breachText.y = H * 0.42;
-    breachText.alpha = 0;
+    breachText2.anchor.set(0.5);
+    breachText2.x = Math.floor(W * 0.33);
+    breachText2.y = Math.floor(H * 0.40);
+    breachText2.alpha = 0;
 
     try {
       var breachGlow = new PIXI.filters.GlowFilter({
-        distance: 20,
-        outerStrength: 3.0,
-        innerStrength: 1.5,
+        distance: 18,
+        outerStrength: 2.5,
+        innerStrength: 1.0,
         color: 0x00bbff,
         quality: 0.3
       });
-      breachText.filters = [breachGlow];
+      breachText2.filters = [breachGlow];
     } catch (e) {
-      console.warn('[DataCascadeDensity] GlowFilter not available for BREACH:', e);
+      console.warn('[DataCascadeWall] GlowFilter not available for BREACH:', e);
     }
 
-    densityContainer.addChild(breachText);
+    wallContainer.addChild(breachText2);
 
-    var accessText = new PIXI.Text('ACCESS', {
+    var accessText2 = new PIXI.Text('ACCESS', {
       fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontSize: 64,
+      fontSize: 68,
       fill: 0xccffff,
       fontWeight: 'bold',
-      letterSpacing: 6
+      letterSpacing: 5,
+      dropShadow: true,
+      dropShadowColor: 0x00aaff,
+      dropShadowBlur: 12,
+      dropShadowDistance: 0
     });
-    accessText.anchor.set(0.5, 0.5);
-    // Position well inside panels: W*0.68 = 1306px at 1920, safely left of right monitor at 1594px
-    accessText.x = W * 0.68;
-    accessText.y = H * 0.38;
-    accessText.alpha = 0;
+    accessText2.anchor.set(0.5);
+    accessText2.x = Math.floor(W * 0.67);
+    accessText2.y = Math.floor(H * 0.36);
+    accessText2.alpha = 0;
 
     try {
       var accessGlow = new PIXI.filters.GlowFilter({
-        distance: 20,
-        outerStrength: 3.0,
-        innerStrength: 1.5,
+        distance: 18,
+        outerStrength: 2.5,
+        innerStrength: 1.0,
         color: 0x00bbff,
         quality: 0.3
       });
-      accessText.filters = [accessGlow];
+      accessText2.filters = [accessGlow];
     } catch (e) {
-      console.warn('[DataCascadeDensity] GlowFilter not available for ACCESS:', e);
+      console.warn('[DataCascadeWall] GlowFilter not available for ACCESS:', e);
     }
 
-    densityContainer.addChild(accessText);
+    wallContainer.addChild(accessText2);
 
     // =========================================================
-    // LAYER 5: BRIGHT SPARKLE FLARE NODES
+    // LAYER 5: OVERLAY RAIN (10 sparse streams in front of text)
+    // =========================================================
+    var overlayCanvas = document.createElement('canvas');
+    overlayCanvas.width = W;
+    overlayCanvas.height = H;
+    var overlayCtx = overlayCanvas.getContext('2d');
+    overlayCtx.fillStyle = '#000000';
+    overlayCtx.fillRect(0, 0, W, H);
+
+    // 10 streams in center 50% of width
+    var overlayStreams = [];
+    for (var oi = 0; oi < 10; oi++) {
+      var ox = Math.floor(W * 0.25 + oi * (W * 0.5 / 10)) + Math.floor(Math.random() * 20 - 10);
+      var oLen = 10 + Math.floor(Math.random() * 6);
+      var oStream = {
+        x: ox,
+        y: -(Math.random() * H * 0.5) - oLen * 20,
+        speed: 5.0 + Math.random() * 5.0,
+        length: oLen,
+        charSize: 20,
+        chars: [],
+        charset: wallCharset
+      };
+      for (var oc = 0; oc < oLen; oc++) {
+        oStream.chars.push(wallCharset[Math.floor(Math.random() * wallCharset.length)]);
+      }
+      overlayStreams.push(oStream);
+    }
+
+    var overlayBaseTex = new PIXI.BaseTexture(overlayCanvas);
+    var overlayTex = new PIXI.Texture(overlayBaseTex);
+    var overlaySprite = new PIXI.Sprite(overlayTex);
+    overlaySprite.blendMode = PIXI.BLEND_MODES.ADD;
+    overlaySprite.alpha = 1.0;
+    wallContainer.addChild(overlaySprite);
+
+    // =========================================================
+    // LAYER 6: EXTRA SPARKLE NODES
     // =========================================================
     var sparkles = new PIXI.Graphics();
     sparkles.blendMode = PIXI.BLEND_MODES.ADD;
@@ -2187,50 +2221,39 @@ class FirewallSequence {
     for (var si = 0; si < 40; si++) {
       var sx = Math.random() * W;
       var sy = Math.random() * H * 0.75;
-      var sr = 1 + Math.random() * 3;
       var pick = Math.random();
+      var sr, sCol, sAlpha;
 
       if (pick < 0.15) {
-        sparkles.beginFill(0xffffff, 0.7 + Math.random() * 0.25);
+        // Blazing white
+        sr = 2 + Math.random() * 2;
+        sCol = 0xffffff;
+        sAlpha = 0.65 + Math.random() * 0.20;
       } else if (pick < 0.40) {
-        sparkles.beginFill(0x80eeff, 0.5 + Math.random() * 0.3);
+        // Bright cyan
+        sr = 2 + Math.random();
+        sCol = 0x80eeff;
+        sAlpha = 0.45 + Math.random() * 0.25;
       } else {
-        sparkles.beginFill(0x00d4ff, 0.25 + Math.random() * 0.3);
+        // Subtle
+        sr = 1 + Math.random();
+        sCol = 0x00bbdd;
+        sAlpha = 0.20 + Math.random() * 0.20;
       }
+
+      sparkles.beginFill(sCol, sAlpha);
       sparkles.drawCircle(Math.floor(sx), Math.floor(sy), sr);
       sparkles.endFill();
     }
 
-    densityContainer.addChild(sparkles);
-
-    // =========================================================
-    // LAYER 6: FOREGROUND OVERLAY RAIN (in front of text for depth)
-    // 10 sparse streams — NORMAL blend
-    // =========================================================
-    var overlayCanvas = document.createElement('canvas');
-    overlayCanvas.width = W;
-    overlayCanvas.height = H;
-    var overlayCtx = overlayCanvas.getContext('2d');
-    overlayCtx.fillStyle = 'rgba(0, 4, 12, 1)';
-    overlayCtx.fillRect(0, 0, W, H);
-
-    var overlayStreams = createDensityStreams(10, 5.0, 11.0, 20, 180, Math.floor(W * 0.2));
-
-    var overlayBaseTexture = new PIXI.BaseTexture(overlayCanvas);
-    var overlayTexture = new PIXI.Texture(overlayBaseTexture);
-    var overlaySprite = new PIXI.Sprite(overlayTexture);
-    // *** CRITICAL: NORMAL blend mode, NOT ADD ***
-    overlaySprite.blendMode = PIXI.BLEND_MODES.NORMAL;
-    overlaySprite.alpha = 0.55;
-
-    densityContainer.addChild(overlaySprite);
+    wallContainer.addChild(sparkles);
 
     // =========================================================
     // GSAP ANIMATION TIMELINE
     // =========================================================
 
     // Master container fade-in
-    tl.fromTo(densityContainer, { alpha: 0 }, { alpha: 1, duration: 0.5, ease: 'power2.out' }, 0);
+    tl.fromTo(wallContainer, { alpha: 0 }, { alpha: 1, duration: 0.5, ease: 'power2.out' }, 0);
 
     // Rain animation loop (drives all 3 canvases)
     tl.to({ frame: 0 }, {
@@ -2238,33 +2261,38 @@ class FirewallSequence {
       duration: 3.0,
       ease: 'none',
       onUpdate: function() {
-        // Background rain: slow, dim (brightnessScale 0.33), blurred
-        updateDensityRain(bgRainCtx, bgStreams, W, H, 11, 0.07, 0.33, false);
-        bgBaseTexture.update();
+        // Background rain: dim fog tier (brightScale 0.35)
+        renderWallRain(bgCtx, bgStreams, W, H, 11, 0.06, 0.35);
+        bgBaseTex.update();
 
-        // Foreground rain: fast, bright (brightnessScale 1.0), sharp
-        updateDensityRain(fgRainCtx, fgStreams, W, H, 18, 0.09, 1.0, true);
-        fgBaseTexture.update();
+        // Foreground rain: full brightness hero tier
+        renderWallRain(fgCtx, fgStreams, W, H, 18, 0.08, 1.0);
+        fgBaseTex.update();
 
-        // Overlay rain: sparse, in front of text
-        updateDensityRain(overlayCtx, overlayStreams, W, H, 20, 0.09, 0.85, true);
-        overlayBaseTexture.update();
+        // Overlay rain: slightly less than foreground so text shows through
+        renderWallRain(overlayCtx, overlayStreams, W, H, 20, 0.08, 0.8);
+        overlayBaseTex.update();
       }
     }, 0);
 
     // BREACH text fade-in/out
-    tl.to(breachText, { alpha: 0.95, duration: 0.5, ease: 'power2.in' }, 0.6);
-    tl.to(breachText, { alpha: 0, duration: 0.4, ease: 'power2.out' }, 2.6);
+    tl.to(breachText2, { alpha: 0.95, duration: 0.5, ease: 'power2.in' }, 0.6);
+    tl.to(breachText2, { alpha: 0, duration: 0.4, ease: 'power2.out' }, 2.6);
 
     // ACCESS text fade-in/out
-    tl.to(accessText, { alpha: 0.95, duration: 0.5, ease: 'power2.in' }, 1.0);
-    tl.to(accessText, { alpha: 0, duration: 0.4, ease: 'power2.out' }, 2.6);
+    tl.to(accessText2, { alpha: 0.95, duration: 0.5, ease: 'power2.in' }, 1.0);
+    tl.to(accessText2, { alpha: 0, duration: 0.4, ease: 'power2.out' }, 2.6);
+
+    // Floor elements fade
+    tl.fromTo(floorGlow, { alpha: 0 }, { alpha: 1, duration: 0.6 }, 0.3);
+    tl.fromTo(floorFlare, { alpha: 0 }, { alpha: 1, duration: 0.6 }, 0.4);
+    tl.fromTo(floorReflect, { alpha: 0 }, { alpha: 0.18, duration: 0.6 }, 0.3);
 
     // Sparkle pulse animation
-    tl.fromTo(sparkles, { alpha: 0.5 }, { alpha: 1.0, duration: 0.6, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 0.3);
+    tl.fromTo(sparkles, { alpha: 0.5 }, { alpha: 1, duration: 0.6, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 0.3);
 
     // Master container fade-out
-    tl.to(densityContainer, { alpha: 0, duration: 0.5, ease: 'power2.out' }, 3.0);
+    tl.to(wallContainer, { alpha: 0, duration: 0.5, ease: 'power2.out' }, 3.0);
   }
 
   /**

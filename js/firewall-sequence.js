@@ -2196,6 +2196,9 @@ class FirewallSequence {
       // Add intensify layer (hex grid, ring thickness, Fresnel, brackets, more particles)
       this._addRippleWaveIntensify(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline);
 
+      // Add polish layer (thick 18px bands, enhanced Fresnel, searing core, more particles)
+      this._addRippleWavePolish(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline);
+
       // =========================================================
       // GSAP ANIMATION TIMELINE
       // All animations added to the passed timeline parameter
@@ -3188,6 +3191,308 @@ class FirewallSequence {
     // Layer 9: Panel detail visible with panels
     timeline.to(panelDetailGfx, { alpha: 0.9, duration: 0.4, ease: 'power1.out' }, 0.2);
     timeline.to(panelDetailGfx, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 1.6);
+  }
+
+  /**
+   * Ripple Wave Round 4 polish - 5 focused layers addressing exact visual gaps
+   * from reference comparison. PURE ADDITION - transforms thin 3px lines into
+   * thick 18px luminous bands, adds Fresnel depth cue, searing white core.
+   * Uses NORMAL blend for thick bands (per PixiJS 7 docs: overlapping primitives
+   * with ADD blend cause blowout). Graphics drawn ONCE, never modified per frame.
+   */
+  _addRippleWavePolish(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline) {
+    // =============================================================
+    // 5 FOCUSED LAYERS - Each targets a specific visual gap
+    // Ring timing: ringDelay = 0.1 + i * 0.15, duration: 1.5, ease: 'power2.out'
+    // =============================================================
+
+    // =============================================
+    // LAYER 1: THICK RING GLOW BANDS (highest impact)
+    // Transform thin 3px lines into 18px luminous bands
+    // Uses NORMAL blend to avoid blowout from overlapping strokes
+    // 3 concentric strokes create gradient band effect
+    // =============================================
+    const thickBandContainers = [];
+
+    for (let tbi = 0; tbi < 5; tbi++) {
+      const bandContainer = new PIXI.Container();
+      bandContainer.x = cx;
+      bandContainer.y = cy;
+
+      const bandGfx = new PIXI.Graphics();
+      // DO NOT use PIXI.BLEND_MODES.ADD - per PixiJS 7 docs, overlapping
+      // primitives in same Graphics with ADD blend cause blowout
+      // NORMAL blend lets multi-stroke ellipses stack into gradient band
+
+      // Outermost glow - wide and soft
+      bandGfx.lineStyle(18, 0x003344, 0.07);
+      bandGfx.drawEllipse(0, 0, baseRX, baseRY);
+
+      // Middle band - medium brightness
+      bandGfx.lineStyle(8, 0x007799, 0.14);
+      bandGfx.drawEllipse(0, 0, baseRX, baseRY);
+
+      // Inner core - brightest, thinnest
+      bandGfx.lineStyle(2.5, 0x33ccee, 0.28);
+      bandGfx.drawEllipse(0, 0, baseRX, baseRY);
+
+      bandContainer.addChild(bandGfx);
+      bandContainer.scale.set(0);
+      bandContainer.alpha = 1;
+
+      rippleContainer.addChild(bandContainer);
+      thickBandContainers.push(bandContainer);
+    }
+
+    // =============================================
+    // LAYER 2: FRESNEL NEAR-SIDE BRIGHTNESS (3D depth cue)
+    // 45 dots along bottom arc + 6 bright nodes per ring
+    // Creates 2-3x brightness at bottom vs top = 3D depth
+    // Shares containers with Layer 1 for perfect sync
+    // =============================================
+    const fresnelContainers = [];
+
+    for (let fri = 0; fri < 5; fri++) {
+      const fresnelContainer = new PIXI.Container();
+      fresnelContainer.x = cx;
+      fresnelContainer.y = cy;
+
+      const fresnelGfx = new PIXI.Graphics();
+      fresnelGfx.blendMode = PIXI.BLEND_MODES.ADD;
+
+      // 45 dots distributed along bottom arc (0.15π to 0.85π)
+      for (let fdi = 0; fdi < 45; fdi++) {
+        const angle = (0.15 + (fdi / 44) * 0.70) * Math.PI;
+        // In PixiJS screen coords: +y is down, sin(angle) positive in this range = bottom
+        const fx = baseRX * Math.cos(angle);
+        const fy = baseRY * Math.sin(angle);
+
+        // Brightness peaks at bottom center (angle = π/2)
+        const peakFactor = Math.sin(angle);
+        const dotAlpha = 0.15 + peakFactor * 0.35;
+        const dotSize = 1.5 + peakFactor * 2.0;
+
+        fresnelGfx.beginFill(0x88eeff, dotAlpha);
+        fresnelGfx.drawCircle(fx, fy, dotSize);
+        fresnelGfx.endFill();
+      }
+
+      // 6 bright nodes per ring at bottom arc - larger sparkle points
+      for (let fni = 0; fni < 6; fni++) {
+        const nodeAngle = (0.25 + (fni / 5) * 0.50) * Math.PI;
+        const nx = baseRX * Math.cos(nodeAngle);
+        const ny = baseRY * Math.sin(nodeAngle);
+        fresnelGfx.beginFill(0xffffff, 0.55 + Math.random() * 0.20);
+        fresnelGfx.drawCircle(nx, ny, 3 + Math.random() * 3);
+        fresnelGfx.endFill();
+      }
+
+      fresnelContainer.addChild(fresnelGfx);
+      fresnelContainer.scale.set(0);
+      fresnelContainer.alpha = 1;
+
+      rippleContainer.addChild(fresnelContainer);
+      fresnelContainers.push(fresnelContainer);
+    }
+
+    // =============================================
+    // LAYER 3: SEARING WHITE CORE BOOST
+    // Push core brightness toward true white via ADD blend
+    // 3 filled ellipses + 6 star-spike lines (lens flare)
+    // =============================================
+    const coreBoostContainer = new PIXI.Container();
+    coreBoostContainer.blendMode = PIXI.BLEND_MODES.ADD;
+
+    const coreGfx = new PIXI.Graphics();
+
+    // Innermost - searing white
+    coreGfx.beginFill(0xffffff, 0.50);
+    coreGfx.drawEllipse(cx, cy, 28, 11);
+    coreGfx.endFill();
+
+    // Middle - bright cyan-white
+    coreGfx.beginFill(0xaaddff, 0.25);
+    coreGfx.drawEllipse(cx, cy, 65, 26);
+    coreGfx.endFill();
+
+    // Outer - subtle dark cyan glow
+    coreGfx.beginFill(0x004466, 0.10);
+    coreGfx.drawEllipse(cx, cy, 160, 64);
+    coreGfx.endFill();
+
+    // 6 star-spike lines through center (lens flare cross pattern)
+    const spikeAngles = [0, Math.PI / 3, 2 * Math.PI / 3, Math.PI, 4 * Math.PI / 3, 5 * Math.PI / 3];
+    for (let si = 0; si < spikeAngles.length; si++) {
+      const sLen = 50 + Math.random() * 60; // 50-110px length
+      const sAlpha = 0.4 + Math.random() * 0.25;
+      coreGfx.lineStyle(1.2, 0xffffff, sAlpha);
+      coreGfx.moveTo(cx, cy);
+      // * 0.4 on y flattens spikes to match elliptical perspective
+      coreGfx.lineTo(cx + Math.cos(spikeAngles[si]) * sLen, cy + Math.sin(spikeAngles[si]) * sLen * 0.4);
+    }
+
+    coreBoostContainer.addChild(coreGfx);
+    coreBoostContainer.alpha = 0;
+    rippleContainer.addChild(coreBoostContainer);
+
+    // =============================================
+    // LAYER 4: PARTICLE DENSITY BOOST + RADIAL STREAKS
+    // 200 dust particles + 25 bright standouts
+    // 30 radial streaks + 8 brighter longer streaks
+    // =============================================
+    const dustGfx = new PIXI.Graphics();
+
+    // 200 dust particles with density gradient (65% in center)
+    for (let dpi = 0; dpi < 200; dpi++) {
+      const inCenter = Math.random() < 0.65;
+      const dpx = inCenter ? w * 0.25 + Math.random() * w * 0.50 : Math.random() * w;
+      const dpy = inCenter ? h * 0.25 + Math.random() * h * 0.50 : Math.random() * h;
+      const dpSize = 0.8 + Math.random() * 1.5;
+      const dpAlpha = 0.03 + Math.random() * 0.12;
+      const dpColor = Math.random() < 0.65 ? 0xffffff : (Math.random() < 0.7 ? 0x00d4ff : 0x4488ff);
+
+      dustGfx.beginFill(dpColor, dpAlpha);
+      dustGfx.drawCircle(dpx, dpy, dpSize);
+      dustGfx.endFill();
+    }
+
+    // 25 brighter standout particles
+    for (let bpi = 0; bpi < 25; bpi++) {
+      const bpx = w * 0.15 + Math.random() * w * 0.70;
+      const bpy = h * 0.15 + Math.random() * h * 0.70;
+      dustGfx.beginFill(0xffffff, 0.35 + Math.random() * 0.35);
+      dustGfx.drawCircle(bpx, bpy, 2 + Math.random() * 3);
+      dustGfx.endFill();
+    }
+
+    dustGfx.alpha = 0;
+    rippleContainer.addChild(dustGfx);
+
+    // Radial streak artifacts
+    const streakGfx = new PIXI.Graphics();
+    streakGfx.blendMode = PIXI.BLEND_MODES.ADD;
+
+    // 30 normal streaks
+    for (let sti = 0; sti < 30; sti++) {
+      const stAngle = Math.random() * Math.PI * 2;
+      const stDist = 120 + Math.random() * 350;
+      const stLen = 10 + Math.random() * 35;
+      const stStartX = cx + Math.cos(stAngle) * stDist;
+      const stStartY = cy + Math.sin(stAngle) * stDist * 0.4; // perspective flatten
+      const stEndX = stStartX + Math.cos(stAngle) * stLen;
+      const stEndY = stStartY + Math.sin(stAngle) * stLen * 0.4;
+
+      streakGfx.lineStyle(0.8 + Math.random() * 0.8, 0x00d4ff, 0.08 + Math.random() * 0.15);
+      streakGfx.moveTo(stStartX, stStartY);
+      streakGfx.lineTo(stEndX, stEndY);
+    }
+
+    // 8 brighter, longer streaks
+    for (let bsi = 0; bsi < 8; bsi++) {
+      const bsAngle = Math.random() * Math.PI * 2;
+      const bsDist = 80 + Math.random() * 300;
+      const bsLen = 30 + Math.random() * 50;
+      const bsStartX = cx + Math.cos(bsAngle) * bsDist;
+      const bsStartY = cy + Math.sin(bsAngle) * bsDist * 0.4;
+      const bsEndX = bsStartX + Math.cos(bsAngle) * bsLen;
+      const bsEndY = bsStartY + Math.sin(bsAngle) * bsLen * 0.4;
+
+      streakGfx.lineStyle(1.5, 0x44eeff, 0.20 + Math.random() * 0.15);
+      streakGfx.moveTo(bsStartX, bsStartY);
+      streakGfx.lineTo(bsEndX, bsEndY);
+    }
+
+    streakGfx.alpha = 0;
+    rippleContainer.addChild(streakGfx);
+
+    // =============================================
+    // LAYER 5: ENHANCED FUI BRACKET CORNER DOTS
+    // Larger, brighter corner node dots to emphasize brackets
+    // (Brackets already exist from Round 3, this enhances visibility)
+    // =============================================
+    const bracketDotsGfx = new PIXI.Graphics();
+    bracketDotsGfx.blendMode = PIXI.BLEND_MODES.ADD;
+
+    const panelPositions = [
+      { x: w * 0.03, y: h * 0.10, width: w * 0.18, height: h * 0.38 },   // Left panel
+      { x: w * 0.80, y: h * 0.08, width: w * 0.17, height: h * 0.32 },   // Right panel
+      { x: w * 0.04, y: h * 0.75, width: w * 0.12, height: h * 0.12 },   // Bottom-left
+      { x: w * 0.84, y: h * 0.78, width: w * 0.12, height: h * 0.10 },   // Bottom-right
+    ];
+
+    panelPositions.forEach(panel => {
+      const px = panel.x;
+      const py = panel.y;
+      const pw = panel.width;
+      const ph = panel.height;
+
+      // Bright corner dots with glow rings
+      bracketDotsGfx.beginFill(0x00d4ff, 0.70);
+      bracketDotsGfx.drawCircle(px, py, 3);
+      bracketDotsGfx.drawCircle(px + pw, py, 3);
+      bracketDotsGfx.drawCircle(px, py + ph, 3);
+      bracketDotsGfx.drawCircle(px + pw, py + ph, 3);
+      bracketDotsGfx.endFill();
+
+      // Outer glow rings
+      bracketDotsGfx.lineStyle(1, 0x00d4ff, 0.25);
+      bracketDotsGfx.drawCircle(px, py, 6);
+      bracketDotsGfx.drawCircle(px + pw, py, 6);
+      bracketDotsGfx.drawCircle(px, py + ph, 6);
+      bracketDotsGfx.drawCircle(px + pw, py + ph, 6);
+    });
+
+    bracketDotsGfx.alpha = 0;
+    rippleContainer.addChild(bracketDotsGfx);
+
+    // =============================================
+    // GSAP ANIMATIONS FOR POLISH LAYERS
+    // Match exact timing from Round 1 ring animations
+    // =============================================
+
+    // Layers 1 & 2: Thick bands + Fresnel expand with ring stagger
+    for (let ani = 0; ani < 5; ani++) {
+      const ringDelay = 0.1 + ani * 0.15;
+
+      // Layer 1: Thick band containers
+      timeline.to(thickBandContainers[ani].scale, {
+        x: 1.0, y: 1.0,
+        duration: 1.5,
+        ease: 'power2.out'
+      }, ringDelay);
+      timeline.to(thickBandContainers[ani], {
+        alpha: 0,
+        duration: 1.3,
+        ease: 'power1.in'
+      }, ringDelay + 0.2);
+
+      // Layer 2: Fresnel containers
+      timeline.to(fresnelContainers[ani].scale, {
+        x: 1.0, y: 1.0,
+        duration: 1.5,
+        ease: 'power2.out'
+      }, ringDelay);
+      timeline.to(fresnelContainers[ani], {
+        alpha: 0,
+        duration: 1.3,
+        ease: 'power1.in'
+      }, ringDelay + 0.2);
+    }
+
+    // Layer 3: Core boost - appears after initial flash, fades out
+    timeline.to(coreBoostContainer, { alpha: 1, duration: 0.05, ease: 'power2.out' }, 0.05);
+    timeline.to(coreBoostContainer, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layer 4: Dust particles and streaks
+    timeline.to(dustGfx, { alpha: 1, duration: 0.15, ease: 'power1.out' }, 0.15);
+    timeline.to(dustGfx, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    timeline.to(streakGfx, { alpha: 0.9, duration: 0.15, ease: 'power1.out' }, 0.15);
+    timeline.to(streakGfx, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layer 5: Enhanced bracket corner dots
+    timeline.to(bracketDotsGfx, { alpha: 0.9, duration: 0.3, ease: 'power1.out' }, 0);
+    timeline.to(bracketDotsGfx, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 1.6);
   }
 
   /**

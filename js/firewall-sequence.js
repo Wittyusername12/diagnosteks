@@ -2199,6 +2199,9 @@ class FirewallSequence {
       // Add polish layer (thick 18px bands, enhanced Fresnel, searing core, more particles)
       this._addRippleWavePolish(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline);
 
+      // Add showtime layer (bloom filter, ADD-blend wide bands, bold Fresnel, sparkle bursts)
+      this._addRippleWaveShowtime(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline);
+
       // =========================================================
       // GSAP ANIMATION TIMELINE
       // All animations added to the passed timeline parameter
@@ -3493,6 +3496,347 @@ class FirewallSequence {
     // Layer 5: Enhanced bracket corner dots
     timeline.to(bracketDotsGfx, { alpha: 0.9, duration: 0.3, ease: 'power1.out' }, 0);
     timeline.to(bracketDotsGfx, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 1.6);
+  }
+
+  /**
+   * Ripple Wave Round 5 SHOWTIME - Maximum cinematic impact
+   * HEADLINE: AdvancedBloomFilter on core for light-bleeding bloom effect
+   * ADD-blend wide ring glow bands (28-44px progressive width)
+   * Bold Fresnel with squared sine peaks and 8px white hot-spot nodes
+   * 15 animated sparkle bursts for razzamatazz
+   * Global brightness lift with core-to-ring bridge and upward light column
+   */
+  _addRippleWaveShowtime(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline) {
+    // =============================================================
+    // 5 SHOWTIME LAYERS - Maximum cinematic impact
+    // Ring timing: ringDelay = 0.1 + i * 0.15, duration: 1.5, ease: 'power2.out'
+    // =============================================================
+
+    // =============================================
+    // LAYER 1: ADVANCEDBLOOMFILTER ON CORE (THE CINEMATIC WEAPON)
+    // Transforms core from "drawn shape" to "light source that bleeds"
+    // =============================================
+    const bloomCoreContainer = new PIXI.Container();
+
+    const bloomGfx = new PIXI.Graphics();
+
+    // Searing white center
+    bloomGfx.beginFill(0xffffff, 0.95);
+    bloomGfx.drawEllipse(cx, cy, 30, 12);
+    bloomGfx.endFill();
+
+    // Bright cyan inner glow
+    bloomGfx.beginFill(0x88eeff, 0.50);
+    bloomGfx.drawEllipse(cx, cy, 75, 30);
+    bloomGfx.endFill();
+
+    // Medium teal spread
+    bloomGfx.beginFill(0x00aacc, 0.20);
+    bloomGfx.drawEllipse(cx, cy, 150, 60);
+    bloomGfx.endFill();
+
+    // Wide dark teal aura - bridges core to innermost ring
+    bloomGfx.beginFill(0x004466, 0.10);
+    bloomGfx.drawEllipse(cx, cy, 250, 100);
+    bloomGfx.endFill();
+
+    // Star-spike flares - 6 very bright cross lines
+    const spikeData = [
+      { angle: 0, len: 80 },
+      { angle: Math.PI / 3, len: 55 },
+      { angle: 2 * Math.PI / 3, len: 65 },
+      { angle: Math.PI, len: 80 },
+      { angle: 4 * Math.PI / 3, len: 55 },
+      { angle: 5 * Math.PI / 3, len: 65 }
+    ];
+    for (let s = 0; s < spikeData.length; s++) {
+      bloomGfx.lineStyle(1.5, 0xffffff, 0.75);
+      bloomGfx.moveTo(cx, cy);
+      bloomGfx.lineTo(
+        cx + Math.cos(spikeData[s].angle) * spikeData[s].len,
+        cy + Math.sin(spikeData[s].angle) * spikeData[s].len * 0.4  // perspective flatten
+      );
+    }
+
+    bloomCoreContainer.addChild(bloomGfx);
+
+    // Apply AdvancedBloomFilter - access via PIXI.filters (same pattern as GlowFilter)
+    let bloomFilter = null;
+    try {
+      if (PIXI.filters && PIXI.filters.AdvancedBloomFilter) {
+        bloomFilter = new PIXI.filters.AdvancedBloomFilter({
+          threshold: 0.2,     // Low threshold - catches most bright core elements
+          bloomScale: 1.5,    // Strong bloom intensity
+          brightness: 1.3,    // Slightly overblown - the "searing" quality
+          blur: 6,            // Moderate spread
+          quality: 4          // Good quality
+        });
+        bloomCoreContainer.filters = [bloomFilter];
+      } else {
+        throw new Error('AdvancedBloomFilter not available');
+      }
+    } catch (e) {
+      console.warn('[RippleWave] AdvancedBloomFilter not found, using drawn glow fallback');
+      // Fallback: large glow ellipses in ADD blend
+      const fallbackGlow = new PIXI.Graphics();
+      fallbackGlow.beginFill(0x004466, 0.08);
+      fallbackGlow.drawEllipse(cx, cy, 300, 120);
+      fallbackGlow.endFill();
+      fallbackGlow.beginFill(0x002233, 0.04);
+      fallbackGlow.drawEllipse(cx, cy, 450, 180);
+      fallbackGlow.endFill();
+      const fallbackContainer = new PIXI.Container();
+      fallbackContainer.blendMode = PIXI.BLEND_MODES.ADD;
+      fallbackContainer.addChild(fallbackGlow);
+      rippleContainer.addChild(fallbackContainer);
+    }
+
+    bloomCoreContainer.alpha = 0;
+    rippleContainer.addChild(bloomCoreContainer);
+
+    // =============================================
+    // LAYER 2: ADD-BLEND WIDE RING GLOW BANDS
+    // Fixes Round 4's NORMAL blend mistake - ADD at low alpha IS visible
+    // Per-primitive additive stacking creates natural gradient
+    // Outer rings progressively wider (28px -> 44px)
+    // =============================================
+    const wideGlowContainers = [];
+
+    for (let rgi = 0; rgi < 5; rgi++) {
+      const glowContainer = new PIXI.Container();
+      glowContainer.x = cx;
+      glowContainer.y = cy;
+      glowContainer.blendMode = PIXI.BLEND_MODES.ADD;
+
+      const glowGfx = new PIXI.Graphics();
+
+      // Progressive width: ring 0 = 28px, ring 4 = 44px
+      const wideWidth = 28 + rgi * 4;
+      const mediumWidth = 12 + rgi * 2;
+
+      // Wide outer haze - barely visible individually, ADD makes it glow
+      glowGfx.lineStyle(wideWidth, 0x003344, 0.020);
+      glowGfx.drawEllipse(0, 0, baseRX, baseRY);
+
+      // Medium glow band
+      glowGfx.lineStyle(mediumWidth, 0x006688, 0.040);
+      glowGfx.drawEllipse(0, 0, baseRX, baseRY);
+
+      // Narrow bright core - reinforces existing thin ring line
+      glowGfx.lineStyle(4, 0x22bbdd, 0.085);
+      glowGfx.drawEllipse(0, 0, baseRX, baseRY);
+
+      glowContainer.addChild(glowGfx);
+      glowContainer.scale.set(0);
+      glowContainer.alpha = 1;
+
+      rippleContainer.addChild(glowContainer);
+      wideGlowContainers.push(glowContainer);
+    }
+
+    // =============================================
+    // LAYER 3: BOLD FRESNEL NEAR-SIDE BRIGHTNESS (3:1 ratio)
+    // Squared sine for sharper peak, 8 large white hot-spot nodes
+    // =============================================
+    const boldFresnelContainers = [];
+
+    for (let bfi = 0; bfi < 5; bfi++) {
+      const fresnelContainer = new PIXI.Container();
+      fresnelContainer.x = cx;
+      fresnelContainer.y = cy;
+
+      const fresnelGfx = new PIXI.Graphics();
+      // NORMAL blend - dots are opaque bright points, not glow
+
+      // 50 bright Fresnel dots along bottom arc
+      for (let fdi = 0; fdi < 50; fdi++) {
+        const angle = (0.15 + (fdi / 49) * 0.70) * Math.PI;
+        const fx = baseRX * Math.cos(angle);
+        const fy = baseRY * Math.sin(angle);
+
+        // Squared sine = sharper peak at bottom center
+        const peak = Math.pow(Math.sin(angle), 2.0);
+        const dotAlpha = 0.10 + peak * 0.40;  // 0.10 at sides, 0.50 at bottom
+        const dotSize = 1.5 + peak * 3.0;     // 1.5px at sides, 4.5px at bottom
+
+        fresnelGfx.beginFill(0x88eeff, dotAlpha);
+        fresnelGfx.drawCircle(fx, fy, dotSize);
+        fresnelGfx.endFill();
+      }
+
+      // 8 LARGE BRIGHT WHITE NODES - the "hot spots"
+      for (let fni = 0; fni < 8; fni++) {
+        const nodeAngle = (0.20 + (fni / 7) * 0.60) * Math.PI;
+        const nx = baseRX * Math.cos(nodeAngle);
+        const ny = baseRY * Math.sin(nodeAngle);
+        const nodePeak = Math.pow(Math.sin(nodeAngle), 1.5);
+        const nodeSize = 3 + nodePeak * 5;        // 3px at sides, 8px at bottom
+        const nodeAlpha = 0.40 + nodePeak * 0.40; // 0.40 at sides, 0.80 at bottom
+
+        fresnelGfx.beginFill(0xffffff, nodeAlpha);
+        fresnelGfx.drawCircle(nx, ny, nodeSize);
+        fresnelGfx.endFill();
+      }
+
+      fresnelContainer.addChild(fresnelGfx);
+      fresnelContainer.scale.set(0);
+      fresnelContainer.alpha = 1;
+
+      rippleContainer.addChild(fresnelContainer);
+      boldFresnelContainers.push(fresnelContainer);
+    }
+
+    // =============================================
+    // LAYER 4: ANIMATED SPARKLE BURSTS (the razzamatazz)
+    // 15 sparkles flash at random times during transition
+    // =============================================
+    const sparkles = [];
+
+    for (let spi = 0; spi < 15; spi++) {
+      const sparkle = new PIXI.Graphics();
+
+      // Position on/near ring field using ring ellipse math
+      const ringIdx = Math.floor(Math.random() * 5);
+      const sparkAngle = Math.random() * Math.PI * 2;
+      const sparkRX = baseRX * (0.3 + ringIdx * 0.175);
+      const sparkRY = baseRY * (0.3 + ringIdx * 0.175);
+      const sparkX = cx + sparkRX * Math.cos(sparkAngle) + (Math.random() - 0.5) * 30;
+      const sparkY = cy + sparkRY * Math.sin(sparkAngle) + (Math.random() - 0.5) * 15;
+
+      // Small bright dot with tiny cross (star-point micro-flare)
+      const sparkSize = 2 + Math.random() * 4;
+      sparkle.beginFill(0xffffff, 0.9);
+      sparkle.drawCircle(sparkX, sparkY, sparkSize);
+      sparkle.endFill();
+
+      // Tiny cross lines
+      sparkle.lineStyle(0.8, 0xffffff, 0.7);
+      sparkle.moveTo(sparkX - sparkSize * 1.5, sparkY);
+      sparkle.lineTo(sparkX + sparkSize * 1.5, sparkY);
+      sparkle.moveTo(sparkX, sparkY - sparkSize * 0.6);
+      sparkle.lineTo(sparkX, sparkY + sparkSize * 0.6);
+
+      sparkle.alpha = 0;
+      sparkle.blendMode = PIXI.BLEND_MODES.ADD;
+      rippleContainer.addChild(sparkle);
+
+      // Store for animation
+      sparkles.push({
+        gfx: sparkle,
+        flashTime: 0.3 + Math.random() * 1.2,
+        flashDuration: 0.15 + Math.random() * 0.25
+      });
+    }
+
+    // =============================================
+    // LAYER 5: GLOBAL BRIGHTNESS LIFT + EXPANDED CORE HAZE
+    // =============================================
+
+    // Part A: Global ambient lift
+    const ambientGfx = new PIXI.Graphics();
+    ambientGfx.beginFill(0x001122, 0.025);
+    ambientGfx.drawEllipse(cx, cy, w * 0.55, h * 0.45);
+    ambientGfx.endFill();
+
+    const ambientContainer = new PIXI.Container();
+    ambientContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    ambientContainer.addChild(ambientGfx);
+    ambientContainer.alpha = 0;
+    rippleContainer.addChild(ambientContainer);
+
+    // Part B: Core-to-ring bridge glow
+    const bridgeGfx = new PIXI.Graphics();
+    bridgeGfx.beginFill(0x003344, 0.045);
+    bridgeGfx.drawEllipse(cx, cy, baseRX * 0.6, baseRY * 0.6);
+    bridgeGfx.endFill();
+    bridgeGfx.beginFill(0x002233, 0.025);
+    bridgeGfx.drawEllipse(cx, cy, baseRX * 0.85, baseRY * 0.85);
+    bridgeGfx.endFill();
+
+    const bridgeContainer = new PIXI.Container();
+    bridgeContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    bridgeContainer.addChild(bridgeGfx);
+    bridgeContainer.alpha = 0;
+    rippleContainer.addChild(bridgeContainer);
+
+    // Part C: Upward light column
+    const columnGfx = new PIXI.Graphics();
+    columnGfx.beginFill(0x003355, 0.035);
+    columnGfx.drawRect(cx - 25, cy - h * 0.4, 50, h * 0.35);
+    columnGfx.endFill();
+    columnGfx.beginFill(0x004466, 0.020);
+    columnGfx.drawRect(cx - 60, cy - h * 0.35, 120, h * 0.30);
+    columnGfx.endFill();
+
+    const columnContainer = new PIXI.Container();
+    columnContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    columnContainer.addChild(columnGfx);
+    columnContainer.alpha = 0;
+    rippleContainer.addChild(columnContainer);
+
+    // =============================================
+    // GSAP ANIMATIONS FOR SHOWTIME LAYERS
+    // =============================================
+
+    // Layer 1: Bloom core - appears after initial flash
+    timeline.to(bloomCoreContainer, { alpha: 1, duration: 0.05, ease: 'power2.out' }, 0.05);
+    timeline.to(bloomCoreContainer, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layers 2 & 3: Wide glow bands + Bold Fresnel expand with ring stagger
+    for (let ani = 0; ani < 5; ani++) {
+      const ringDelay = 0.1 + ani * 0.15;
+
+      // Layer 2: Wide glow containers
+      timeline.to(wideGlowContainers[ani].scale, {
+        x: 1.0, y: 1.0,
+        duration: 1.5,
+        ease: 'power2.out'
+      }, ringDelay);
+      timeline.to(wideGlowContainers[ani], {
+        alpha: 0,
+        duration: 1.3,
+        ease: 'power1.in'
+      }, ringDelay + 0.2);
+
+      // Layer 3: Bold Fresnel containers
+      timeline.to(boldFresnelContainers[ani].scale, {
+        x: 1.0, y: 1.0,
+        duration: 1.5,
+        ease: 'power2.out'
+      }, ringDelay);
+      timeline.to(boldFresnelContainers[ani], {
+        alpha: 0,
+        duration: 1.3,
+        ease: 'power1.in'
+      }, ringDelay + 0.2);
+    }
+
+    // Layer 4: Animated sparkle bursts - each flashes at random time
+    sparkles.forEach(sp => {
+      const flashIn = sp.flashDuration * 0.3;
+      const flashOut = sp.flashDuration * 0.7;
+
+      timeline.to(sp.gfx, {
+        alpha: 0.8 + Math.random() * 0.2,
+        duration: flashIn,
+        ease: 'power2.out'
+      }, sp.flashTime);
+      timeline.to(sp.gfx, {
+        alpha: 0,
+        duration: flashOut,
+        ease: 'power1.in'
+      }, sp.flashTime + flashIn);
+    });
+
+    // Layer 5: Global brightness lift elements
+    timeline.to(ambientContainer, { alpha: 1, duration: 0.15, ease: 'power1.out' }, 0.1);
+    timeline.to(ambientContainer, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    timeline.to(bridgeContainer, { alpha: 1, duration: 0.15, ease: 'power1.out' }, 0.1);
+    timeline.to(bridgeContainer, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    timeline.to(columnContainer, { alpha: 1, duration: 0.15, ease: 'power1.out' }, 0.1);
+    timeline.to(columnContainer, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
   }
 
   /**

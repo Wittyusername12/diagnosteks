@@ -17,11 +17,12 @@
   --accent-orange: #ff6b00;
   --accent-orange-glow: rgba(255, 107, 0, 0.3);
 
-  /* Fury/SHIELD */
-  --fury-red: #ff3333;
-  --fury-red-dim: #cc0000;
-  --fury-red-glow: rgba(255, 51, 51, 0.3);
-  --fury-red-dark: rgba(255, 51, 51, 0.1);
+  /* Fury/SHIELD - Amber theme (MCU canon: SHIELD uses orange/blue, not red) */
+  --fury-amber: #ff8c00;
+  --fury-amber-dim: #cc7000;
+  --fury-amber-glow: rgba(255, 140, 0, 0.3);
+  --fury-amber-dark: rgba(255, 140, 0, 0.1);
+  --fury-amber-bright: #ffaa00;
 
   /* Success/Status */
   --success-green: #00ff88;
@@ -1021,24 +1022,24 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  background: linear-gradient(180deg, rgba(255, 51, 51, 0.1) 0%, transparent 100%);
-  border-bottom: 1px solid var(--fury-red-dim);
+  background: linear-gradient(180deg, rgba(255, 140, 0, 0.1) 0%, transparent 100%);
+  border-bottom: 1px solid var(--fury-amber-dim);
 }
 
 .shield-title {
   font-family: var(--font-display);
   font-size: 1.2rem;
-  color: var(--fury-red);
+  color: var(--fury-amber);
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  text-shadow: 0 0 10px var(--fury-red-glow);
+  text-shadow: 0 0 10px var(--fury-amber-glow);
 }
 
 .classified-badge {
   font-family: var(--font-display);
   font-size: 0.8rem;
-  color: var(--fury-red);
-  border: 1px solid var(--fury-red);
+  color: var(--fury-amber);
+  border: 1px solid var(--fury-amber);
   padding: 5px 15px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -1057,27 +1058,27 @@ body {
 .fury-avatar {
   width: 80px;
   height: 80px;
-  border: 2px solid var(--fury-red);
+  border: 2px solid var(--fury-amber);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px var(--fury-red-glow);
+  box-shadow: 0 0 20px var(--fury-amber-glow);
 }
 
 .fury-initials {
   font-family: var(--font-display);
   font-size: 1.8rem;
-  color: var(--fury-red);
+  color: var(--fury-amber);
 }
 
 .fury-quote {
   background: var(--bg-panel);
-  border: 1px solid var(--fury-red-dim);
+  border: 1px solid var(--fury-amber-dim);
   padding: 20px 30px;
   max-width: 600px;
   text-align: center;
-  --aug-border-bg: var(--fury-red);
+  --aug-border-bg: var(--fury-amber);
   --aug-tl: 10px;
   --aug-br: 10px;
 }
@@ -1093,7 +1094,7 @@ body {
 .fury-loading {
   font-family: var(--font-display);
   font-size: 0.9rem;
-  color: var(--fury-red);
+  color: var(--fury-amber);
   text-transform: uppercase;
   letter-spacing: 0.15em;
   animation: pulse-glow 1.5s ease-in-out infinite;
@@ -1121,7 +1122,7 @@ body {
   align-items: center;
   gap: 15px;
   background: var(--bg-panel);
-  border: 1px solid var(--fury-red-dim);
+  border: 1px solid var(--fury-amber-dim);
   padding: 15px 20px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1129,18 +1130,18 @@ body {
 }
 
 .fury-option:hover {
-  background: var(--fury-red-dark);
-  border-color: var(--fury-red);
-  box-shadow: 0 0 15px var(--fury-red-glow);
+  background: var(--fury-amber-dark);
+  border-color: var(--fury-amber);
+  box-shadow: 0 0 15px var(--fury-amber-glow);
 }
 
 .option-letter {
   font-family: var(--font-display);
   font-size: 1rem;
-  color: var(--fury-red);
+  color: var(--fury-amber);
   width: 30px;
   height: 30px;
-  border: 1px solid var(--fury-red);
+  border: 1px solid var(--fury-amber);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1394,9 +1395,9 @@ body {
                0 0 20px var(--primary-cyan-glow);
 }
 
-.text-glow-red {
-  text-shadow: 0 0 10px var(--fury-red),
-               0 0 20px var(--fury-red-glow);
+.text-glow-amber {
+  text-shadow: 0 0 10px var(--fury-amber),
+               0 0 20px var(--fury-amber-glow);
 }
 
 /* ============================================

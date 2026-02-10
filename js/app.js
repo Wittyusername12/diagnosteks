@@ -770,8 +770,6 @@ const App = {
    * @param {number} firewallNumber - The firewall number (1-10)
    */
   loadFirewall(firewallNumber) {
-    console.log('[DEBUG-FLOW-7] loadFirewall() called with firewallNumber:', firewallNumber);
-    console.log('[DEBUG-LOAD] Loading next firewall problem');
     this.missionState.currentFirewall = firewallNumber;
     this.state.currentFirewall = firewallNumber;
     this.missionState.currentFirewallAttempted = false;  // Reset for new firewall
@@ -787,7 +785,6 @@ const App = {
     }
 
     this.missionState.currentProblem = problem;
-    console.log('[DEBUG-LOAD] Problem loaded:', { firewall: firewallNumber, operation: problem.operation, teks: problem.teks });
 
     // Update UI
     this.elements.currentFirewallDisplay.textContent = firewallNumber;
@@ -811,15 +808,12 @@ const App = {
    * Check the user's answer for the current math problem
    */
   checkAnswer() {
-    console.log('[DEBUG-FLOW-1] checkAnswer() called');
     // Prevent answer submission during animations
     if (typeof animator !== 'undefined' && animator.isAnimating) {
-      console.log('[DEBUG-SKIP] Animation in progress, skipping answer check');
       return;
     }
 
     if (!this.missionState.currentProblem) {
-      console.log('[DEBUG-SKIP] No currentProblem set, skipping answer check');
       return;
     }
 
@@ -827,7 +821,6 @@ const App = {
     const userAnswer = parseFloat(userInput);
 
     if (isNaN(userAnswer)) {
-      console.log('[DEBUG-FLOW] Invalid input (NaN), showing error');
       this.elements.jarvisDialogue.textContent = '"Invalid input. Enter a numeric decryption key."';
       this.elements.answerInput.classList.add('incorrect');
       setTimeout(() => {
@@ -837,13 +830,10 @@ const App = {
     }
 
     const correctAnswer = this.missionState.currentProblem.correctAnswer;
-    console.log('[DEBUG-FLOW-2] Comparing answers:', { userAnswer, correctAnswer, isCorrect: userAnswer === correctAnswer });
 
     if (userAnswer === correctAnswer) {
-      console.log('[DEBUG-CORRECT] Answer is correct! About to start correct-answer sequence');
       this.handleCorrectAnswer();
     } else {
-      console.log('[DEBUG-FLOW] Answer is wrong, calling handleWrongAnswer()');
       this.handleWrongAnswer();
     }
   },
@@ -852,9 +842,7 @@ const App = {
    * Handle a correct answer - update UI and advance
    */
   handleCorrectAnswer() {
-    console.log('[DEBUG-FLOW-3] handleCorrectAnswer() called');
     const currentFW = this.missionState.currentFirewall;
-    console.log('[DEBUG-CORRECT] Current firewall:', currentFW);
 
     // Only increment score if this is a first-attempt correct answer
     if (!this.missionState.currentFirewallAttempted) {
@@ -875,38 +863,26 @@ const App = {
     this.updateProgress();
 
     // Play GSAP animation sequence, then advance
-    console.log('[DEBUG-FLOW-4] About to call animator.playCorrectSequence()');
-    console.log('[DEBUG-CORRECT] Calling animation sequence: animator.playCorrectSequence');
     animator.playCorrectSequence(() => {
-      console.log('[DEBUG-FLOW-5] animator.playCorrectSequence callback fired');
-      console.log('[DEBUG-CORRECT] Correct animation complete, now in callback');
-
       // Check if mission complete (after firewall 10)
       if (currentFW >= 10) {
-        console.log('[DEBUG-FLOW-6] Firewall 10 complete, showing victory screen');
         this.showVictoryScreen();
         return;
       }
 
       // Check if we just COMPLETED firewall 3, 6, or 9 - trigger Fury science question
       if (shouldShowFuryAfter(currentFW)) {
-        console.log('[DEBUG-FLOW-6] Fury trigger condition met (after firewall', currentFW, ')');
-        console.log('[DEBUG-TRANSITION] Checking for transitionEngine before Fury...');
-        console.log('[DEBUG-TRANSITION] transitionEngine exists:', !!window.transitionEngine);
-        console.log('[DEBUG-TRANSITION] transitionEngine.isPlaying:', window.transitionEngine?.isPlaying);
-        // DEBUG NOTE: transitionEngine.playTransition() is NOT called anywhere in this flow
-        console.log('[DEBUG-TRANSITION] WARNING: No transitionEngine.playTransition() call found in this code path');
         this.showFuryQuestion(currentFW);
       } else {
-        // Advance to next firewall
-        console.log('[DEBUG-FLOW-6] Advancing to next firewall (no Fury trigger)');
-        console.log('[DEBUG-TRANSITION] Checking for transitionEngine before next firewall...');
-        console.log('[DEBUG-TRANSITION] transitionEngine exists:', !!window.transitionEngine);
-        console.log('[DEBUG-TRANSITION] transitionEngine.isPlaying:', window.transitionEngine?.isPlaying);
-        // DEBUG NOTE: transitionEngine.playTransition() is NOT called anywhere in this flow
-        console.log('[DEBUG-TRANSITION] WARNING: No transitionEngine.playTransition() call found in this code path');
-        console.log('[DEBUG-ADVANCE] Advancing to next firewall:', currentFW + 1);
-        this.loadFirewall(currentFW + 1);
+        // Advance to next firewall with transition animation
+        if (window.transitionEngine) {
+          window.transitionEngine.playTransition((type) => {
+            this.loadFirewall(currentFW + 1);
+          });
+        } else {
+          // Fallback if transitionEngine not available
+          this.loadFirewall(currentFW + 1);
+        }
       }
     });
   },
@@ -931,7 +907,6 @@ const App = {
    * @param {number} afterFirewall - The firewall number (3, 6, or 9)
    */
   showFuryQuestion(afterFirewall) {
-    console.log('[DEBUG-FLOW-8] showFuryQuestion() called for afterFirewall:', afterFirewall);
     const question = getScienceQuestion(afterFirewall);
     if (!question) {
       console.error(`No science question found for firewall ${afterFirewall}`);
@@ -946,9 +921,7 @@ const App = {
     this.updateMissionLog(`[FURY] Security protocol initiated`);
 
     // Play Fury alert animation (red pulses), then show Fury screen
-    console.log('[DEBUG-FLOW-9] About to call animator.playFuryAlert()');
     animator.playFuryAlert(() => {
-      console.log('[DEBUG-FLOW-10] animator.playFuryAlert callback fired, showing Fury screen');
       // Update Fury screen content
       this.elements.furyQuestion.textContent = question.question;
 
@@ -1001,7 +974,6 @@ const App = {
    * @param {HTMLElement} buttonElement - The clicked button element
    */
   handleCorrectScienceAnswer(buttonElement) {
-    console.log('[DEBUG-FLOW-11] handleCorrectScienceAnswer() called');
     const currentFW = this.missionState.currentFirewall;
 
     // Only increment score if this is a first-attempt correct answer
@@ -1020,7 +992,6 @@ const App = {
 
     // Advance after delay
     setTimeout(() => {
-      console.log('[DEBUG-FLOW-12] Science answer delay complete, advancing from Fury');
       buttonElement.classList.remove('correct');
 
       // Reset Fury quote for next time
@@ -1028,19 +999,20 @@ const App = {
 
       // Move to next firewall
       const nextFW = currentFW + 1;
-      console.log('[DEBUG-TRANSITION] Checking for transitionEngine before next firewall (from Fury)...');
-      console.log('[DEBUG-TRANSITION] transitionEngine exists:', !!window.transitionEngine);
-      console.log('[DEBUG-TRANSITION] transitionEngine.isPlaying:', window.transitionEngine?.isPlaying);
-      // DEBUG NOTE: transitionEngine.playTransition() is NOT called anywhere in this flow
-      console.log('[DEBUG-TRANSITION] WARNING: No transitionEngine.playTransition() call found in this code path');
       if (nextFW > 10) {
-        console.log('[DEBUG-FLOW-13] All firewalls complete, showing victory');
         this.showVictoryScreen();
       } else {
-        console.log('[DEBUG-ADVANCE] Advancing to next firewall:', nextFW);
-        console.log('[DEBUG-FLOW-13] Loading firewall', nextFW, 'and switching to firewall screen');
-        this.loadFirewall(nextFW);
-        this.showScreen('firewall');
+        // Play fullscreen transition animation, THEN load next firewall
+        if (window.transitionEngine) {
+          window.transitionEngine.playTransition((type) => {
+            this.loadFirewall(nextFW);
+            this.showScreen('firewall');
+          });
+        } else {
+          // Fallback if transitionEngine not available
+          this.loadFirewall(nextFW);
+          this.showScreen('firewall');
+        }
       }
     }, 1500);
   },
@@ -1321,7 +1293,6 @@ const App = {
 
     // Decrypt button - Phase 2: Check answer
     document.getElementById('btn-decrypt')?.addEventListener('click', () => {
-      console.log('[DEBUG-FLOW-0] DECRYPT button clicked');
       this.checkAnswer();
     });
 
@@ -1405,7 +1376,6 @@ const App = {
     // Enter key in answer input
     document.getElementById('answer-input')?.addEventListener('keydown', (e) => {
       if (e.code === 'Enter') {
-        console.log('[DEBUG-FLOW-0] ENTER key pressed in answer input');
         e.preventDefault();
         document.getElementById('btn-decrypt')?.click();
       }

@@ -2190,6 +2190,9 @@ class FirewallSequence {
         console.warn('[RippleWave] GlowFilter not available:', e);
       }
 
+      // Add refinement layer (blazing core, god-rays, particles, panels, haze)
+      this._addRippleWaveRefinement(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline);
+
       // =========================================================
       // GSAP ANIMATION TIMELINE
       // All animations added to the passed timeline parameter
@@ -2246,6 +2249,460 @@ class FirewallSequence {
       // Container cleanup fade
       timeline.to(rippleContainer, { alpha: 0, duration: 0.3, ease: 'power2.in' }, 1.7);
     }
+  }
+
+  /**
+   * Ripple Wave refinement layer - adds visual density to transform
+   * from geometric diagram into holographic command center phenomenon
+   */
+  _addRippleWaveRefinement(rippleContainer, w, h, cx, cy, baseRX, baseRY, timeline) {
+    // =============================================================
+    // 8 LAYERS TO CLOSE THE VISUAL GAP
+    // All Graphics drawn ONCE (per ChatGPT PixiJS report guidance)
+    // =============================================================
+
+    // =============================================
+    // LAYER 1: BLAZING CORE (highest impact change)
+    // Multi-zone energy source with additive blend
+    // Elliptical to match the ring perspective
+    // =============================================
+    const coreContainer = new PIXI.Container();
+    coreContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    const coreGfx = new PIXI.Graphics();
+
+    // Core zone 4 (outermost, drawn first): soft dark glow
+    coreGfx.beginFill(0x005577, 0.12);
+    coreGfx.drawEllipse(cx, cy, 220, 220 * 0.4);
+    coreGfx.endFill();
+
+    // Core zone 3: medium cyan
+    coreGfx.beginFill(0x00d4ff, 0.25);
+    coreGfx.drawEllipse(cx, cy, 140, 140 * 0.4);
+    coreGfx.endFill();
+
+    // Core zone 2: bright cyan
+    coreGfx.beginFill(0x88eeff, 0.5);
+    coreGfx.drawEllipse(cx, cy, 80, 80 * 0.4);
+    coreGfx.endFill();
+
+    // Core zone 1 (innermost): blazing white
+    coreGfx.beginFill(0xffffff, 0.9);
+    coreGfx.drawEllipse(cx, cy, 40, 40 * 0.4);
+    coreGfx.endFill();
+
+    coreContainer.addChild(coreGfx);
+    coreContainer.alpha = 0;
+    rippleContainer.addChild(coreContainer);
+
+    // =============================================
+    // LAYER 2: GOD-RAYS (radial lines from core)
+    // 12 main rays + 16 short spear rays near core
+    // =============================================
+    const godRayContainer = new PIXI.Container();
+    godRayContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    const godRayGfx = new PIXI.Graphics();
+
+    const maxRayLen = Math.max(w, h) * 0.7;
+
+    // 12 main god-rays
+    for (let ri = 0; ri < 12; ri++) {
+      const rayAngle = (ri / 12) * Math.PI * 2 + (Math.random() * 0.08 - 0.04);
+      const rayLen = maxRayLen * (0.5 + Math.random() * 0.5);
+
+      // Primary rays (up, down, left, right) are brighter
+      const isPrimary = (ri % 3 === 0);
+      const rayAlpha = isPrimary ? 0.35 : (0.15 + Math.random() * 0.15);
+      const rayWidth = isPrimary ? 4 : (2 + Math.random() * 2);
+
+      godRayGfx.lineStyle(rayWidth, 0x00d4ff, rayAlpha);
+      godRayGfx.moveTo(cx, cy);
+      godRayGfx.lineTo(
+        cx + Math.cos(rayAngle) * rayLen,
+        cy + Math.sin(rayAngle) * rayLen
+      );
+    }
+
+    // 16 short spear rays near core (star-burst pattern)
+    for (let si = 0; si < 16; si++) {
+      const spearAngle = (si / 16) * Math.PI * 2 + (Math.random() * 0.1 - 0.05);
+      const spearLen = 30 + Math.random() * 50;
+      godRayGfx.lineStyle(1.5, 0xffffff, 0.4);
+      godRayGfx.moveTo(cx, cy);
+      godRayGfx.lineTo(
+        cx + Math.cos(spearAngle) * spearLen,
+        cy + Math.sin(spearAngle) * spearLen
+      );
+    }
+
+    godRayContainer.addChild(godRayGfx);
+    godRayContainer.alpha = 0;
+    rippleContainer.addChild(godRayContainer);
+
+    // =============================================
+    // LAYER 3: RING PARTICLE TEXTURE
+    // 5 sets of particle dots that expand with rings
+    // Creates luminous matter effect on ring paths
+    // =============================================
+    const ringParticleContainers = [];
+
+    for (let rpi = 0; rpi < 5; rpi++) {
+      const particleGfx = new PIXI.Graphics();
+
+      // 70 particles per ring path
+      for (let pi = 0; pi < 70; pi++) {
+        const particleAngle = (pi / 70) * Math.PI * 2 + (Math.random() * 0.06 - 0.03);
+        const px = baseRX * Math.cos(particleAngle);
+        const py = baseRY * Math.sin(particleAngle);
+
+        // Vary particle size and brightness
+        const pSize = Math.random() < 0.15 ? (3 + Math.random() * 2) : (1 + Math.random() * 2);
+        const pAlpha = Math.random() < 0.15 ? (0.5 + Math.random() * 0.3) : (0.2 + Math.random() * 0.4);
+        const pColor = Math.random() < 0.3 ? 0xffffff : 0x88eeff;
+
+        particleGfx.beginFill(pColor, pAlpha);
+        particleGfx.drawCircle(px, py, pSize);
+        particleGfx.endFill();
+      }
+
+      particleGfx.x = cx;
+      particleGfx.y = cy;
+      particleGfx.scale.set(0);
+      particleGfx.alpha = 0.8;
+
+      rippleContainer.addChild(particleGfx);
+      ringParticleContainers.push(particleGfx);
+    }
+
+    // =============================================
+    // LAYER 4: FLOATING DISPLAY PANELS
+    // Left panel with globe, right panel with vessel
+    // =============================================
+    const panelContainer = new PIXI.Container();
+
+    // === LEFT PANEL ===
+    const leftPanel = new PIXI.Graphics();
+    const lpX = w * 0.03;
+    const lpY = h * 0.10;
+    const lpW = w * 0.18;
+    const lpH = h * 0.38;
+
+    // Panel background
+    leftPanel.beginFill(0x041520, 0.50);
+    leftPanel.drawRect(lpX, lpY, lpW, lpH);
+    leftPanel.endFill();
+    leftPanel.lineStyle(1, 0x0a6688, 0.60);
+    leftPanel.drawRect(lpX, lpY, lpW, lpH);
+
+    // Wireframe globe
+    const globeCX = lpX + lpW * 0.5;
+    const globeCY = lpY + lpH * 0.30;
+    const globeR = Math.min(lpW, lpH) * 0.25;
+
+    leftPanel.lineStyle(1, 0x00d4ff, 0.50);
+    leftPanel.drawCircle(globeCX, globeCY, globeR);
+
+    // Latitude lines (3 horizontal ellipses)
+    for (let lat = -1; lat <= 1; lat++) {
+      const latY = globeCY + lat * globeR * 0.5;
+      const latRX = Math.sqrt(Math.max(1, globeR * globeR - (lat * globeR * 0.5) * (lat * globeR * 0.5)));
+      leftPanel.lineStyle(0.5, 0x00aacc, 0.35);
+      leftPanel.drawEllipse(globeCX, latY, latRX, latRX * 0.15);
+    }
+
+    // Longitude arcs (2 vertical ellipses)
+    leftPanel.lineStyle(0.5, 0x00aacc, 0.35);
+    leftPanel.drawEllipse(globeCX, globeCY, globeR * 0.4, globeR);
+    leftPanel.drawEllipse(globeCX, globeCY, globeR * 0.7, globeR);
+
+    // Grid lines on globe
+    leftPanel.lineStyle(0.3, 0x006688, 0.25);
+    for (let gi = 0; gi < 6; gi++) {
+      const gridAngle = (gi / 6) * Math.PI;
+      leftPanel.moveTo(globeCX - globeR * Math.cos(gridAngle), globeCY - globeR * Math.sin(gridAngle));
+      leftPanel.lineTo(globeCX + globeR * Math.cos(gridAngle), globeCY + globeR * Math.sin(gridAngle));
+    }
+
+    // Bar chart below globe
+    const chartBaseY = lpY + lpH * 0.65;
+    for (let bi = 0; bi < 8; bi++) {
+      const barH = 10 + Math.random() * 35;
+      const barColor = Math.random() < 0.2 ? 0xff6644 : 0x00d4ff;
+      leftPanel.beginFill(barColor, 0.45);
+      leftPanel.drawRect(lpX + 15 + bi * 18, chartBaseY - barH, 12, barH);
+      leftPanel.endFill();
+    }
+
+    // Waveform line
+    leftPanel.lineStyle(1, 0x00aacc, 0.35);
+    leftPanel.moveTo(lpX + 10, lpY + lpH * 0.80);
+    for (let wi = 0; wi < 12; wi++) {
+      const wx = lpX + 10 + wi * (lpW - 20) / 12;
+      const wy = lpY + lpH * 0.80 + (Math.random() - 0.5) * 20;
+      leftPanel.lineTo(wx, wy);
+    }
+
+    // Data readout lines at bottom
+    for (let di = 0; di < 4; di++) {
+      leftPanel.lineStyle(0.5, 0x00aacc, 0.25);
+      leftPanel.moveTo(lpX + 10, lpY + lpH * 0.88 + di * 8);
+      leftPanel.lineTo(lpX + 10 + Math.random() * 80, lpY + lpH * 0.88 + di * 8);
+    }
+
+    panelContainer.addChild(leftPanel);
+
+    // === RIGHT PANEL ===
+    const rightPanel = new PIXI.Graphics();
+    const rpX = w * 0.80;
+    const rpY = h * 0.08;
+    const rpW = w * 0.17;
+    const rpH = h * 0.32;
+
+    // Panel background
+    rightPanel.beginFill(0x041520, 0.50);
+    rightPanel.drawRect(rpX, rpY, rpW, rpH);
+    rightPanel.endFill();
+    rightPanel.lineStyle(1, 0x0a6688, 0.60);
+    rightPanel.drawRect(rpX, rpY, rpW, rpH);
+
+    // Wireframe vessel/craft shape (lens shape)
+    const vesselCX = rpX + rpW * 0.5;
+    const vesselCY = rpY + rpH * 0.35;
+    const vesselW = rpW * 0.7;
+    const vesselH = rpH * 0.25;
+
+    rightPanel.lineStyle(1, 0x00d4ff, 0.50);
+    // Draw elongated lens using bezier curves
+    rightPanel.moveTo(vesselCX - vesselW * 0.5, vesselCY);
+    rightPanel.bezierCurveTo(
+      vesselCX - vesselW * 0.3, vesselCY - vesselH,
+      vesselCX + vesselW * 0.3, vesselCY - vesselH,
+      vesselCX + vesselW * 0.5, vesselCY
+    );
+    rightPanel.bezierCurveTo(
+      vesselCX + vesselW * 0.3, vesselCY + vesselH,
+      vesselCX - vesselW * 0.3, vesselCY + vesselH,
+      vesselCX - vesselW * 0.5, vesselCY
+    );
+
+    // Internal mesh lines on vessel
+    rightPanel.lineStyle(0.5, 0x006688, 0.30);
+    for (let mi = 0; mi < 5; mi++) {
+      const mx = vesselCX - vesselW * 0.35 + mi * vesselW * 0.7 / 5;
+      rightPanel.moveTo(mx, vesselCY - vesselH * 0.7);
+      rightPanel.lineTo(mx, vesselCY + vesselH * 0.7);
+    }
+
+    // Circular gauge
+    const gaugeX = rpX + rpW * 0.25;
+    const gaugeY = rpY + rpH * 0.72;
+    const gaugeR = 18;
+    rightPanel.lineStyle(1, 0x00aacc, 0.40);
+    rightPanel.drawCircle(gaugeX, gaugeY, gaugeR);
+    rightPanel.arc(gaugeX, gaugeY, gaugeR * 0.7, -Math.PI * 0.7, Math.PI * 0.3);
+
+    // Mini bar charts
+    for (let mbi = 0; mbi < 4; mbi++) {
+      const mbH = 8 + Math.random() * 20;
+      rightPanel.beginFill(0x00d4ff, 0.35);
+      rightPanel.drawRect(rpX + rpW * 0.55 + mbi * 14, rpY + rpH * 0.78 - mbH, 10, mbH);
+      rightPanel.endFill();
+    }
+
+    panelContainer.addChild(rightPanel);
+
+    // === BOTTOM-LEFT MINI PANEL ===
+    const blPanel = new PIXI.Graphics();
+    blPanel.beginFill(0x041520, 0.40);
+    blPanel.drawRect(w * 0.04, h * 0.75, w * 0.12, h * 0.12);
+    blPanel.endFill();
+    blPanel.lineStyle(1, 0x0a6688, 0.40);
+    blPanel.drawRect(w * 0.04, h * 0.75, w * 0.12, h * 0.12);
+
+    // Bars and red accent
+    for (let bbi = 0; bbi < 5; bbi++) {
+      const bbH = 5 + Math.random() * 25;
+      blPanel.beginFill(0x00d4ff, 0.30);
+      blPanel.drawRect(w * 0.05 + bbi * 16, h * 0.84 - bbH, 10, bbH);
+      blPanel.endFill();
+    }
+    blPanel.beginFill(0xff3344, 0.50);
+    blPanel.drawCircle(w * 0.14, h * 0.78, 4);
+    blPanel.endFill();
+
+    panelContainer.addChild(blPanel);
+
+    // === BOTTOM-RIGHT MINI PANEL ===
+    const brPanel = new PIXI.Graphics();
+    brPanel.beginFill(0x041520, 0.40);
+    brPanel.drawRect(w * 0.84, h * 0.78, w * 0.12, h * 0.10);
+    brPanel.endFill();
+    brPanel.lineStyle(1, 0x0a6688, 0.40);
+    brPanel.drawRect(w * 0.84, h * 0.78, w * 0.12, h * 0.10);
+
+    // Circular gauge element
+    brPanel.lineStyle(1, 0x00aacc, 0.35);
+    brPanel.drawCircle(w * 0.90, h * 0.83, 15);
+    brPanel.arc(w * 0.90, h * 0.83, 10, 0, Math.PI * 1.4);
+
+    panelContainer.addChild(brPanel);
+
+    panelContainer.alpha = 0;
+    rippleContainer.addChild(panelContainer);
+
+    // =============================================
+    // LAYER 5: SCATTERED PARTICLES
+    // 200 bright dots filling the void with energy
+    // =============================================
+    const scatterGfx = new PIXI.Graphics();
+
+    for (let sci = 0; sci < 200; sci++) {
+      // Density gradient: 60% in center, 40% outer
+      let scX, scY;
+      if (Math.random() < 0.6) {
+        scX = cx + (Math.random() - 0.5) * w * 0.6;
+        scY = cy + (Math.random() - 0.5) * h * 0.6;
+      } else {
+        scX = Math.random() * w;
+        scY = Math.random() * h;
+      }
+
+      // Vary size and brightness
+      const isBright = Math.random() < 0.08;
+      const scSize = isBright ? (3 + Math.random() * 2) : (1 + Math.random() * 2);
+      const scAlpha = isBright ? (0.5 + Math.random() * 0.3) : (0.08 + Math.random() * 0.25);
+
+      // Color distribution: 70% white, 20% cyan, 10% blue
+      const colorRoll = Math.random();
+      const scColor = colorRoll < 0.7 ? 0xffffff : (colorRoll < 0.9 ? 0x00d4ff : 0x4488ff);
+
+      scatterGfx.beginFill(scColor, scAlpha);
+      scatterGfx.drawCircle(scX, scY, scSize);
+      scatterGfx.endFill();
+    }
+
+    scatterGfx.alpha = 0;
+    rippleContainer.addChild(scatterGfx);
+
+    // =============================================
+    // LAYER 6: ATMOSPHERIC HAZE
+    // Volumetric central glow creating depth
+    // =============================================
+    const hazeContainer = new PIXI.Container();
+    hazeContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    const hazeGfx = new PIXI.Graphics();
+
+    // Outer haze
+    hazeGfx.beginFill(0x001122, 0.05);
+    hazeGfx.drawEllipse(cx, cy, w * 0.55, h * 0.30);
+    hazeGfx.endFill();
+
+    // Middle haze
+    hazeGfx.beginFill(0x002244, 0.08);
+    hazeGfx.drawEllipse(cx, cy, w * 0.40, h * 0.22);
+    hazeGfx.endFill();
+
+    // Inner haze
+    hazeGfx.beginFill(0x003355, 0.15);
+    hazeGfx.drawEllipse(cx, cy, w * 0.25, h * 0.15);
+    hazeGfx.endFill();
+
+    hazeContainer.addChild(hazeGfx);
+    hazeContainer.alpha = 0;
+    rippleContainer.addChild(hazeContainer);
+
+    // =============================================
+    // LAYER 7: FLOOR REFLECTIONS
+    // Faint mirrored copies of rings below center
+    // =============================================
+    const floorGfx = new PIXI.Graphics();
+    const floorY = cy + baseRY * 0.7;
+
+    // Reflection of 3 rings (indices 0, 2, 4)
+    for (let fri = 0; fri < 3; fri++) {
+      const reflectAlpha = 0.06 + fri * 0.02;
+      const reflectRX = baseRX * (0.3 + fri * 0.3);
+      const reflectRY = baseRY * 0.4 * (0.3 + fri * 0.3);
+
+      floorGfx.lineStyle(2, 0x005577, reflectAlpha);
+      floorGfx.drawEllipse(cx, floorY + fri * 15, reflectRX, reflectRY);
+    }
+
+    floorGfx.alpha = 0;
+    rippleContainer.addChild(floorGfx);
+
+    // =============================================
+    // LAYER 8: INITIAL VERTICAL BEAM
+    // Energy discharge that triggers the ripple
+    // =============================================
+    const beamContainer = new PIXI.Container();
+    beamContainer.blendMode = PIXI.BLEND_MODES.ADD;
+    const beamGfx = new PIXI.Graphics();
+
+    // Wide glow beam behind
+    beamGfx.beginFill(0x00d4ff, 0.15);
+    beamGfx.drawRect(cx - 10, cy - h * 0.35, 20, h * 0.7);
+    beamGfx.endFill();
+
+    // Narrow bright beam
+    beamGfx.beginFill(0x00d4ff, 0.7);
+    beamGfx.drawRect(cx - 2, cy - h * 0.35, 4, h * 0.7);
+    beamGfx.endFill();
+
+    // Hot white center line
+    beamGfx.beginFill(0xffffff, 0.5);
+    beamGfx.drawRect(cx - 1, cy - h * 0.35, 2, h * 0.7);
+    beamGfx.endFill();
+
+    beamContainer.addChild(beamGfx);
+    beamContainer.alpha = 0;
+    rippleContainer.addChild(beamContainer);
+
+    // =============================================
+    // GSAP ANIMATIONS FOR REFINEMENT LAYERS
+    // =============================================
+
+    // Layer 8: Vertical beam - flash first, then fade
+    timeline.to(beamContainer, { alpha: 0.9, duration: 0.05, ease: 'power2.out' }, 0);
+    timeline.to(beamContainer, { alpha: 0, duration: 0.35, ease: 'power1.in' }, 0.08);
+
+    // Layer 1: Core glow appears after beam
+    timeline.to(coreContainer, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0.05);
+    timeline.to(coreContainer, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layer 2: God-rays fade in
+    timeline.to(godRayContainer, { alpha: 0.8, duration: 0.3, ease: 'power1.out' }, 0.05);
+    timeline.to(godRayContainer, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.4);
+
+    // Layer 6: Atmospheric haze
+    timeline.to(hazeContainer, { alpha: 0.7, duration: 0.4, ease: 'power1.out' }, 0.05);
+    timeline.to(hazeContainer, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layer 5: Scattered particles
+    timeline.to(scatterGfx, { alpha: 0.9, duration: 0.5, ease: 'power1.out' }, 0.1);
+    timeline.to(scatterGfx, { alpha: 0, duration: 0.5, ease: 'power1.in' }, 1.5);
+
+    // Layer 3: Ring particles expand with same stagger as main rings
+    for (let rpa = 0; rpa < 5; rpa++) {
+      const particleDelay = 0.1 + rpa * 0.15;
+      timeline.to(ringParticleContainers[rpa].scale, {
+        x: 1.0, y: 1.0,
+        duration: 1.5,
+        ease: 'power2.out'
+      }, particleDelay);
+      timeline.to(ringParticleContainers[rpa], {
+        alpha: 0,
+        duration: 1.3,
+        ease: 'power1.in'
+      }, particleDelay + 0.2);
+    }
+
+    // Layer 4: Display panels
+    timeline.to(panelContainer, { alpha: 0.85, duration: 0.4, ease: 'power1.out' }, 0.2);
+    timeline.to(panelContainer, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 1.6);
+
+    // Layer 7: Floor reflections
+    timeline.to(floorGfx, { alpha: 0.5, duration: 0.5, ease: 'power1.out' }, 0.15);
+    timeline.to(floorGfx, { alpha: 0, duration: 0.4, ease: 'power1.in' }, 1.5);
   }
 
   /**

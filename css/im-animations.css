@@ -23,10 +23,11 @@
   --im-dark: #0a0a0a;
   --im-panel-bg: #0d1117;
 
-  /* Fury/SHIELD red */
-  --im-fury-red: #ff3333;
-  --im-fury-red-dim: #cc0000;
-  --im-fury-red-glow: rgba(255, 51, 51, 0.3);
+  /* Fury/SHIELD amber (MCU canon: SHIELD uses orange/blue) */
+  --im-fury-amber: #ff8c00;
+  --im-fury-amber-dim: #cc7000;
+  --im-fury-amber-glow: rgba(255, 140, 0, 0.3);
+  --im-fury-amber-bright: #ffaa00;
 
   /* Feedback colors */
   --im-correct-green: #00ff00;
@@ -710,8 +711,8 @@
     box-shadow: none;
   }
   50% {
-    box-shadow: 0 0 var(--im-glow-size-md) var(--im-fury-red),
-                inset 0 0 var(--im-glow-size-sm) var(--im-fury-red-glow);
+    box-shadow: 0 0 var(--im-glow-size-md) var(--im-fury-amber),
+                inset 0 0 var(--im-glow-size-sm) var(--im-fury-amber-glow);
   }
 }
 
@@ -726,4 +727,96 @@
   20%, 40%, 60%, 80% {
     opacity: 0;
   }
+}
+
+/* ============================================
+   NICK FURY SHIELD ALERT OVERLAY (.im-fury-*)
+   Reference: Brief Section "PART 1: ALERT INTERRUPTION EFFECT"
+   2.5-second dramatic takeover before Fury science screen
+   ============================================ */
+
+/* Fullscreen dark overlay with amber vignette */
+.im-fury-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  opacity: 0;
+}
+
+/* Dark background layer */
+.im-fury-overlay-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 0;
+}
+
+/* Amber vignette effect around edges */
+.im-fury-vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(255, 140, 0, 0.1) 60%,
+    rgba(255, 140, 0, 0.25) 80%,
+    rgba(20, 10, 0, 0.5) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* SHIELD logo - centered, large */
+.im-fury-logo {
+  position: relative;
+  z-index: 2;
+  width: 40vh;
+  height: 40vh;
+  max-width: 400px;
+  max-height: 400px;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0);
+  /* Amber glow applied via filter (gray logo becomes amber) */
+  filter: brightness(1.5) drop-shadow(0 0 30px rgba(255, 140, 0, 0.8))
+          drop-shadow(0 0 60px rgba(255, 140, 0, 0.5));
+}
+
+/* "SECURITY OVERRIDE" text above logo */
+.im-fury-alert-text {
+  position: relative;
+  z-index: 2;
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #ff8c00;
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  text-shadow:
+    0 0 10px rgba(255, 140, 0, 0.8),
+    0 0 20px rgba(255, 140, 0, 0.5),
+    0 0 40px rgba(255, 140, 0, 0.3);
+  margin-bottom: 30px;
+  opacity: 0;
+}
+
+/* Panel flash class - applied during amber border pulse */
+.im-fury-panel-flash {
+  box-shadow: 0 0 20px rgba(255, 140, 0, 0.6),
+              inset 0 0 10px rgba(255, 140, 0, 0.2) !important;
+  border-color: #ff8c00 !important;
 }

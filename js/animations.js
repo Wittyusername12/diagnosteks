@@ -19,8 +19,8 @@ const HUD_CONFIG = {
     correctFlash: 0.3,        // Green flash duration
     wrongShake: 0.5,          // Shake animation duration
     firewallBreach: 2.0,      // Full breach celebration sequence
-    furyAlertPulse: 0.5,      // Red border pulse duration
-    furyAlertCount: 4,        // Number of red pulses before Fury appears
+    furyAlertPulse: 0.5,      // Amber border pulse duration
+    furyAlertCount: 4,        // Number of amber pulses during SHIELD takeover
     transitionDelay: 1.5,     // Pause before advancing to next firewall
     inputLockBuffer: 0.3      // Extra time to keep input locked after animation
   },
@@ -31,7 +31,8 @@ const HUD_CONFIG = {
   // Colors
   colors: {
     cyan: '#00d4ff',
-    red: '#ff3333',
+    amber: '#ff8c00',
+    amberBright: '#ffaa00',
     green: '#00ff00',
     white: '#ffffff',
     dark: '#0a0a0a'
@@ -353,59 +354,153 @@ class AnimationController {
   }
 
   /**
-   * Play Fury alert sequence (red border pulses before Fury appears)
-   * Uses boxShadow instead of borderColor (augmented-ui conflict)
-   * @param {function} onComplete - Callback when pulses finish
+   * Play Fury alert sequence - 2.5 second dramatic SHIELD takeover
+   * Creates fullscreen overlay with SHIELD logo and amber panel flashes
+   * @param {function} onComplete - Callback when alert sequence finishes
    */
   playFuryAlert(onComplete) {
     this.lockInput();
 
-    // Target ALL panels including header and footer (per project brief lines 584-600)
+    // Target ALL panels including header and footer
     const panels = document.querySelectorAll(
-      '.hud-panel, .sidebar, .problem-container, .jarvis-dialogue, .header-bar, .footer-bar'
+      '.hud-panel, .sidebar, .problem-container, .jarvis-dialogue, .header-bar, .footer-bar, .content-area'
     );
 
-    // Debug logging - show what we found
-    console.log('[GSAP] playFuryAlert - Elements found:', panels.length);
-    panels.forEach((panel, i) => {
-      const classes = panel.className.split(' ').filter(c => c).join('.');
-      console.log(`  Panel ${i}: .${classes}`);
-    });
+    console.log('[GSAP] playFuryAlert - Creating SHIELD alert overlay');
+    console.log('[GSAP] playFuryAlert - Panels to flash:', panels.length);
 
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        if (onComplete) onComplete();
-        // Note: Don't unlock input here - Fury screen will handle that
-      }
-    });
+    // Create the overlay DOM structure
+    const overlay = document.createElement('div');
+    overlay.className = 'im-fury-overlay';
+    overlay.innerHTML = `
+      <div class="im-fury-overlay-bg"></div>
+      <div class="im-fury-vignette"></div>
+      <div class="im-fury-alert-text">SECURITY OVERRIDE</div>
+      <img class="im-fury-logo" src="./shield_logo.png" alt="S.H.I.E.L.D.">
+    `;
+    document.body.appendChild(overlay);
+
+    const alertText = overlay.querySelector('.im-fury-alert-text');
+    const logo = overlay.querySelector('.im-fury-logo');
 
     // Add fury-alert-active class to body
     document.body.classList.add('fury-alert-active');
 
-    // Pulse all panels with red glow (4 pulses over ~2 seconds)
-    // Use boxShadow + filter instead of borderColor (augmented-ui conflict)
+    // Master timeline for the 2.5 second sequence
+    const timeline = gsap.timeline({
+      onComplete: () => {
+        // Remove overlay from DOM
+        if (overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
+        // Remove class
+        document.body.classList.remove('fury-alert-active');
+        // Ensure all panels return to normal (cyan)
+        panels.forEach(panel => {
+          gsap.set(panel, { boxShadow: 'none', filter: 'brightness(1)' });
+        });
+        console.log('[GSAP] Fury alert complete - overlay removed, panels reset');
+        if (onComplete) onComplete();
+      }
+    });
+
+    // ========================================
+    // PHASE 1: SCREEN TAKEOVER (0s to 0.8s)
+    // ========================================
+
+    // Fade in overlay immediately
+    timeline.to(overlay, {
+      opacity: 1,
+      duration: 0.2,
+      ease: 'power2.out'
+    }, 0);
+
+    // Flash all HUD panel borders amber - 4 pulses over 2 seconds
     panels.forEach(panel => {
       timeline.to(panel, {
-        boxShadow: '0 0 25px #ff3333, inset 0 0 15px rgba(255, 51, 51, 0.2)',
+        boxShadow: '0 0 25px rgba(255, 140, 0, 0.6), inset 0 0 15px rgba(255, 140, 0, 0.2)',
         filter: 'brightness(1.2)',
-        duration: HUD_CONFIG.timing.furyAlertPulse / 2,
-        repeat: HUD_CONFIG.timing.furyAlertCount * 2 - 1,
+        duration: 0.25,
+        repeat: 3,
         yoyo: true,
         ease: 'power1.inOut'
       }, 0);
     });
 
-    // Remove class and reset panels when done
-    timeline.add(() => {
-      document.body.classList.remove('fury-alert-active');
-      // Ensure all panels return to normal
-      panels.forEach(panel => {
-        gsap.set(panel, { boxShadow: 'none', filter: 'brightness(1)' });
-      });
-    });
+    // Scale SHIELD logo from 0 to 1 with elastic ease
+    timeline.to(logo, {
+      scale: 1,
+      opacity: 1,
+      duration: 0.8,
+      ease: 'back.out(1.7)'
+    }, 0.1);
+
+    // ========================================
+    // PHASE 2: LOGO PULSE + TEXT (0.5s to 2.0s)
+    // ========================================
+
+    // Fade in "SECURITY OVERRIDE" text
+    if (typeof ScrambleTextPlugin !== 'undefined') {
+      // Use ScrambleText for dramatic effect
+      timeline.fromTo(alertText,
+        { opacity: 0 },
+        {
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power2.out'
+        }, 0.5);
+      timeline.to(alertText, {
+        duration: 0.8,
+        scrambleText: {
+          text: 'SECURITY OVERRIDE',
+          chars: '!<>-_\\/[]{}=+*^?#@$%01',
+          revealDelay: 0.3,
+          speed: 0.4
+        }
+      }, 0.5);
+    } else {
+      // Fallback: simple fade in
+      timeline.to(alertText, {
+        opacity: 1,
+        duration: 0.5,
+        ease: 'power2.out'
+      }, 0.5);
+    }
+
+    // Logo pulses scale gently (1.0 to 1.05 and back, repeat 2)
+    timeline.to(logo, {
+      scale: 1.05,
+      duration: 0.4,
+      repeat: 2,
+      yoyo: true,
+      ease: 'sine.inOut'
+    }, 0.9);
+
+    // Intensify logo glow then dim
+    timeline.to(logo, {
+      filter: 'brightness(2) drop-shadow(0 0 50px rgba(255, 140, 0, 1)) drop-shadow(0 0 80px rgba(255, 140, 0, 0.7))',
+      duration: 0.3,
+      ease: 'power2.in'
+    }, 1.2);
+    timeline.to(logo, {
+      filter: 'brightness(1.5) drop-shadow(0 0 30px rgba(255, 140, 0, 0.8)) drop-shadow(0 0 60px rgba(255, 140, 0, 0.5))',
+      duration: 0.3,
+      ease: 'power2.out'
+    }, 1.5);
+
+    // ========================================
+    // PHASE 3: DISMISS (2.0s to 2.5s)
+    // ========================================
+
+    // Fade out everything
+    timeline.to([overlay, logo, alertText], {
+      opacity: 0,
+      duration: 0.5,
+      ease: 'power2.in'
+    }, 2.0);
 
     this.currentTimeline = timeline;
-    console.log('[GSAP] Playing Fury alert sequence - pulsing', panels.length, 'elements');
+    console.log('[GSAP] Playing Fury SHIELD alert - 2.5s dramatic takeover');
   }
 
   /**

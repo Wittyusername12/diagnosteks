@@ -774,6 +774,7 @@ class FirewallSequence {
     var W = window.pixiEffectManager.getWidth();
     var H = window.pixiEffectManager.getHeight();
     this._addDataCascade(stage, W, H, timeline);
+    this._addDataCascadeEnhance(stage, W, H, timeline);
   }
 
   /**
@@ -1221,6 +1222,691 @@ class FirewallSequence {
 
     // Phase 3 — FADE OUT (3.0s - 3.5s)
     tl.to(masterContainer, { alpha: 0, duration: 0.5, ease: 'power2.out' }, 3.0);
+  }
+
+  /**
+   * Enhance Data Cascade with dramatic visual layers ON TOP of Round 1
+   * 10 layers: atmospheric haze, 3-tier depth rain (160+ streams), physical monitors,
+   * breach flare, floor reflections, sparkle nodes
+   * @param {PIXI.Container} stage - The PixiJS stage
+   * @param {number} W - Stage width
+   * @param {number} H - Stage height
+   * @param {gsap.core.Timeline} tl - GSAP timeline
+   */
+  _addDataCascadeEnhance(stage, W, H, tl) {
+    var self = this;
+
+    // Character set: 85-90% digits for legibility (Wachowski requirement)
+    var digitChars = '0123456789';
+    var symbolChars = '@#$&';
+
+    // =========================================================
+    // MASTER ENHANCEMENT CONTAINER
+    // =========================================================
+    var enhanceContainer = new PIXI.Container();
+    enhanceContainer.alpha = 0;
+    stage.addChild(enhanceContainer);
+
+    // =========================================================
+    // HELPER: Create stream objects for enhanced rain
+    // =========================================================
+    function createEnhancedStreams(count, minSpeed, maxSpeed, charSize, spacing, xOffset) {
+      var streams = [];
+      var cols = Math.ceil(W / spacing);
+      for (var i = 0; i < count; i++) {
+        var colIndex = i % cols;
+        var streamLength = 8 + Math.floor(Math.random() * 16);
+        var stream = {
+          x: xOffset + colIndex * spacing + spacing / 2 + (Math.random() - 0.5) * 8,
+          y: -Math.random() * H * 1.2 - streamLength * charSize,
+          speed: minSpeed + Math.random() * (maxSpeed - minSpeed),
+          length: streamLength,
+          charSize: charSize,
+          chars: [],
+          charset: Math.random() < 0.88 ? digitChars : (digitChars + symbolChars)
+        };
+        for (var c = 0; c < stream.length; c++) {
+          stream.chars.push(stream.charset[Math.floor(Math.random() * stream.charset.length)]);
+        }
+        streams.push(stream);
+      }
+      return streams;
+    }
+
+    // =========================================================
+    // HELPER: Update enhanced rain frame on canvas
+    // =========================================================
+    function updateEnhancedRain(ctx, streams, canvasW, canvasH, charSize, trailAlpha) {
+      // Trail fade
+      ctx.fillStyle = 'rgba(0, 5, 15, ' + trailAlpha + ')';
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      ctx.font = charSize + 'px "JetBrains Mono", "Courier New", monospace';
+      ctx.textBaseline = 'top';
+
+      for (var s = 0; s < streams.length; s++) {
+        var stream = streams[s];
+        stream.y += stream.speed;
+
+        if (stream.y - stream.length * charSize > canvasH) {
+          stream.y = -(stream.length * charSize) - (Math.random() * canvasH * 0.3);
+        }
+
+        for (var i = 0; i < stream.length; i++) {
+          var charY = Math.floor(stream.y - i * charSize);
+          if (charY < -charSize || charY > canvasH) continue;
+
+          // Character mutation — 8% chance per frame
+          if (Math.random() < 0.08) {
+            stream.chars[i] = stream.charset[Math.floor(Math.random() * stream.charset.length)];
+          }
+
+          // HEAD-TO-TAIL BRIGHTNESS GRADIENT
+          var headFactor = 1.0 - (i / stream.length);
+          var r, g, b, a;
+
+          if (i === 0) {
+            // HEAD: blazing white
+            r = 230; g = 255; b = 255; a = 0.95;
+          } else if (i === 1) {
+            // Near-head: very bright white-cyan
+            r = 180; g = 245; b = 255; a = 0.85;
+          } else if (i <= 3) {
+            // Upper body: bright cyan
+            r = 0; g = 212; b = 255; a = 0.7 * headFactor;
+          } else if (i <= 7) {
+            // Mid body: medium cyan
+            r = 0; g = 160; b = 220; a = 0.5 * headFactor;
+          } else {
+            // Tail: fading dark blue
+            r = 0; g = 80; b = 160; a = 0.3 * headFactor;
+          }
+
+          ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+          ctx.fillText(stream.chars[i], Math.floor(stream.x), charY);
+        }
+      }
+
+      // Bright flash sparks — 30% chance per frame
+      if (Math.random() < 0.3) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        for (var f = 0; f < 6; f++) {
+          var rs = streams[Math.floor(Math.random() * streams.length)];
+          var headY = Math.floor(rs.y);
+          if (headY >= 0 && headY <= canvasH) {
+            ctx.fillText(rs.chars[0], Math.floor(rs.x), headY);
+          }
+        }
+      }
+    }
+
+    // =========================================================
+    // LAYER 1: ATMOSPHERIC HAZE (draw first so everything sits on top)
+    // =========================================================
+    var hazeGfx = new PIXI.Graphics();
+    hazeGfx.blendMode = PIXI.BLEND_MODES.ADD;
+
+    // Large soft outer haze
+    hazeGfx.beginFill(0x001a2a, 0.08);
+    hazeGfx.drawEllipse(W * 0.5, H * 0.48, W * 0.45, H * 0.4);
+    hazeGfx.endFill();
+
+    // Brighter central zone
+    hazeGfx.beginFill(0x003344, 0.12);
+    hazeGfx.drawEllipse(W * 0.5, H * 0.50, W * 0.2, H * 0.15);
+    hazeGfx.endFill();
+
+    enhanceContainer.addChild(hazeGfx);
+
+    // =========================================================
+    // LAYER 2: DEEP BACKGROUND RAIN (60-80 streams, blurred, dim, small)
+    // =========================================================
+    var deepBgCanvas = document.createElement('canvas');
+    deepBgCanvas.width = W;
+    deepBgCanvas.height = H;
+    var deepBgCtx = deepBgCanvas.getContext('2d');
+    deepBgCtx.fillStyle = 'rgba(0, 5, 15, 1)';
+    deepBgCtx.fillRect(0, 0, W, H);
+
+    var deepBgStreams = createEnhancedStreams(70, 1.0, 2.5, 10, 25, 5);
+
+    var deepBgBaseTexture = new PIXI.BaseTexture(deepBgCanvas);
+    var deepBgTexture = new PIXI.Texture(deepBgBaseTexture);
+    var deepBgSprite = new PIXI.Sprite(deepBgTexture);
+    deepBgSprite.alpha = 0.25;
+    deepBgSprite.blendMode = PIXI.BLEND_MODES.ADD;
+
+    try {
+      var deepBlur = new PIXI.filters.BlurFilter(4);
+      deepBgSprite.filters = [deepBlur];
+    } catch (e) {
+      console.warn('[DataCascadeEnhance] BlurFilter not available for deep bg:', e);
+    }
+
+    enhanceContainer.addChild(deepBgSprite);
+
+    // =========================================================
+    // LAYER 3: MIDGROUND RAIN (50-60 streams, slight blur, medium brightness)
+    // =========================================================
+    var midCanvas = document.createElement('canvas');
+    midCanvas.width = W;
+    midCanvas.height = H;
+    var midCtx = midCanvas.getContext('2d');
+    midCtx.fillStyle = 'rgba(0, 5, 15, 1)';
+    midCtx.fillRect(0, 0, W, H);
+
+    var midStreams = createEnhancedStreams(55, 2.5, 5.0, 14, 32, 10);
+
+    var midBaseTexture = new PIXI.BaseTexture(midCanvas);
+    var midTexture = new PIXI.Texture(midBaseTexture);
+    var midSprite = new PIXI.Sprite(midTexture);
+    midSprite.alpha = 0.45;
+    midSprite.blendMode = PIXI.BLEND_MODES.ADD;
+
+    try {
+      var midBlur = new PIXI.filters.BlurFilter(1.5);
+      midSprite.filters = [midBlur];
+    } catch (e) {
+      console.warn('[DataCascadeEnhance] BlurFilter not available for mid:', e);
+    }
+
+    enhanceContainer.addChild(midSprite);
+
+    // =========================================================
+    // LAYER 4: DENSE FOREGROUND RAIN (50-65 streams, sharp, bright, large digits)
+    // =========================================================
+    var denseFgCanvas = document.createElement('canvas');
+    denseFgCanvas.width = W;
+    denseFgCanvas.height = H;
+    var denseFgCtx = denseFgCanvas.getContext('2d');
+    denseFgCtx.fillStyle = 'rgba(0, 5, 15, 1)';
+    denseFgCtx.fillRect(0, 0, W, H);
+
+    var denseFgStreams = createEnhancedStreams(58, 4.0, 9.0, 18, 30, 15);
+
+    var denseFgBaseTexture = new PIXI.BaseTexture(denseFgCanvas);
+    var denseFgTexture = new PIXI.Texture(denseFgBaseTexture);
+    var denseFgSprite = new PIXI.Sprite(denseFgTexture);
+    denseFgSprite.alpha = 0.7;
+    denseFgSprite.blendMode = PIXI.BLEND_MODES.ADD;
+
+    enhanceContainer.addChild(denseFgSprite);
+
+    // =========================================================
+    // LAYER 5: ENHANCED FLOOR REFLECTIONS
+    // =========================================================
+    // Reflection from dense foreground
+    var fgReflection = new PIXI.Sprite(denseFgTexture);
+    fgReflection.y = H;
+    fgReflection.anchor.y = 1.0;
+    fgReflection.scale.y = -0.25;
+    fgReflection.alpha = 0.18;
+    fgReflection.blendMode = PIXI.BLEND_MODES.ADD;
+    try {
+      var fgReflBlur = new PIXI.filters.BlurFilter(2);
+      fgReflection.filters = [fgReflBlur];
+    } catch (e) {}
+    enhanceContainer.addChild(fgReflection);
+
+    // Reflection from midground
+    var midReflection = new PIXI.Sprite(midTexture);
+    midReflection.y = H;
+    midReflection.anchor.y = 1.0;
+    midReflection.scale.y = -0.20;
+    midReflection.alpha = 0.10;
+    midReflection.blendMode = PIXI.BLEND_MODES.ADD;
+    try {
+      var midReflBlur = new PIXI.filters.BlurFilter(3);
+      midReflection.filters = [midReflBlur];
+    } catch (e) {}
+    enhanceContainer.addChild(midReflection);
+
+    // Floor brightness band
+    var floorGlow = new PIXI.Graphics();
+    floorGlow.blendMode = PIXI.BLEND_MODES.ADD;
+    // Wide soft glow band at horizon
+    floorGlow.beginFill(0x002233, 0.06);
+    floorGlow.drawRect(0, H * 0.76, W, H * 0.06);
+    floorGlow.endFill();
+    // Thin bright horizon line
+    floorGlow.beginFill(0x00d4ff, 0.15);
+    floorGlow.drawRect(0, H * 0.78, W, 3);
+    floorGlow.endFill();
+    enhanceContainer.addChild(floorGlow);
+
+    // =========================================================
+    // LAYER 6: CENTRAL BREACH FLARE
+    // =========================================================
+    var breachFlare = new PIXI.Graphics();
+    breachFlare.blendMode = PIXI.BLEND_MODES.ADD;
+    var cx = W * 0.5;
+    var cy = H * 0.50;
+
+    // Zone 4 (outer haze)
+    breachFlare.beginFill(0x004466, 0.06);
+    breachFlare.drawCircle(cx, cy, 120);
+    breachFlare.endFill();
+
+    // Zone 3 (mid glow)
+    breachFlare.beginFill(0x00aadd, 0.15);
+    breachFlare.drawCircle(cx, cy, 50);
+    breachFlare.endFill();
+
+    // Zone 2 (inner glow)
+    breachFlare.beginFill(0x80ddff, 0.4);
+    breachFlare.drawCircle(cx, cy, 20);
+    breachFlare.endFill();
+
+    // Zone 1 (core)
+    breachFlare.beginFill(0xffffff, 0.9);
+    breachFlare.drawCircle(cx, cy, 6);
+    breachFlare.endFill();
+
+    // Horizontal flare lines
+    breachFlare.beginFill(0x00d4ff, 0.4);
+    breachFlare.drawRect(cx - W * 0.25, cy - 1, W * 0.5, 2);
+    breachFlare.endFill();
+    breachFlare.beginFill(0xffffff, 0.3);
+    breachFlare.drawRect(cx - W * 0.15, cy - 0.5, W * 0.3, 1);
+    breachFlare.endFill();
+
+    // 4 radial flare spikes at 45° angles
+    breachFlare.lineStyle(1, 0x00d4ff, 0.5);
+    var spikeLen = 30;
+    breachFlare.moveTo(cx, cy);
+    breachFlare.lineTo(cx + spikeLen * 0.707, cy - spikeLen * 0.707);
+    breachFlare.moveTo(cx, cy);
+    breachFlare.lineTo(cx - spikeLen * 0.707, cy - spikeLen * 0.707);
+    breachFlare.moveTo(cx, cy);
+    breachFlare.lineTo(cx + spikeLen * 0.707, cy + spikeLen * 0.707);
+    breachFlare.moveTo(cx, cy);
+    breachFlare.lineTo(cx - spikeLen * 0.707, cy + spikeLen * 0.707);
+
+    breachFlare.alpha = 0;
+    enhanceContainer.addChild(breachFlare);
+
+    // =========================================================
+    // LAYER 7: ENHANCED FUI MONITORS (physical screens with bezels)
+    // =========================================================
+
+    // --- LEFT MONITOR ---
+    var leftMonitorContainer = new PIXI.Container();
+    leftMonitorContainer.x = W * 0.02;
+    leftMonitorContainer.y = H * 0.30;
+    leftMonitorContainer.skew.x = 0.08;
+    leftMonitorContainer.alpha = 0;
+
+    var lmW = W * 0.155;
+    var lmH = H * 0.50;
+    var leftMonitor = new PIXI.Graphics();
+
+    // BEZEL (outer frame)
+    leftMonitor.beginFill(0x0a1520, 0.85);
+    leftMonitor.drawRect(-8, -8, lmW + 16, lmH + 16);
+    leftMonitor.endFill();
+    leftMonitor.lineStyle(1.5, 0x003344, 0.5);
+    leftMonitor.drawRect(-8, -8, lmW + 16, lmH + 16);
+
+    // SCREEN (inner lit area)
+    leftMonitor.beginFill(0x011a28, 0.6);
+    leftMonitor.drawRect(0, 0, lmW, lmH);
+    leftMonitor.endFill();
+    leftMonitor.lineStyle(1, 0x00d4ff, 0.7);
+    leftMonitor.drawRect(0, 0, lmW, lmH);
+
+    // Corner brackets
+    var cLen = 12;
+    leftMonitor.lineStyle(2, 0x00d4ff, 0.8);
+    leftMonitor.moveTo(0, cLen);
+    leftMonitor.lineTo(0, 0);
+    leftMonitor.lineTo(cLen, 0);
+    leftMonitor.moveTo(lmW - cLen, 0);
+    leftMonitor.lineTo(lmW, 0);
+    leftMonitor.lineTo(lmW, cLen);
+    leftMonitor.moveTo(0, lmH - cLen);
+    leftMonitor.lineTo(0, lmH);
+    leftMonitor.lineTo(cLen, lmH);
+    leftMonitor.moveTo(lmW - cLen, lmH);
+    leftMonitor.lineTo(lmW, lmH);
+    leftMonitor.lineTo(lmW, lmH - cLen);
+
+    // Header bar
+    leftMonitor.beginFill(0x00d4ff, 0.15);
+    leftMonitor.drawRect(5, 5, lmW - 10, 18);
+    leftMonitor.endFill();
+
+    // Section 1: Data readout bars
+    for (var dbi = 0; dbi < 8; dbi++) {
+      var barY = 28 + dbi * 11;
+      var fillPct = 0.3 + Math.random() * 0.55;
+      leftMonitor.beginFill(0x00d4ff, 0.25 + Math.random() * 0.25);
+      leftMonitor.drawRect(8, barY, (lmW - 16) * fillPct, 5);
+      leftMonitor.endFill();
+      leftMonitor.beginFill(0x002233, 0.15);
+      leftMonitor.drawRect(8 + (lmW - 16) * fillPct, barY, (lmW - 16) * (1 - fillPct), 5);
+      leftMonitor.endFill();
+    }
+
+    // Section 2: Mini line chart
+    leftMonitor.lineStyle(1, 0x00d4ff, 0.6);
+    var chartY = 120;
+    leftMonitor.moveTo(8, chartY + 30);
+    for (var cli = 0; cli < 9; cli++) {
+      var px = 8 + cli * ((lmW - 16) / 8);
+      var py = chartY + 10 + Math.random() * 40;
+      leftMonitor.lineTo(px, py);
+    }
+    leftMonitor.beginFill(0x00d4ff, 0.05);
+    leftMonitor.moveTo(8, chartY + 30);
+    for (var cli2 = 0; cli2 < 9; cli2++) {
+      var px2 = 8 + cli2 * ((lmW - 16) / 8);
+      var py2 = chartY + 10 + Math.random() * 40;
+      leftMonitor.lineTo(px2, py2);
+    }
+    leftMonitor.lineTo(lmW - 8, chartY + 60);
+    leftMonitor.lineTo(8, chartY + 60);
+    leftMonitor.closePath();
+    leftMonitor.endFill();
+
+    // Section 3: Text lines
+    for (var tli = 0; tli < 7; tli++) {
+      var tlY = 190 + tli * 10;
+      var tlAlpha = 0.2 + Math.random() * 0.2;
+      leftMonitor.beginFill(0x00d4ff, tlAlpha);
+      leftMonitor.drawRect(8, tlY, (lmW - 16) * (0.4 + Math.random() * 0.5), 3);
+      leftMonitor.endFill();
+    }
+
+    // Section 4: Small bar chart at bottom
+    var chartBase = lmH - 25;
+    for (var chi = 0; chi < 6; chi++) {
+      var chH = 20 + Math.random() * 40;
+      leftMonitor.beginFill(0x00d4ff, 0.3 + Math.random() * 0.2);
+      leftMonitor.drawRect(10 + chi * 14, chartBase - chH, 8, chH);
+      leftMonitor.endFill();
+    }
+    leftMonitor.lineStyle(1, 0x00d4ff, 0.2);
+    leftMonitor.moveTo(8, chartBase + 2);
+    leftMonitor.lineTo(lmW - 8, chartBase + 2);
+
+    leftMonitorContainer.addChild(leftMonitor);
+
+    try {
+      var leftGlow = new PIXI.filters.GlowFilter({
+        distance: 8,
+        outerStrength: 1.5,
+        color: 0x003355
+      });
+      leftMonitorContainer.filters = [leftGlow];
+    } catch (e) {}
+
+    enhanceContainer.addChild(leftMonitorContainer);
+
+    // --- RIGHT MONITOR ---
+    var rightMonitorContainer = new PIXI.Container();
+    rightMonitorContainer.x = W * 0.83;
+    rightMonitorContainer.y = H * 0.35;
+    rightMonitorContainer.skew.x = -0.08;
+    rightMonitorContainer.alpha = 0;
+
+    var rmW = W * 0.145;
+    var rmH = H * 0.45;
+    var rightMonitor = new PIXI.Graphics();
+
+    // BEZEL
+    rightMonitor.beginFill(0x0a1520, 0.85);
+    rightMonitor.drawRect(-8, -8, rmW + 16, rmH + 16);
+    rightMonitor.endFill();
+    rightMonitor.lineStyle(1.5, 0x003344, 0.5);
+    rightMonitor.drawRect(-8, -8, rmW + 16, rmH + 16);
+
+    // SCREEN
+    rightMonitor.beginFill(0x011a28, 0.6);
+    rightMonitor.drawRect(0, 0, rmW, rmH);
+    rightMonitor.endFill();
+    rightMonitor.lineStyle(1, 0x00d4ff, 0.7);
+    rightMonitor.drawRect(0, 0, rmW, rmH);
+
+    // Corner brackets
+    rightMonitor.lineStyle(2, 0x00d4ff, 0.8);
+    rightMonitor.moveTo(0, cLen);
+    rightMonitor.lineTo(0, 0);
+    rightMonitor.lineTo(cLen, 0);
+    rightMonitor.moveTo(rmW - cLen, 0);
+    rightMonitor.lineTo(rmW, 0);
+    rightMonitor.lineTo(rmW, cLen);
+    rightMonitor.moveTo(0, rmH - cLen);
+    rightMonitor.lineTo(0, rmH);
+    rightMonitor.lineTo(cLen, rmH);
+    rightMonitor.moveTo(rmW - cLen, rmH);
+    rightMonitor.lineTo(rmW, rmH);
+    rightMonitor.lineTo(rmW, rmH - cLen);
+
+    // RADAR/TARGETING DISPLAY
+    var radarCX = rmW / 2;
+    var radarCY = rmH * 0.35;
+
+    // Concentric circles
+    rightMonitor.lineStyle(1, 0x00d4ff, 0.2);
+    rightMonitor.drawCircle(radarCX, radarCY, 20);
+    rightMonitor.lineStyle(1, 0x00d4ff, 0.25);
+    rightMonitor.drawCircle(radarCX, radarCY, 35);
+    rightMonitor.lineStyle(1, 0x00d4ff, 0.3);
+    rightMonitor.drawCircle(radarCX, radarCY, 50);
+    rightMonitor.lineStyle(1, 0x00d4ff, 0.2);
+    rightMonitor.drawCircle(radarCX, radarCY, 65);
+
+    // Center dot
+    rightMonitor.beginFill(0x00d4ff, 0.6);
+    rightMonitor.drawCircle(radarCX, radarCY, 2);
+    rightMonitor.endFill();
+
+    // Cross-hair lines
+    rightMonitor.lineStyle(1, 0x00d4ff, 0.12);
+    rightMonitor.moveTo(5, radarCY);
+    rightMonitor.lineTo(rmW - 5, radarCY);
+    rightMonitor.moveTo(radarCX, 10);
+    rightMonitor.lineTo(radarCX, rmH * 0.55);
+
+    // Diagonal cross
+    rightMonitor.lineStyle(1, 0x00d4ff, 0.08);
+    rightMonitor.moveTo(radarCX - 50, radarCY - 25);
+    rightMonitor.lineTo(radarCX + 50, radarCY + 25);
+    rightMonitor.moveTo(radarCX + 50, radarCY - 25);
+    rightMonitor.lineTo(radarCX - 50, radarCY + 25);
+
+    // Radar blips
+    var blipAngles = [0.3, 1.2, 2.1, 3.5, 4.8];
+    for (var bi = 0; bi < blipAngles.length; bi++) {
+      var bAngle = blipAngles[bi];
+      var bRadius = 20 + Math.random() * 45;
+      var bx = radarCX + bRadius * Math.cos(bAngle);
+      var by = radarCY + bRadius * Math.sin(bAngle) * 0.5;
+      rightMonitor.beginFill(0x00d4ff, 0.6);
+      rightMonitor.drawCircle(bx, by, 2 + Math.random());
+      rightMonitor.endFill();
+    }
+
+    // Active target (green)
+    rightMonitor.beginFill(0x00ff88, 0.7);
+    rightMonitor.drawCircle(radarCX + 40 * Math.cos(1.8), radarCY + 40 * Math.sin(1.8) * 0.5, 3);
+    rightMonitor.endFill();
+
+    // Status indicators
+    var statusY = rmH * 0.62;
+    var statusColors = [0x00d4ff, 0xff6b00, 0x00ff88, 0x00d4ff];
+    for (var sti = 0; sti < 4; sti++) {
+      rightMonitor.beginFill(statusColors[sti], 0.4 + Math.random() * 0.2);
+      rightMonitor.drawRect(8 + sti * 30, statusY, 6, 6);
+      rightMonitor.endFill();
+      rightMonitor.beginFill(0x003344, 0.25);
+      rightMonitor.drawRect(16 + sti * 30, statusY + 1, 20, 4);
+      rightMonitor.endFill();
+    }
+
+    // Data lines at bottom
+    for (var rli = 0; rli < 5; rli++) {
+      var rlY = rmH * 0.72 + rli * 12;
+      rightMonitor.beginFill(0x00d4ff, 0.2 + Math.random() * 0.15);
+      rightMonitor.drawRect(8, rlY, (rmW - 16) * (0.5 + Math.random() * 0.4), 3);
+      rightMonitor.endFill();
+    }
+
+    rightMonitorContainer.addChild(rightMonitor);
+
+    // Radar sweep wedge (for rotation)
+    var radarSweep = new PIXI.Graphics();
+    radarSweep.beginFill(0x00d4ff, 0.08);
+    radarSweep.moveTo(radarCX, radarCY);
+    radarSweep.lineTo(radarCX + 65, radarCY);
+    radarSweep.arc(radarCX, radarCY, 65, 0, Math.PI / 6);
+    radarSweep.closePath();
+    radarSweep.endFill();
+    radarSweep.pivot.set(radarCX, radarCY);
+    radarSweep.x = radarCX;
+    radarSweep.y = radarCY;
+    rightMonitorContainer.addChild(radarSweep);
+
+    try {
+      var rightGlow = new PIXI.filters.GlowFilter({
+        distance: 8,
+        outerStrength: 1.5,
+        color: 0x003355
+      });
+      rightMonitorContainer.filters = [rightGlow];
+    } catch (e) {}
+
+    enhanceContainer.addChild(rightMonitorContainer);
+
+    // =========================================================
+    // LAYER 8: BRIGHT SPARKLE FLARE NODES
+    // =========================================================
+    var sparkleContainer = new PIXI.Graphics();
+    sparkleContainer.blendMode = PIXI.BLEND_MODES.ADD;
+
+    for (var spi = 0; spi < 45; spi++) {
+      var spX = Math.random() * W;
+      var spY = Math.random() * H * 0.75;
+      var spRand = Math.random();
+      var spRadius, spColor, spAlpha;
+
+      if (spRand < 0.70) {
+        // Subtle sparkles
+        spRadius = 1 + Math.random();
+        spColor = 0x00d4ff;
+        spAlpha = 0.3 + Math.random() * 0.3;
+      } else if (spRand < 0.90) {
+        // Bright sparkles
+        spRadius = 2 + Math.random() * 2;
+        spColor = 0x80eeff;
+        spAlpha = 0.5 + Math.random() * 0.3;
+      } else {
+        // Blazing white nodes
+        spRadius = 3 + Math.random() * 2;
+        spColor = 0xffffff;
+        spAlpha = 0.6 + Math.random() * 0.3;
+      }
+
+      sparkleContainer.beginFill(spColor, spAlpha);
+      sparkleContainer.drawCircle(spX, spY, spRadius);
+      sparkleContainer.endFill();
+    }
+
+    sparkleContainer.alpha = 0.6;
+    enhanceContainer.addChild(sparkleContainer);
+
+    // =========================================================
+    // LAYER 9: FOREGROUND RAIN OVERLAY (in front of text)
+    // =========================================================
+    var overlayCanvas = document.createElement('canvas');
+    overlayCanvas.width = W;
+    overlayCanvas.height = H;
+    var overlayCtx = overlayCanvas.getContext('2d');
+    overlayCtx.fillStyle = 'rgba(0, 5, 15, 1)';
+    overlayCtx.fillRect(0, 0, W, H);
+
+    var overlayStreams = createEnhancedStreams(10, 6.0, 12.0, 20, 180, 50);
+
+    var overlayBaseTexture = new PIXI.BaseTexture(overlayCanvas);
+    var overlayTexture = new PIXI.Texture(overlayBaseTexture);
+    var overlaySprite = new PIXI.Sprite(overlayTexture);
+    overlaySprite.alpha = 0.5;
+    overlaySprite.blendMode = PIXI.BLEND_MODES.ADD;
+
+    enhanceContainer.addChild(overlaySprite);
+
+    // =========================================================
+    // LAYER 10: ADDITIONAL AMBIENT PARTICLES
+    // =========================================================
+    var ambientParticles = new PIXI.Graphics();
+    ambientParticles.blendMode = PIXI.BLEND_MODES.ADD;
+
+    // Floor zone particles
+    for (var fpi = 0; fpi < 50; fpi++) {
+      var fpX = Math.random() * W;
+      var fpY = H * 0.75 + Math.random() * H * 0.25;
+      ambientParticles.beginFill(0x00d4ff, 0.1 + Math.random() * 0.15);
+      ambientParticles.drawCircle(fpX, fpY, 1);
+      ambientParticles.endFill();
+    }
+
+    // Cascade zone fog particles
+    for (var cpi = 0; cpi < 30; cpi++) {
+      var cpX = Math.random() * W;
+      var cpY = Math.random() * H * 0.75;
+      ambientParticles.beginFill(0x004466, 0.1 + Math.random() * 0.05);
+      ambientParticles.drawCircle(cpX, cpY, 1 + Math.random());
+      ambientParticles.endFill();
+    }
+
+    enhanceContainer.addChild(ambientParticles);
+
+    // =========================================================
+    // GSAP ANIMATION TIMELINE
+    // =========================================================
+
+    // Phase 1 — BUILD UP
+    tl.fromTo(enhanceContainer, { alpha: 0 }, { alpha: 1, duration: 0.5, ease: 'power2.in' }, 0);
+
+    // Phase 2 — Rain animation loop
+    tl.to({ frame: 0 }, {
+      frame: 1,
+      duration: 3.0,
+      ease: 'none',
+      onUpdate: function() {
+        // Deep background rain
+        updateEnhancedRain(deepBgCtx, deepBgStreams, W, H, 10, 0.06);
+        deepBgBaseTexture.update();
+
+        // Midground rain
+        updateEnhancedRain(midCtx, midStreams, W, H, 14, 0.08);
+        midBaseTexture.update();
+
+        // Dense foreground rain
+        updateEnhancedRain(denseFgCtx, denseFgStreams, W, H, 18, 0.10);
+        denseFgBaseTexture.update();
+
+        // Overlay rain
+        updateEnhancedRain(overlayCtx, overlayStreams, W, H, 20, 0.10);
+        overlayBaseTexture.update();
+      }
+    }, 0);
+
+    // Monitor fade-ins
+    tl.fromTo(leftMonitorContainer, { alpha: 0 }, { alpha: 1, duration: 0.6, ease: 'power2.out' }, 0.1);
+    tl.fromTo(rightMonitorContainer, { alpha: 0 }, { alpha: 1, duration: 0.6, ease: 'power2.out' }, 0.2);
+
+    // Breach flare fade-in
+    tl.fromTo(breachFlare, { alpha: 0 }, { alpha: 1, duration: 0.4, ease: 'power2.in' }, 0.5);
+
+    // Sparkle pulse
+    tl.fromTo(sparkleContainer, { alpha: 0.6 }, { alpha: 1.0, duration: 0.8, yoyo: true, repeat: 2, ease: 'sine.inOut' }, 0.3);
+
+    // Radar sweep rotation
+    tl.to(radarSweep, { pixi: { rotation: 360 }, duration: 3.0, ease: 'none' }, 0);
+
+    // Phase 3 — FADE OUT
+    tl.to(enhanceContainer, { alpha: 0, duration: 0.5, ease: 'power2.out' }, 3.0);
   }
 
   /**

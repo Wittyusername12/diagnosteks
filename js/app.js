@@ -388,14 +388,9 @@ const App = {
   // INITIALIZATION
   // ============================================
   init() {
-    console.log('[DEBUG-INIT] App.init() starting');
     this.cacheElements();
-    console.log('[DEBUG-INIT] cacheElements() completed');
-    console.log('[DEBUG-INIT] Cached elements.answerInput:', this.elements.answerInput);
     this.loadSettings();
-    console.log('[DEBUG-INIT] loadSettings() completed');
     this.bindEvents();
-    console.log('[DEBUG-INIT] bindEvents() returned');
     this.startClock();
     this.showScreen('grade-select');
     this.checkResumeMission();
@@ -775,7 +770,6 @@ const App = {
    * @param {number} firewallNumber - The firewall number (1-10)
    */
   loadFirewall(firewallNumber) {
-    console.log('[DEBUG-LOAD] loadFirewall() called with firewallNumber:', firewallNumber);
     this.missionState.currentFirewall = firewallNumber;
     this.state.currentFirewall = firewallNumber;
     this.missionState.currentFirewallAttempted = false;  // Reset for new firewall
@@ -784,16 +778,13 @@ const App = {
     // Science questions appear AFTER completing firewalls 3, 6, 9
 
     // Get the math problem for this firewall
-    console.log('[DEBUG-LOAD] Calling getMathProblem()');
     const problem = getMathProblem(firewallNumber);
-    console.log('[DEBUG-LOAD] getMathProblem returned:', problem);
     if (!problem) {
       console.error(`No problem found for firewall ${firewallNumber}`);
       return;
     }
 
     this.missionState.currentProblem = problem;
-    console.log('[DEBUG-LOAD] missionState.currentProblem set to:', this.missionState.currentProblem);
 
     // Update UI
     this.elements.currentFirewallDisplay.textContent = firewallNumber;
@@ -817,32 +808,19 @@ const App = {
    * Check the user's answer for the current math problem
    */
   checkAnswer() {
-    console.log('[DEBUG-SUBMIT] checkAnswer() called');
-    console.log('[DEBUG-SUBMIT] this.elements.answerInput:', this.elements.answerInput);
-    console.log('[DEBUG-SUBMIT] currentScreen:', this.state.currentScreen);
-    console.log('[DEBUG-SUBMIT] missionState.currentFirewall:', this.missionState.currentFirewall);
-
     // Prevent answer submission during animations
-    console.log('[DEBUG-GUARD] Checking animator guard - typeof animator:', typeof animator);
-    console.log('[DEBUG-GUARD] animator.isAnimating:', typeof animator !== 'undefined' ? animator.isAnimating : 'animator undefined');
     if (typeof animator !== 'undefined' && animator.isAnimating) {
-      console.log('[DEBUG-GUARD] BLOCKED by animator.isAnimating - returning early!');
       return;
     }
 
-    console.log('[DEBUG-GUARD] Checking currentProblem guard - currentProblem:', this.missionState.currentProblem);
     if (!this.missionState.currentProblem) {
-      console.log('[DEBUG-GUARD] BLOCKED by no currentProblem - returning early!');
       return;
     }
 
     const userInput = this.elements.answerInput.value.trim();
-    console.log('[DEBUG-SUBMIT] Answer value read from input:', userInput);
     const userAnswer = parseFloat(userInput);
-    console.log('[DEBUG-SUBMIT] Parsed as number:', userAnswer);
 
     if (isNaN(userAnswer)) {
-      console.log('[DEBUG-SUBMIT] Invalid input (NaN) - showing error');
       this.elements.jarvisDialogue.textContent = '"Invalid input. Enter a numeric decryption key."';
       this.elements.answerInput.classList.add('incorrect');
       setTimeout(() => {
@@ -852,13 +830,10 @@ const App = {
     }
 
     const correctAnswer = this.missionState.currentProblem.correctAnswer;
-    console.log('[DEBUG-CHECK] Comparing:', { userAnswer: userAnswer, correctAnswer: correctAnswer, match: userAnswer === correctAnswer });
 
     if (userAnswer === correctAnswer) {
-      console.log('[DEBUG-CHECK] CORRECT - calling handleCorrectAnswer()');
       this.handleCorrectAnswer();
     } else {
-      console.log('[DEBUG-CHECK] WRONG - calling handleWrongAnswer()');
       this.handleWrongAnswer();
     }
   },
@@ -1212,6 +1187,7 @@ const App = {
 
       this.updateMissionLog('[RES] Previous mission restored');
       this.populateMissionObjectives();
+      this.loadFirewall(savedState.currentFirewall);  // Load the problem for the current firewall
       this.showScreen('firewall');
     }
   },
@@ -1252,7 +1228,6 @@ const App = {
   // EVENT BINDINGS
   // ============================================
   bindEvents() {
-    console.log('[DEBUG-INIT] bindEvents() starting');
     // Grade buttons
     document.querySelectorAll('.grade-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1301,14 +1276,7 @@ const App = {
     });
 
     // Decrypt button - Phase 2: Check answer
-    const decryptBtn = document.getElementById('btn-decrypt');
-    console.log('[DEBUG-INIT] Decrypt button handler registration - btn-decrypt element:', decryptBtn);
-    console.log('[DEBUG-INIT] Decrypt button handler registration - btn-decrypt disabled?:', decryptBtn?.disabled);
-    decryptBtn?.addEventListener('click', () => {
-      console.log('[DEBUG-CLICK] Decrypt button clicked!');
-      console.log('[DEBUG-CLICK] Button disabled state at click time:', document.getElementById('btn-decrypt')?.disabled);
-      console.log('[DEBUG-CLICK] animator exists:', typeof animator !== 'undefined');
-      console.log('[DEBUG-CLICK] animator.isAnimating:', typeof animator !== 'undefined' ? animator.isAnimating : 'N/A');
+    document.getElementById('btn-decrypt')?.addEventListener('click', () => {
       this.checkAnswer();
     });
 
@@ -1348,8 +1316,6 @@ const App = {
     document.addEventListener('keydown', (e) => {
       // Don't trigger shortcuts when typing in input fields
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        // DEBUG NOTE: This early return is correct - Enter key in answer-input is handled by separate listener
-        console.log('[DEBUG-KEY] Document keydown - early return because target is:', e.target.tagName, 'key was:', e.code);
         return;
       }
 
@@ -1377,10 +1343,7 @@ const App = {
           break;
         case 'Enter':
           // Submit answer on firewall screen
-          console.log('[DEBUG-KEY] Document keydown Enter detected, currentScreen:', this.state.currentScreen);
-          // DEBUG NOTE: This handler should NOT fire when typing in answer-input because of the early return at line 1317-1319
           if (this.state.currentScreen === 'firewall') {
-            console.log('[DEBUG-KEY] Document keydown Enter - calling checkAnswer()');
             this.checkAnswer();
           }
           break;
@@ -1395,21 +1358,12 @@ const App = {
     });
 
     // Enter key in answer input
-    const answerInputForEnter = document.getElementById('answer-input');
-    console.log('[DEBUG-INIT] Enter key handler registration - answer-input element:', answerInputForEnter);
-    answerInputForEnter?.addEventListener('keydown', (e) => {
-      console.log('[DEBUG-KEY] Key pressed in answer-input:', e.code, e.key);
+    document.getElementById('answer-input')?.addEventListener('keydown', (e) => {
       if (e.code === 'Enter') {
-        console.log('[DEBUG-KEY] Enter detected! About to call btn-decrypt.click()');
-        console.log('[DEBUG-KEY] btn-decrypt element:', document.getElementById('btn-decrypt'));
-        console.log('[DEBUG-KEY] btn-decrypt disabled?:', document.getElementById('btn-decrypt')?.disabled);
         e.preventDefault();
         document.getElementById('btn-decrypt')?.click();
-        console.log('[DEBUG-KEY] btn-decrypt.click() called');
       }
     });
-
-    console.log('[DEBUG-INIT] bindEvents() completed - all handlers registered');
   }
 };
 
@@ -1417,11 +1371,7 @@ const App = {
 // INITIALIZE ON DOM READY
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[DEBUG-INIT] DOMContentLoaded fired - app.js initialization starting');
-  console.log('[DEBUG-INIT] btn-decrypt exists:', !!document.getElementById('btn-decrypt'));
-  console.log('[DEBUG-INIT] answer-input exists:', !!document.getElementById('answer-input'));
   App.init();
-  console.log('[DEBUG-INIT] App.init() completed');
 });
 
 // Expose App globally for debugging (can be removed in production)

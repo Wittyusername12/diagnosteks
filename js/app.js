@@ -662,6 +662,14 @@ const App = {
   },
 
   beginMission() {
+    // Phase 3: Initialize sound system on first mission start (user click satisfies autoplay policy)
+    soundManager.init();
+    soundManager.preloadCritical();
+    soundManager.setAmbientVolume(this.state.settings.ambientVolume / 100);
+    soundManager.setEffectsVolume(this.state.settings.effectsVolume / 100);
+    soundManager.setVoiceVolume(this.state.settings.voiceVolume / 100);
+    console.log('[Sound] SoundManager initialized, critical sounds preloading, saved volumes applied');
+
     // Phase 2: Use startMission for full gameplay loop
     this.startMission();
   },
@@ -763,6 +771,10 @@ const App = {
 
     this.updateMissionLog('[INIT] Mission commenced');
     this.updateMissionLog('[FW] Accessing firewall 1');
+
+    // Start ambient background loop
+    soundManager.startLoop('arc-reactor-hum');
+    console.log('[Sound] Ambient loop started: arc-reactor-hum');
 
     // Populate mission objectives
     this.populateMissionObjectives();
@@ -1268,6 +1280,10 @@ const App = {
     this.missionState.isComplete = true;
     this.state.missionInProgress = false;
 
+    // Stop ambient loop with 1s fade
+    soundManager.stopLoop('arc-reactor-hum', 1.0);
+    console.log('[Sound] Ambient loop stopping: arc-reactor-hum (1s fade)');
+
     // Clear saved mission state
     localStorage.removeItem('ironman-mission-state');
 
@@ -1308,6 +1324,10 @@ const App = {
    * Reset and start a new mission from victory screen
    */
   resetMission() {
+    // Stop all audio loops
+    soundManager.stopAllLoops(0.5);
+    console.log('[Sound] All loops stopped (reset)');
+
     // Reset all state
     this.missionState = {
       currentFirewall: 1,
@@ -1536,22 +1556,26 @@ const App = {
     });
 
     // Volume sliders
-    // NOTE: Volume sliders save preferences to localStorage.
-    // Actual audio control wiring happens in Phase 3 when
-    // sound-manager.js is integrated.
+    // Phase 3: Volume sliders wired to soundManager
     this.elements.volumeAmbient?.addEventListener('input', (e) => {
       this.state.settings.ambientVolume = parseInt(e.target.value);
       this.saveSettings();
+      soundManager.setAmbientVolume(e.target.value / 100);
+      console.log('[Sound] Volume changed: ambient', e.target.value / 100);
     });
 
     this.elements.volumeEffects?.addEventListener('input', (e) => {
       this.state.settings.effectsVolume = parseInt(e.target.value);
       this.saveSettings();
+      soundManager.setEffectsVolume(e.target.value / 100);
+      console.log('[Sound] Volume changed: effects', e.target.value / 100);
     });
 
     this.elements.volumeVoice?.addEventListener('input', (e) => {
       this.state.settings.voiceVolume = parseInt(e.target.value);
       this.saveSettings();
+      soundManager.setVoiceVolume(e.target.value / 100);
+      console.log('[Sound] Volume changed: voice', e.target.value / 100);
     });
 
     // Keyboard shortcuts (prepare for Phase 2)

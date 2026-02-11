@@ -85,7 +85,9 @@ window.HUD_CONFIG = {
 
     // Black Widow intro sequence timing
     widowIntroDuration: 8.0,         // Hold time for Widow intro overlay (seconds)
-    widowIntroPauseDuration: 2.5     // Dramatic pause before Widow intro starts (seconds)
+    widowIntroPauseDuration: 2.5,    // Dramatic pause before Widow intro starts (seconds)
+    widowHintDuration: 5.0,          // Duration for Widow gameplay hint panel (seconds)
+    widowFinalDuration: 6.0          // Duration for Widow final transmission panel (seconds)
   },
 
   /**

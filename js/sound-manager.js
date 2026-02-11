@@ -38,15 +38,15 @@ class SoundManager {
       // ARC REACTOR
       // =========================================
       'arc-charge': { src: 'audio/sfx/arc-charge.wav', volume: 0.8, pool: false },
-      'arc-pulse': { src: 'audio/sfx/arc-reactor-pulse.wav', volume: 0.7, pool: true },
-      'arc-hum': { src: 'audio/sfx/arc-reactor-hum.wav', volume: 0.3, pool: false, loop: true },
+      'arc-reactor-pulse': { src: 'audio/sfx/arc-reactor-pulse.wav', volume: 0.7, pool: true },
+      'arc-reactor-hum': { src: 'audio/sfx/arc-reactor-hum.wav', volume: 0.3, pool: false, loop: true },
 
       // =========================================
       // TRANSITIONS
       // =========================================
-      'whoosh': { src: 'audio/sfx/ripple-whoosh.wav', volume: 0.6, pool: true },
+      'ripple-whoosh': { src: 'audio/sfx/ripple-whoosh.wav', volume: 0.6, pool: true },
       'scan-sweep': { src: 'audio/sfx/scan-sweep.wav', volume: 0.5, pool: true },
-      'glitch-burst': { src: 'audio/sfx/glitch-heavy.wav', volume: 0.6, pool: true },
+      'glitch-heavy': { src: 'audio/sfx/glitch-heavy.wav', volume: 0.6, pool: true },
       'glitch-static': { src: 'audio/sfx/glitch-static.wav', volume: 0.5, pool: true },
       'data-stream': { src: 'audio/sfx/data-stream.wav', volume: 0.4, pool: true },
       'data-scroll': { src: 'audio/sfx/data-scroll.wav', volume: 0.4, pool: true },
@@ -55,8 +55,8 @@ class SoundManager {
       // =========================================
       // MATH FEEDBACK (JARVIS)
       // =========================================
-      'success': { src: 'audio/sfx/access-granted.wav', volume: 0.7, pool: true },
-      'error': { src: 'audio/sfx/wrong-answer.wav', volume: 0.6, pool: true },
+      'access-granted': { src: 'audio/sfx/access-granted.wav', volume: 0.7, pool: true },
+      'wrong-answer': { src: 'audio/sfx/wrong-answer.wav', volume: 0.6, pool: true },
       'hint-chime': { src: 'audio/sfx/hint-chime.wav', volume: 0.6, pool: true },
 
       // =========================================
@@ -65,7 +65,6 @@ class SoundManager {
       'science-correct': { src: 'audio/sfx/science-correct.wav', volume: 0.7, pool: true },
       'science-wrong': { src: 'audio/sfx/science-wrong.wav', volume: 0.6, pool: true },
       'warning': { src: 'audio/sfx/warning.wav', volume: 0.7, pool: false },
-      // NOTE: fury-alert removed - transmission-incoming.wav does not exist
 
       // =========================================
       // BLACK WIDOW
@@ -77,14 +76,7 @@ class SoundManager {
       // =========================================
       'breach-complete': { src: 'audio/sfx/breach-complete.wav', volume: 0.8, pool: false },
       'segment-fill': { src: 'audio/sfx/segment-fill.wav', volume: 0.6, pool: true },
-      'victory-fanfare': { src: 'audio/sfx/The Avengers Theme.wav', volume: 0.8, pool: false }
-
-      // NOTE: The following sounds were removed because the files don't exist:
-      // - 'fury-alert' (transmission-incoming.wav)
-      // - 'electric-zap' (electric-zap.wav)
-      // - 'electric-surge' (electric-surge.wav)
-      // - 'glass-shatter' (glass-shatter.wav)
-      // Add these back if you create the audio files later
+      'the-avengers-theme': { src: 'audio/sfx/The Avengers Theme.wav', volume: 0.8, pool: false }
     };
 
     // Preloaded sounds
@@ -186,10 +178,10 @@ class SoundManager {
   preloadCritical() {
     const critical = [
       'ui-click',
-      'success',
-      'error',
-      'whoosh',
-      'arc-pulse',
+      'access-granted',
+      'wrong-answer',
+      'ripple-whoosh',
+      'arc-reactor-pulse',
       'breach-complete',
       'warning',
       'widow-appearance'

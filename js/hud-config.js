@@ -81,7 +81,11 @@ window.HUD_CONFIG = {
     transitionDelay: 1.5,
 
     // Extra buffer after animation before unlocking input
-    inputLockBuffer: 0.3
+    inputLockBuffer: 0.3,
+
+    // Black Widow intro sequence timing
+    widowIntroDuration: 8.0,         // Hold time for Widow intro overlay (seconds)
+    widowIntroPauseDuration: 2.5     // Dramatic pause before Widow intro starts (seconds)
   },
 
   /**

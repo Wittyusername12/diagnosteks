@@ -375,7 +375,8 @@ const App = {
     currentProblem: null,
     currentScienceQuestion: null,
     currentFirewallAttempted: false,  // Tracks if current firewall had a wrong answer
-    currentScienceAttempted: false    // Tracks if current science question had a wrong answer
+    currentScienceAttempted: false,   // Tracks if current science question had a wrong answer
+    widowIntroPlayed: false           // Tracks if Black Widow intro has been shown
   },
 
   // Screen references (populated on init)
@@ -746,7 +747,8 @@ const App = {
       currentProblem: null,
       currentScienceQuestion: null,
       currentFirewallAttempted: false,
-      currentScienceAttempted: false
+      currentScienceAttempted: false,
+      widowIntroPlayed: false
     };
 
     this.state.missionInProgress = true;
@@ -759,10 +761,107 @@ const App = {
     // Populate mission objectives
     this.populateMissionObjectives();
 
-    // Load first firewall
-    this.loadFirewall(1);
+    // Play Black Widow intro, then load Firewall 1
+    this.playWidowIntro(() => {
+      this.loadFirewall(1);
+      this.showScreen('firewall');
+    });
+  },
 
-    this.showScreen('firewall');
+  /**
+   * Play the Black Widow intro sequence
+   * Crimson PixiJS glitch animation + "ENCRYPTED TRANSMISSION" overlay
+   * Reference: Brief Section "APPEARANCE 1: THE INTRODUCTION"
+   * @param {function} callback - Called when intro is complete, to continue mission
+   */
+  playWidowIntro(callback) {
+    // Only play once per mission
+    if (this.missionState.widowIntroPlayed) {
+      console.log('[WidowIntro] Already played, skipping');
+      if (callback) callback();
+      return;
+    }
+    this.missionState.widowIntroPlayed = true;
+
+    // Get DOM elements
+    const overlay = document.getElementById('transition-overlay');
+    const widowIntroContent = document.getElementById('widow-intro-content');
+    const widowIntroText = document.getElementById('widow-intro-text');
+
+    if (!overlay || !widowIntroContent) {
+      console.warn('[WidowIntro] DOM elements not found, skipping');
+      if (callback) callback();
+      return;
+    }
+
+    // Set intro message text (randomly pick WIDOW-INTRO-01 or WIDOW-INTRO-02)
+    const introMessages = [
+      "Tony, it's Natasha. I couldn't let Fury keep those plans locked away forever. I've left breadcrumbs in the system. Your team is good \u2014 use them.",
+      "Stark, it's Romanoff. I know what Fury's doing with those plans, and I can't let it happen. I'm leaving you some help along the way. Don't tell him I reached out."
+    ];
+    if (widowIntroText) {
+      widowIntroText.textContent = introMessages[Math.floor(Math.random() * introMessages.length)];
+    }
+
+    const pauseDuration = (HUD_CONFIG.timing.widowIntroPauseDuration || 2.5) * 1000;
+    const holdDuration = Math.max(HUD_CONFIG.timing.widowIntroDuration || 8, 0) * 1000;
+
+    console.log('[WidowIntro] Starting dramatic pause');
+    this.updateMissionLog('[WIDOW] Encrypted transmission detected');
+
+    // Step 1: Dramatic pause before the intro begins
+    setTimeout(() => {
+      console.log('[WidowIntro] Playing glitch');
+
+      // Step 2: Show overlay and start PixiJS glitch animation
+      overlay.classList.add('active');
+      gsap.set(overlay, { opacity: 1 });
+
+      if (window.transitionEngine && window.transitionEngine.playWidowGlitch) {
+        window.transitionEngine.playWidowGlitch();
+      }
+
+      // Step 3: After 500ms, fade in intro content on top of glitch
+      setTimeout(() => {
+        console.log('[WidowIntro] Showing content');
+        widowIntroContent.classList.add('im-widow-intro-active');
+      }, 500);
+
+      // Step 4: At 2s, kill glitch timeline before its fade-out and clean up PixiJS
+      setTimeout(() => {
+        if (window.transitionEngine) {
+          if (window.transitionEngine.activeTimeline) {
+            window.transitionEngine.activeTimeline.kill();
+            window.transitionEngine.activeTimeline = null;
+          }
+          window.transitionEngine.isPlaying = false;
+        }
+        if (window.pixiEffectManager) {
+          window.pixiEffectManager.reset();
+        }
+        const transitionContent = document.getElementById('transition-content');
+        if (transitionContent) transitionContent.innerHTML = '';
+      }, 2000);
+
+      // Step 5: Hold for full duration, then fade out
+      setTimeout(() => {
+        console.log('[WidowIntro] Fading out');
+        gsap.to(overlay, {
+          opacity: 0,
+          duration: 0.8,
+          ease: 'power2.out',
+          onComplete: () => {
+            // Cleanup
+            overlay.classList.remove('active');
+            gsap.set(overlay, { clearProps: 'opacity' });
+            widowIntroContent.classList.remove('im-widow-intro-active');
+            this.updateMissionLog('[WIDOW] Signal lost');
+            console.log('[WidowIntro] Complete, continuing mission');
+            if (callback) callback();
+          }
+        });
+      }, holdDuration);
+    }, pauseDuration);
   },
 
   /**
@@ -1099,7 +1198,8 @@ const App = {
       currentProblem: null,
       currentScienceQuestion: null,
       currentFirewallAttempted: false,
-      currentScienceAttempted: false
+      currentScienceAttempted: false,
+      widowIntroPlayed: false
     };
 
     this.state.currentFirewall = 0;

@@ -376,7 +376,10 @@ const App = {
     currentScienceQuestion: null,
     currentFirewallAttempted: false,  // Tracks if current firewall had a wrong answer
     currentScienceAttempted: false,   // Tracks if current science question had a wrong answer
-    widowIntroPlayed: false           // Tracks if Black Widow intro has been shown
+    widowIntroPlayed: false,          // Tracks if Black Widow intro has been shown
+    widowAppearances: 0,             // Number of Widow hint appearances this mission
+    lastWidowFirewall: -10,          // Last firewall where Widow appeared
+    wrongAttemptsThisFirewall: 0     // Wrong attempts on current firewall
   },
 
   // Screen references (populated on init)
@@ -748,7 +751,10 @@ const App = {
       currentScienceQuestion: null,
       currentFirewallAttempted: false,
       currentScienceAttempted: false,
-      widowIntroPlayed: false
+      widowIntroPlayed: false,
+      widowAppearances: 0,
+      lastWidowFirewall: -10,
+      wrongAttemptsThisFirewall: 0
     };
 
     this.state.missionInProgress = true;
@@ -865,6 +871,112 @@ const App = {
   },
 
   /**
+   * Show the Black Widow floating panel with a message and auto-destruct countdown
+   * Shared by gameplay hints and final transmission
+   * @param {string} message - The message to display
+   * @param {number} duration - How long to show the panel (seconds)
+   * @param {function} [callback] - Called after panel auto-destructs
+   */
+  showWidowPanel(message, duration, callback) {
+    const widowPanel = document.getElementById('widow-panel');
+    const widowMessageText = document.getElementById('widow-message-text');
+    const widowTimerText = document.getElementById('widow-timer-text');
+
+    if (!widowPanel || !widowMessageText) {
+      console.warn('[WidowPanel] DOM elements not found, skipping');
+      if (callback) callback();
+      return;
+    }
+
+    console.log('[WidowPanel] Showing: "' + message.substring(0, 50) + '..."');
+
+    // Set message text
+    widowMessageText.textContent = message;
+
+    // Set initial timer display
+    let remaining = Math.ceil(duration);
+    if (widowTimerText) {
+      widowTimerText.textContent = 'AUTO-DESTRUCT: ' + remaining + 's';
+    }
+
+    // Show the panel
+    widowPanel.classList.add('im-widow-panel-active');
+
+    // Countdown timer updates every second
+    const timerInterval = setInterval(() => {
+      remaining--;
+      if (remaining > 0 && widowTimerText) {
+        widowTimerText.textContent = 'AUTO-DESTRUCT: ' + remaining + 's';
+      }
+    }, 1000);
+
+    // Auto-dismiss after duration
+    setTimeout(() => {
+      clearInterval(timerInterval);
+      widowPanel.classList.remove('im-widow-panel-active');
+      console.log('[WidowPanel] Auto-destruct complete');
+      if (callback) callback();
+    }, duration * 1000);
+  },
+
+  /**
+   * Check if Black Widow should appear with a gameplay hint after a wrong answer
+   * Runs after the wrong-answer animation completes
+   */
+  checkWidowHint() {
+    const ms = this.missionState;
+
+    // All conditions must be true for Widow to appear
+    if (ms.wrongAttemptsThisFirewall < 2) return;
+    if (ms.widowAppearances >= 4) return;
+    if ((ms.currentFirewall - ms.lastWidowFirewall) < 2) return;
+    if (Math.random() >= 0.5) return;
+
+    // All conditions passed - show Widow hint
+    ms.widowAppearances++;
+    ms.lastWidowFirewall = ms.currentFirewall;
+
+    const genericHints = [
+      "Tony, your team is close. Look at the relationship between the numbers.",
+      "Psst \u2014 the answer isn't as big as you think. Simplify.",
+      "Break it into smaller pieces. That's how I crack codes too.",
+      "Young agents, slow down. Read the problem one more time.",
+      "Sometimes the simplest approach is the right one. Don't overthink it.",
+      "Stark, have your recruits estimate first. Then get precise.",
+      "Check your work. Plug the answer back in \u2014 does it make sense?",
+      "I've seen this encryption before. Focus on the basics."
+    ];
+
+    const hint = genericHints[Math.floor(Math.random() * genericHints.length)];
+    const duration = Math.max(HUD_CONFIG.timing.widowHintDuration || 5, 0);
+
+    this.updateMissionLog('[WIDOW] Hint transmission intercepted');
+    this.showWidowPanel(hint, duration);
+  },
+
+  /**
+   * Play Black Widow's final transmission after FW9 science, before FW10
+   * Always fires regardless of previous appearance count
+   * @param {function} callback - Called after panel auto-destructs, to continue to FW10
+   */
+  playWidowFinalTransmission(callback) {
+    console.log('[WidowFinal] Playing final transmission before FW10');
+
+    const finalMessages = [
+      "This is it, Tony. Fury's watching now. Don't let him catch you. Good luck.",
+      "Last firewall, Stark. I've done what I can. The rest is up to your team.",
+      "You're almost there. Fury doesn't know I helped you. Let's keep it that way. Finish this.",
+      "Final transmission, Tony. Your recruits have come this far \u2014 they can do this. I believe in them."
+    ];
+
+    const message = finalMessages[Math.floor(Math.random() * finalMessages.length)];
+    const duration = Math.max(HUD_CONFIG.timing.widowFinalDuration || 6, 0);
+
+    this.updateMissionLog('[WIDOW] Final transmission incoming');
+    this.showWidowPanel(message, duration, callback);
+  },
+
+  /**
    * Load a specific firewall (math problem or transition to Fury)
    * @param {number} firewallNumber - The firewall number (1-10)
    */
@@ -872,6 +984,7 @@ const App = {
     this.missionState.currentFirewall = firewallNumber;
     this.state.currentFirewall = firewallNumber;
     this.missionState.currentFirewallAttempted = false;  // Reset for new firewall
+    this.missionState.wrongAttemptsThisFirewall = 0;   // Reset wrong attempts counter
 
     // All firewalls (1-10) are math problems
     // Science questions appear AFTER completing firewalls 3, 6, 9
@@ -991,13 +1104,15 @@ const App = {
    */
   handleWrongAnswer() {
     this.missionState.wrongAttempts++;
+    this.missionState.wrongAttemptsThisFirewall++;
     this.missionState.currentFirewallAttempted = true;  // Mark that this firewall had a wrong attempt
 
     this.updateMissionLog(`[FAIL] Incorrect attempt on firewall ${this.missionState.currentFirewall}`);
 
     // Play GSAP wrong answer animation (input is automatically unlocked after)
     animator.playWrongSequence(() => {
-      // Student can try again - input already cleared and focused by animator
+      // After wrong animation completes, check if Widow should appear with a hint
+      this.checkWidowHint();
     });
   },
 
@@ -1101,16 +1216,24 @@ const App = {
       if (nextFW > 10) {
         this.showVictoryScreen();
       } else {
-        // Play fullscreen transition animation, THEN load next firewall
-        if (window.transitionEngine) {
-          window.transitionEngine.playTransition((type) => {
+        // Helper to advance to the next firewall with transition animation
+        const advanceToNext = () => {
+          if (window.transitionEngine) {
+            window.transitionEngine.playTransition((type) => {
+              this.loadFirewall(nextFW);
+              this.showScreen('firewall');
+            });
+          } else {
             this.loadFirewall(nextFW);
             this.showScreen('firewall');
-          });
+          }
+        };
+
+        // Black Widow final transmission after FW9 science, before FW10
+        if (currentFW === 9) {
+          this.playWidowFinalTransmission(advanceToNext);
         } else {
-          // Fallback if transitionEngine not available
-          this.loadFirewall(nextFW);
-          this.showScreen('firewall');
+          advanceToNext();
         }
       }
     }, 1500);
@@ -1199,7 +1322,10 @@ const App = {
       currentScienceQuestion: null,
       currentFirewallAttempted: false,
       currentScienceAttempted: false,
-      widowIntroPlayed: false
+      widowIntroPlayed: false,
+      widowAppearances: 0,
+      lastWidowFirewall: -10,
+      wrongAttemptsThisFirewall: 0
     };
 
     this.state.currentFirewall = 0;

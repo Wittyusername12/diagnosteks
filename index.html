@@ -499,6 +499,28 @@
     <div class="im-transition-content" id="transition-content">
       <!-- Transition animations are injected here dynamically by FirewallSequence -->
     </div>
+
+    <!-- Black Widow Intro Screen (Appearance 1) -->
+    <!-- Hidden by default. JS adds .im-widow-intro-active to show over PixiJS canvas. -->
+    <div id="widow-intro-content">
+      <div class="im-widow-intro-backdrop"></div>
+      <div class="im-widow-intro-scanlines"></div>
+      <div class="im-widow-intro-border"></div>
+      <div class="im-widow-intro-glitch-bars">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="im-widow-intro-center">
+        <img class="im-widow-intro-logo" src="Black_widow_logo.png" alt="Black Widow">
+        <div class="im-widow-intro-header">ENCRYPTED TRANSMISSION</div>
+        <div class="im-widow-intro-message-box">
+          <p id="widow-intro-text">Transmission incoming...</p>
+        </div>
+        <div class="im-widow-intro-signal">[ SIGNAL LOST ]</div>
+      </div>
+    </div>
   </div>
 
   <!-- Black Widow Intercepted Transmission Panel -->

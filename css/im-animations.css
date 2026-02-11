@@ -998,3 +998,186 @@
 .im-widow-panel-active .im-widow-box {
   animation: im-widow-border-pulse 2s ease-in-out infinite;
 }
+
+/* ============================================
+   BLACK WIDOW INTRO SCREEN (.im-widow-intro-*)
+   Reference: Brief Section "APPEARANCE 1: THE INTRODUCTION"
+   Option A full-screen crimson overlay with logo, header, message
+   Displays on top of PixiJS glitch canvas inside #transition-overlay
+   ============================================ */
+
+/* Wrapper - hidden by default, positioned over PixiJS canvas */
+#widow-intro-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: none;
+  pointer-events: none;
+}
+
+/* Show intro when active class is applied */
+.im-widow-intro-active {
+  display: block !important;
+  animation: im-widow-intro-fade-in 0.8s ease-out;
+}
+
+/* Fade-in keyframes */
+@keyframes im-widow-intro-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Radial gradient backdrop - subtle crimson center glow */
+.im-widow-intro-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(139, 0, 0, 0.19) 0%,
+    rgba(10, 10, 10, 0.93) 60%,
+    rgba(10, 10, 10, 0.98) 100%
+  );
+}
+
+/* Full-screen CRT scanline effect */
+.im-widow-intro-scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Red border frame with inset glow */
+.im-widow-intro-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid rgba(204, 0, 0, 0.38);
+  box-shadow: inset 0 0 60px rgba(204, 0, 0, 0.06), 0 0 20px rgba(204, 0, 0, 0.13);
+  pointer-events: none;
+  z-index: 7;
+}
+
+/* Container for decorative horizontal glitch lines */
+.im-widow-intro-glitch-bars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+
+/* Individual glitch bar styling */
+.im-widow-intro-glitch-bars > div {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(204, 0, 0, 0.5) 30%, rgba(204, 0, 0, 0.5) 70%, transparent 100%);
+  opacity: 0.7;
+}
+
+.im-widow-intro-glitch-bars > div:nth-child(1) {
+  top: 15%;
+}
+
+.im-widow-intro-glitch-bars > div:nth-child(2) {
+  top: 35%;
+  height: 3px;
+}
+
+.im-widow-intro-glitch-bars > div:nth-child(3) {
+  top: 52%;
+}
+
+.im-widow-intro-glitch-bars > div:nth-child(4) {
+  top: 78%;
+  height: 3px;
+}
+
+/* Centered flex column for main content */
+.im-widow-intro-center {
+  position: relative;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 20px;
+}
+
+/* Hourglass logo with crimson glow */
+.im-widow-intro-logo {
+  width: 70px;
+  height: auto;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 15px #cc0000) drop-shadow(0 0 30px rgba(204, 0, 0, 0.25));
+}
+
+/* "ENCRYPTED TRANSMISSION" header text */
+.im-widow-intro-header {
+  color: var(--im-widow-crimson);
+  font-size: 11px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  opacity: 0.8;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* Bordered dark message box */
+.im-widow-intro-message-box {
+  border: 1px solid rgba(204, 0, 0, 0.31);
+  background: rgba(10, 10, 10, 0.8);
+  padding: 20px 32px;
+  max-width: 460px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(204, 0, 0, 0.06);
+}
+
+/* Intro message text */
+#widow-intro-text {
+  color: #e0e0e0;
+  font-size: 14px;
+  line-height: 1.7;
+  font-style: italic;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  margin: 0;
+}
+
+/* "[ SIGNAL LOST ]" footer text */
+.im-widow-intro-signal {
+  color: var(--im-widow-crimson);
+  font-size: 10px;
+  letter-spacing: 4px;
+  margin-top: 20px;
+  opacity: 0.5;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}

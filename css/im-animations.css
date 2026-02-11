@@ -1134,17 +1134,18 @@
 
 /* Hourglass logo with crimson glow */
 .im-widow-intro-logo {
-  width: 70px;
+  width: 130px;
   height: auto;
   margin-bottom: 16px;
   filter: drop-shadow(0 0 15px #cc0000) drop-shadow(0 0 30px rgba(204, 0, 0, 0.25));
+  mix-blend-mode: multiply;
 }
 
 /* "ENCRYPTED TRANSMISSION" header text */
 .im-widow-intro-header {
   color: var(--im-widow-crimson);
-  font-size: 11px;
-  letter-spacing: 6px;
+  font-size: 16px;
+  letter-spacing: 8px;
   text-transform: uppercase;
   margin-bottom: 20px;
   opacity: 0.8;
@@ -1156,7 +1157,7 @@
   border: 1px solid rgba(204, 0, 0, 0.31);
   background: rgba(10, 10, 10, 0.8);
   padding: 20px 32px;
-  max-width: 460px;
+  max-width: 520px;
   text-align: center;
   box-shadow: 0 0 30px rgba(204, 0, 0, 0.06);
 }
@@ -1164,7 +1165,7 @@
 /* Intro message text */
 #widow-intro-text {
   color: #e0e0e0;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.7;
   font-style: italic;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
@@ -1174,8 +1175,8 @@
 /* "[ SIGNAL LOST ]" footer text */
 .im-widow-intro-signal {
   color: var(--im-widow-crimson);
-  font-size: 10px;
-  letter-spacing: 4px;
+  font-size: 13px;
+  letter-spacing: 5px;
   margin-top: 20px;
   opacity: 0.5;
   text-transform: uppercase;

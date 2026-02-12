@@ -831,6 +831,11 @@ const App = {
     setTimeout(() => {
       console.log('[WidowIntro] Playing glitch');
 
+      // Sound: Widow intro
+      console.log('[Sound] Widow intro → widow-appearance + glitch-static');
+      soundManager.play('widow-appearance');
+      soundManager.play('glitch-static', { delay: 0.1 });
+
       // Step 2: Show overlay and start PixiJS glitch animation
       overlay.classList.add('active');
       gsap.set(overlay, { opacity: 1 });
@@ -911,6 +916,10 @@ const App = {
       widowTimerText.textContent = 'AUTO-DESTRUCT: ' + remaining + 's';
     }
 
+    // Sound: Widow hint panel
+    console.log('[Sound] Widow hint → hint-chime');
+    soundManager.play('hint-chime');
+
     // Show the panel
     widowPanel.classList.add('im-widow-panel-active');
 
@@ -985,6 +994,11 @@ const App = {
     const duration = Math.max(HUD_CONFIG.timing.widowFinalDuration || 6, 0);
 
     this.updateMissionLog('[WIDOW] Final transmission incoming');
+
+    // Sound: Widow final transmission
+    console.log('[Sound] Widow final → widow-appearance');
+    soundManager.play('widow-appearance');
+
     this.showWidowPanel(message, duration, callback);
   },
 
@@ -1086,6 +1100,11 @@ const App = {
     // Update progress
     this.updateProgress();
 
+    // Sound: correct answer feedback
+    console.log('[Sound] Correct answer → access-granted + arc-reactor-pulse');
+    soundManager.play('access-granted');
+    soundManager.play('arc-reactor-pulse', { delay: 0.3 });
+
     // Play GSAP animation sequence, then advance
     animator.playCorrectSequence(() => {
       // Check if mission complete (after firewall 10)
@@ -1121,6 +1140,10 @@ const App = {
 
     this.updateMissionLog(`[FAIL] Incorrect attempt on firewall ${this.missionState.currentFirewall}`);
 
+    // Sound: wrong answer feedback
+    console.log('[Sound] Wrong answer → wrong-answer');
+    soundManager.play('wrong-answer');
+
     // Play GSAP wrong answer animation (input is automatically unlocked after)
     animator.playWrongSequence(() => {
       // After wrong animation completes, check if Widow should appear with a hint
@@ -1145,6 +1168,11 @@ const App = {
     this.missionState.currentScienceAttempted = false;  // Reset for new science question
 
     this.updateMissionLog(`[FURY] Security protocol initiated`);
+
+    // Sound: Fury alert
+    console.log('[Sound] Fury alert → warning + glitch-heavy');
+    soundManager.play('warning');
+    soundManager.play('glitch-heavy', { delay: 0.2 });
 
     // Play Fury alert animation (red pulses), then show Fury screen
     animator.playFuryAlert(() => {
@@ -1210,6 +1238,10 @@ const App = {
       this.updateMissionLog(`[FURY] Security verification passed (retry - no score)`);
     }
 
+    // Sound: science correct
+    console.log('[Sound] Science correct → science-correct');
+    soundManager.play('science-correct');
+
     // Visual feedback
     buttonElement.classList.add('correct');
 
@@ -1261,6 +1293,10 @@ const App = {
 
     this.updateMissionLog(`[FURY] Security verification failed`);
 
+    // Sound: science wrong
+    console.log('[Sound] Science wrong → science-wrong');
+    soundManager.play('science-wrong');
+
     // Visual feedback
     buttonElement.classList.add('incorrect');
 
@@ -1283,6 +1319,10 @@ const App = {
     // Stop ambient loop with 1s fade
     soundManager.stopLoop('arc-reactor-hum', 1.0);
     console.log('[Sound] Ambient loop stopping: arc-reactor-hum (1s fade)');
+
+    // Sound: Victory theme
+    console.log('[Sound] Victory → the-avengers-theme');
+    soundManager.play('the-avengers-theme');
 
     // Clear saved mission state
     localStorage.removeItem('ironman-mission-state');

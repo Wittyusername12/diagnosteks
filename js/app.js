@@ -1364,9 +1364,9 @@ const App = {
    * Reset and start a new mission from victory screen
    */
   resetMission() {
-    // Stop all audio loops
-    soundManager.stopAllLoops(0.5);
-    console.log('[Sound] All loops stopped (reset)');
+    // Stop all audio (loops, effects, and victory theme)
+    soundManager.stopAll(0.5);
+    console.log('[Sound] Stopping all audio on reset');
 
     // Reset all state
     this.missionState = {

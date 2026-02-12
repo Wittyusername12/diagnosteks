@@ -85,6 +85,9 @@ class SoundManager {
     // Currently playing loops
     this.activeLoops = new Map();
 
+    // Active non-pooled audio (for stopAll)
+    this.activeAudio = new Set();
+
     console.log('[SoundManager] Initialized with 23 sounds');
   }
 
@@ -266,14 +269,21 @@ class SoundManager {
   _playNew(name, config, options) {
     const audio = new Audio(config.src);
 
-    // Configure
-    audio.volume = Math.min(1, config.volume * options.volume * this.volumes.effects * this.volumes.master);
+    // Configure - loops use ambient volume, one-shots use effects volume
+    const volumeCategory = options.loop ? this.volumes.ambient : this.volumes.effects;
+    audio.volume = Math.min(1, config.volume * options.volume * volumeCategory * this.volumes.master);
     audio.playbackRate = options.rate;
     audio.loop = options.loop;
 
     // Track loops
     if (options.loop) {
       this.activeLoops.set(name, audio);
+    } else {
+      // Track non-loop audio for stopAll()
+      this.activeAudio.add(audio);
+      audio.addEventListener('ended', () => {
+        this.activeAudio.delete(audio);
+      }, { once: true });
     }
 
     // Play with optional delay
@@ -385,6 +395,7 @@ class SoundManager {
   // Set ambient volume
   setAmbientVolume(volume) {
     this.volumes.ambient = Math.max(0, Math.min(1, volume));
+    this._updateLoopVolumes();
   }
 
   // Update pool volumes
@@ -397,12 +408,12 @@ class SoundManager {
     });
   }
 
-  // Update loop volumes
+  // Update loop volumes (uses ambient volume, not effects)
   _updateLoopVolumes() {
     this.activeLoops.forEach((audio, name) => {
       const config = this.sounds[name];
       if (config) {
-        audio.volume = config.volume * this.volumes.effects * this.volumes.master;
+        audio.volume = config.volume * this.volumes.ambient * this.volumes.master;
       }
     });
   }
@@ -455,23 +466,51 @@ class SoundManager {
     return !!this.sounds[name];
   }
 
-  // Stop all sounds
-  stopAll() {
-    // Stop pools
+  // Stop all sounds (loops, pools, and non-pooled audio)
+  stopAll(fadeTime = 0) {
+    console.log('[SoundManager] Stopping all audio' + (fadeTime ? ' (' + fadeTime + 's fade)' : ''));
+
+    // Stop all loops (handles its own fading)
+    this.stopAllLoops(fadeTime);
+
+    // Collect all non-loop audio elements to stop
+    const audios = [];
+
     Object.values(this.pools).forEach(pool => {
       pool.forEach(slot => {
-        slot.audio.pause();
-        slot.audio.currentTime = 0;
-        slot.inUse = false;
+        if (slot.inUse) {
+          audios.push(slot.audio);
+          slot.inUse = false;
+        }
       });
     });
 
-    // Stop loops
-    this.activeLoops.forEach((audio) => {
-      audio.pause();
-      audio.currentTime = 0;
-    });
-    this.activeLoops.clear();
+    this.activeAudio.forEach(audio => audios.push(audio));
+    this.activeAudio.clear();
+
+    if (fadeTime > 0 && audios.length > 0) {
+      const steps = 20;
+      const stepTime = (fadeTime * 1000) / steps;
+      audios.forEach(audio => {
+        const startVolume = audio.volume;
+        const volumeStep = startVolume / steps;
+        let step = 0;
+        const fadeInterval = setInterval(() => {
+          step++;
+          audio.volume = Math.max(0, startVolume - (volumeStep * step));
+          if (step >= steps) {
+            clearInterval(fadeInterval);
+            audio.pause();
+            audio.currentTime = 0;
+          }
+        }, stepTime);
+      });
+    } else {
+      audios.forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+    }
   }
 
   // Cleanup

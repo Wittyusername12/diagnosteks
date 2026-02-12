@@ -948,7 +948,7 @@ const App = {
     const ms = this.missionState;
 
     // All conditions must be true for Widow to appear
-    if (ms.wrongAttemptsThisFirewall < 2) return;
+    if (ms.wrongAttemptsThisFirewall < 2) return; // Widow hint available after 2 wrong attempts (teacher preference)
     if (ms.widowAppearances >= 4) return;
     if ((ms.currentFirewall - ms.lastWidowFirewall) < 2) return;
     if (Math.random() >= 0.5) return;

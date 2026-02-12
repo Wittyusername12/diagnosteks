@@ -1048,6 +1048,8 @@ const App = {
     this.elements.problemNarrative.textContent = problem.narrative;
     this.elements.problemExpression.textContent = problem.expression;
     this.elements.jarvisDialogue.textContent = `"Decryption key required. ${problem.teks} protocol active."`;
+    if (typeof soundManager !== 'undefined') soundManager.play('ui-type');
+    console.log('[Sound] New problem loaded → ui-type');
 
     // Clear answer input
     this.elements.answerInput.value = '';
@@ -1564,6 +1566,7 @@ const App = {
     // Grade buttons
     document.querySelectorAll('.grade-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
         const grade = parseInt(btn.dataset.grade);
         this.selectGrade(grade);
       });
@@ -1572,6 +1575,7 @@ const App = {
     // TEKS action buttons
     document.querySelectorAll('.teks-action-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
         const action = btn.dataset.action;
         const type = btn.dataset.type;
 
@@ -1585,26 +1589,32 @@ const App = {
 
     // Navigation buttons
     document.getElementById('btn-back-to-grade')?.addEventListener('click', () => {
+      if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
       this.showScreen('grade-select');
     });
 
     document.getElementById('btn-generate-mission')?.addEventListener('click', () => {
+      if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
       this.generateMission();
     });
 
     document.getElementById('btn-reconfigure')?.addEventListener('click', () => {
+      if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
       this.showScreen('teks-select');
     });
 
     document.getElementById('btn-begin-mission')?.addEventListener('click', () => {
+      if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
       this.beginMission();
     });
 
     document.getElementById('btn-resume-mission')?.addEventListener('click', () => {
+      if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
       this.resumeMission();
     });
 
     document.getElementById('btn-new-mission')?.addEventListener('click', () => {
+      if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
       this.newMission();
     });
 
@@ -1623,6 +1633,7 @@ const App = {
 
     // Victory screen - New mission button
     document.getElementById('btn-new-mission-victory')?.addEventListener('click', () => {
+      if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
       this.resetMission();
     });
 
@@ -1701,6 +1712,18 @@ const App = {
         document.getElementById('btn-decrypt')?.click();
       }
     });
+
+    // Throttled UI hover sound (delegated, capture phase for mouseenter)
+    let lastHoverSoundTime = 0;
+    document.body.addEventListener('mouseenter', (e) => {
+      if (e.target.closest('button')) {
+        const now = Date.now();
+        if (now - lastHoverSoundTime > 150) {
+          lastHoverSoundTime = now;
+          if (typeof soundManager !== 'undefined') soundManager.play('ui-hover');
+        }
+      }
+    }, true);
   }
 };
 

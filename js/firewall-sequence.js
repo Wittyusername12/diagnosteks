@@ -666,6 +666,12 @@ class FirewallSequence {
       });
 
       // --- 0.3s - 0.8s: SPINNING & ORBITING ---
+      // Sound: arc reactor charge accent
+      timeline.add(() => {
+        console.log('[Sound] Transition accent → arc-charge');
+        if (window.soundManager) soundManager.play('arc-charge');
+      }, 0.3);
+
       blockRings.forEach((r) => {
         timeline.to(r.graphic, { rotation: r.dir * Math.PI * 2 * r.speed, duration: 2.0, ease: 'none' }, 0.3);
       });
@@ -773,6 +779,13 @@ class FirewallSequence {
     var stage = window.pixiEffectManager.getStage();
     var W = window.pixiEffectManager.getWidth();
     var H = window.pixiEffectManager.getHeight();
+
+    // Sound: data cascade accent
+    timeline.add(() => {
+      console.log('[Sound] Transition accent → data-stream');
+      if (window.soundManager) soundManager.play('data-stream');
+    }, 0);
+
     this._addDataCascade(stage, W, H, timeline);
     this._addDataCascadeEnhance(stage, W, H, timeline);
     this._addDataCascadeFinal(stage, W, H, timeline);
@@ -4224,6 +4237,12 @@ class FirewallSequence {
       timeline.to(rayContainer, { alpha: 0, duration: 0.6, ease: 'power1.in' }, 1.4);
 
       // Rings: staggered expansion — each ring starts 0.15s after the previous
+      // Sound: ripple wave accent
+      timeline.add(() => {
+        console.log('[Sound] Transition accent → ripple-whoosh');
+        if (window.soundManager) soundManager.play('ripple-whoosh');
+      }, 0.1);
+
       for (let ani = 0; ani < numRings; ani++) {
         const ringDelay = 0.1 + ani * 0.15;
 
@@ -6415,6 +6434,12 @@ class FirewallSequence {
       timeline.to(hotspot, { alpha: 1, duration: 0.2, ease: 'power2.out' }, 0);
 
       // --- 0.1s - 1.6s: HOTSPOT SWEEP (left to right) ---
+      // Sound: scan sweep accent
+      timeline.add(() => {
+        console.log('[Sound] Transition accent → scan-sweep');
+        if (window.soundManager) soundManager.play('scan-sweep');
+      }, 0.1);
+
       const sweepStart = -60;
       const sweepEnd = w + 60;
       const sweepDuration = 1.5;
@@ -7114,6 +7139,12 @@ class FirewallSequence {
       });
 
       // 0.5s: TEXT SLAM MOMENT - spike effects - EXPLOSIVE
+      // Sound: text slam accent
+      timeline.add(() => {
+        console.log('[Sound] Transition accent → text-slam');
+        if (window.soundManager) soundManager.play('text-slam');
+      }, 0.5);
+
       // Radial rays spike to full brightness
       rays.forEach((r) => {
         timeline.to(r.graphic, {
@@ -7405,6 +7436,12 @@ class FirewallSequence {
       opacity: 1,
       duration: 0.3,
       ease: 'power2.in'
+    }, 0);
+
+    // Sound: Base transition sound for all types
+    timeline.add(() => {
+      console.log('[Sound] Transition base → breach-complete');
+      if (window.soundManager) soundManager.play('breach-complete');
     }, 0);
 
     // Initialize PixiJS canvas inside the transition content container

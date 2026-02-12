@@ -81,6 +81,44 @@ class CerebrasAPI {
     return this._parseScienceResponse(raw);
   }
 
+  /**
+   * Public wrapper for answer computation.
+   * @param {string} operation - 'ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE'
+   * @param {number[]} operands - [a, b]
+   * @returns {number}
+   */
+  calculateAnswer(operation, operands) {
+    return this._computeAnswer(operation, operands);
+  }
+
+  /**
+   * Validate a problem object against the expected schema.
+   * @param {object} problem
+   * @returns {{valid: boolean, errors: string[]}}
+   */
+  validateProblemSchema(problem) {
+    const errors = [];
+    const required = ['id', 'firewallNumber', 'narrative', 'expression', 'correctAnswer', 'operation', 'operands', 'teks'];
+
+    for (const field of required) {
+      if (problem[field] === undefined || problem[field] === null) {
+        errors.push(`Missing required field: ${field}`);
+      }
+    }
+
+    if (problem.operation && !['ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE'].includes(problem.operation)) {
+      errors.push(`Invalid operation: ${problem.operation}`);
+    }
+    if (problem.operands && (!Array.isArray(problem.operands) || problem.operands.length !== 2)) {
+      errors.push('operands must be an array of exactly 2 numbers');
+    }
+    if (problem.correctAnswer !== undefined && typeof problem.correctAnswer !== 'number') {
+      errors.push('correctAnswer must be a number');
+    }
+
+    return { valid: errors.length === 0, errors };
+  }
+
   /* =========================================
      PROMPT BUILDERS
      ========================================= */

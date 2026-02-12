@@ -10,7 +10,7 @@ const CEREBRAS_CONFIG = {
   workerUrl: 'https://ironman-api.shanewaldrop123.workers.dev',
 
   // Model: Qwen3-235B MoE (22B active) via Cerebras inference
-  model: 'qwen-3-235b-a22b',
+  model: 'qwen-3-235b-a22b-instruct-2507',
 
   // Generation parameters
   temperature: 0.7,

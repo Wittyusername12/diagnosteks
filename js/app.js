@@ -792,10 +792,6 @@ const App = {
     this.updateMissionLog('[INIT] Mission commenced');
     this.updateMissionLog('[FW] Accessing firewall 1');
 
-    // Start ambient background loop
-    soundManager.startLoop('arc-reactor-hum');
-    console.log('[Sound] Ambient loop started: arc-reactor-hum');
-
     // Populate mission objectives
     this.populateMissionObjectives();
 
@@ -1348,10 +1344,6 @@ const App = {
   showVictoryScreen() {
     this.missionState.isComplete = true;
     this.state.missionInProgress = false;
-
-    // Stop ambient loop with 1s fade
-    soundManager.stopLoop('arc-reactor-hum', 1.0);
-    console.log('[Sound] Ambient loop stopping: arc-reactor-hum (1s fade)');
 
     // Sound: Victory theme
     console.log('[Sound] Victory → the-avengers-theme');

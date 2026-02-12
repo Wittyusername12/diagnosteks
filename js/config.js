@@ -7,7 +7,7 @@
 const CEREBRAS_CONFIG = {
   // Cloudflare Worker proxy URL (handles auth + CORS)
   // Replace with your deployed worker URL
-  workerUrl: 'https://cerebras-proxy.workers.dev/v1/chat/completions',
+  workerUrl: 'https://ironman-api.shanewaldrop123.workers.dev',
 
   // Model: Qwen3-235B MoE (22B active) via Cerebras inference
   model: 'qwen-3-235b-a22b',

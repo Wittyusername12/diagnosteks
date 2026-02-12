@@ -669,7 +669,7 @@ class FirewallSequence {
       // Sound: arc reactor charge accent
       timeline.add(() => {
         console.log('[Sound] Transition accent → arc-charge');
-        if (window.soundManager) soundManager.play('arc-charge');
+        if (typeof soundManager !== 'undefined') soundManager.play('arc-charge');
       }, 0.3);
 
       blockRings.forEach((r) => {
@@ -783,7 +783,7 @@ class FirewallSequence {
     // Sound: data cascade accent
     timeline.add(() => {
       console.log('[Sound] Transition accent → data-stream');
-      if (window.soundManager) soundManager.play('data-stream');
+      if (typeof soundManager !== 'undefined') soundManager.play('data-stream');
     }, 0);
 
     this._addDataCascade(stage, W, H, timeline);
@@ -4240,7 +4240,7 @@ class FirewallSequence {
       // Sound: ripple wave accent
       timeline.add(() => {
         console.log('[Sound] Transition accent → ripple-whoosh');
-        if (window.soundManager) soundManager.play('ripple-whoosh');
+        if (typeof soundManager !== 'undefined') soundManager.play('ripple-whoosh');
       }, 0.1);
 
       for (let ani = 0; ani < numRings; ani++) {
@@ -6437,7 +6437,7 @@ class FirewallSequence {
       // Sound: scan sweep accent
       timeline.add(() => {
         console.log('[Sound] Transition accent → scan-sweep');
-        if (window.soundManager) soundManager.play('scan-sweep');
+        if (typeof soundManager !== 'undefined') soundManager.play('scan-sweep');
       }, 0.1);
 
       const sweepStart = -60;
@@ -7142,7 +7142,7 @@ class FirewallSequence {
       // Sound: text slam accent
       timeline.add(() => {
         console.log('[Sound] Transition accent → text-slam');
-        if (window.soundManager) soundManager.play('text-slam');
+        if (typeof soundManager !== 'undefined') soundManager.play('text-slam');
       }, 0.5);
 
       // Radial rays spike to full brightness
@@ -7441,7 +7441,7 @@ class FirewallSequence {
     // Sound: Base transition sound for all types
     timeline.add(() => {
       console.log('[Sound] Transition base → breach-complete');
-      if (window.soundManager) soundManager.play('breach-complete');
+      if (typeof soundManager !== 'undefined') soundManager.play('breach-complete');
     }, 0);
 
     // Initialize PixiJS canvas inside the transition content container

@@ -342,6 +342,26 @@ const TEKS_DATA = {
   }
 };
 
+// Jarvis generic hints — displayed in dialogue box on 1st wrong answer
+// Phase 5: Replace with pattern-specific hints from pattern-detector.js
+const JARVIS_GENERIC_HINTS = [
+  "Perhaps break the problem into smaller steps, sir.",
+  "Consider what you know for certain, and build from there.",
+  "Take another look at the numbers. What's the relationship between them?",
+  "Sometimes it helps to work backwards. What would need to be true?",
+  "Might I suggest drawing it out? Visualization is a powerful tool.",
+  "Focus on one part of the problem at a time.",
+  "Have you tried estimating first? A rough answer can guide you to the precise one.",
+  "Look for patterns in the numbers. They're often hiding in plain sight.",
+  "Remember your fundamentals. What operation does this problem call for?",
+  "Take a breath, recruits. Fresh eyes often spot what tired ones miss.",
+  "Perhaps talk through your thinking out loud. I find it helps, sir.",
+  "What would happen if you tried the opposite approach?",
+  "Check your work by plugging your answer back in. Does it make sense?",
+  "Even Mr. Stark uses scratch paper. There's no shame in showing your work.",
+  "You're closer than you think. One small adjustment could be all it takes."
+];
+
 // ============================================
 // APPLICATION STATE
 // ============================================
@@ -948,10 +968,9 @@ const App = {
     const ms = this.missionState;
 
     // All conditions must be true for Widow to appear
-    if (ms.wrongAttemptsThisFirewall < 2) return;
+    if (ms.wrongAttemptsThisFirewall < 2) return; // Widow hint available after 2 wrong attempts (teacher preference)
     if (ms.widowAppearances >= 4) return;
     if ((ms.currentFirewall - ms.lastWidowFirewall) < 2) return;
-    if (Math.random() >= 0.5) return;
 
     // All conditions passed - show Widow hint
     ms.widowAppearances++;
@@ -1146,7 +1165,19 @@ const App = {
 
     // Play GSAP wrong answer animation (input is automatically unlocked after)
     animator.playWrongSequence(() => {
-      // After wrong animation completes, check if Widow should appear with a hint
+      // Tier 1: Jarvis gives a generic text hint on 1st wrong answer
+      if (this.missionState.wrongAttemptsThisFirewall === 1) {
+        const hint = JARVIS_GENERIC_HINTS[Math.floor(Math.random() * JARVIS_GENERIC_HINTS.length)];
+        console.log('[Hint] Jarvis generic hint:', hint);
+        // Phase 5: Replace with pattern-specific hints from pattern-detector.js
+        setTimeout(() => {
+          if (this.elements.jarvisDialogue) {
+            this.elements.jarvisDialogue.textContent = '"' + hint + '"';
+          }
+        }, 1500);
+      }
+
+      // Tier 2: Check if Widow should appear (2nd+ wrong answer)
       this.checkWidowHint();
     });
   },

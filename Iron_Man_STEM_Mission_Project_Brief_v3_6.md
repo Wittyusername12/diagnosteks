@@ -76,7 +76,7 @@ Problems are generated BEFORE the lesson -- even just 10 minutes before while yo
 | Aspect | Real-Time Generation | Pre-Generation (Our Approach) |
 |--------|---------------------|-------------------------------|
 | **Speed** | Critical -- must be <500ms | Irrelevant -- can take 30-60 seconds |
-| **Model Size** | Small/fast models only | Can use large, smart models (Llama 70B, Qwen3 235B) |
+| **Model Size** | Small/fast models only | Can use large, smart models (Llama 3.3 70B Versatile via Groq) |
 | **Accuracy** | Risk of LLM math errors | Teacher reviews and verifies every problem |
 | **Audio** | Must synthesize in real-time | Pre-synthesize everything with Cartesia |
 | **During Lesson** | Requires API calls + internet | ZERO API calls, works completely offline |
@@ -88,7 +88,7 @@ PRE-LESSON (5-15 minutes before class):
 +--------------------------------------------------------------------------+
 | 1. Teacher selects grade + TEKS checkboxes                               |
 | 2. Click "Generate Mission"                                              |
-| 3. Cerebras (Llama 70B/Qwen3 235B) generates problems (10-30 seconds)    |
+| 3. Groq (Llama 3.3 70B Versatile) generates problems (10-30 seconds)     |
 | 4. Problems display on screen for teacher review                         |
 | 5. Teacher can "Regenerate" any problem that looks wrong                 |
 | 6. Click "Approve & Synthesize"                                          |
@@ -147,7 +147,7 @@ WRONG ANSWER SUBMITTED
 |  LAYER 3: Dynamic Mode (OPTIONAL, ~1 second delay)          |
 |  ---------------------------------------------------------  |
 |  ONLY triggered when teacher says: "Jarvis, analyze this"   |
-|  Chain: Web Speech API -> Cerebras -> Cartesia                |
+|  Chain: Web Speech API -> Groq -> Cartesia                    |
 |  Jarvis gives truly custom explanation of the problem       |
 |  Latency: 700-1500ms (feels like "processing")              |
 |  Fallback: "Experiencing interference, sir" + text input    |
@@ -175,7 +175,7 @@ Teacher says "Jarvis, analyze this"
          v Web Speech API (~200-500ms)
 Teacher's speech -> text
          |
-         v Cerebras API (~300-500ms)
+         v Groq API (~300-500ms)
 Context + problem + wrong answer -> analysis text
          |
          v Cartesia API (~200-300ms to start streaming)
@@ -235,15 +235,42 @@ Track session data for educator review and portfolio documentation.
 - Uses **PixiJS 7.4.2** for GPU-accelerated visual effects (bloom, god rays, particles, RGB split) -- see [PixiJS Architecture](#pixijs-gpu-effects-architecture--v32)
 - Uses **Augmented-UI** CSS framework for sci-fi panel styling
 
-**2. AI Backend (Cerebras API)**
-- **Cerebras** for problem generation during pre-lesson setup
-- **Use larger, smarter models:** Since speed doesn't matter for pre-generation, use Llama 3.1 70B or Qwen3 235B (not small/fast models)
+**2. AI Backend (Groq API via Cloudflare Worker)**
+- **Groq** for problem generation during pre-lesson setup, accessed via Cloudflare Worker proxy (https://ironman-api.shanewaldrop123.workers.dev) to handle CORS for file:// origins
+- **Model:** Llama 3.3 70B Versatile — selected for highest instruction-following score (IFEval 92.1) per deep research analysis. For K-5 problem generation, controllability > raw capability.
 - Generates 10 math problems + 3 science questions per mission
 - Problems include metadata for pattern detection (see Section 7)
-- 1 million free tokens/day -- sufficient for classroom use
-- OpenAI-compatible API (just change base URL)
-- **During lesson:** ZERO Cerebras calls (everything pre-generated)
-- **Dynamic mode only:** Cerebras called for Layer 3 "Jarvis, analyze this" requests
+- 14,400 free requests/day on Groq free tier -- one mission uses ~13 requests (less than 0.1% of daily limit)
+- OpenAI-compatible API format (same request/response structure as Cerebras, just different provider)
+- **During lesson:** ZERO API calls (everything pre-generated)
+- **Dynamic mode only:** Groq called for Layer 3 "Jarvis, analyze this" requests
+
+### Provider Architecture (Phase 4)
+
+```
+Browser (file://) --> Cloudflare Worker --> Groq API --> Llama 3.3 70B Versatile
+                      (CORS proxy)          (API key stored
+                                             as Worker secret)
+```
+
+**Why Groq + Llama 3.3 70B:**
+- IFEval 92.1 — highest instruction-following score among open-weight models (per deep research report)
+- For K-5 generation, controllability matters more than raw capability
+- Explicit child safety documentation in model card
+- Groq free tier: 14,400 requests/day (mission uses ~13)
+- Llama Guard 3 8B available as optional safety classification pass (free on Groq)
+
+**Why Cloudflare Worker proxy:**
+- App runs from file:// which sends Origin: null
+- Groq API rejects null origins (CORS policy)
+- Worker at ironman-api.shanewaldrop123.workers.dev forwards requests with proper headers
+- API key stored as encrypted Worker secret, never exposed in client-side code
+
+**Optional: Llama Guard Safety Pass:**
+- Groq offers Llama Guard 3 8B as a free endpoint
+- Can classify generated problems before Teacher Review Screen
+- Toggleable — teacher can enable/disable
+- Logs warnings (e.g., "Problem 7 flagged for review") rather than hard-blocking
 
 **3. Voice Input (Web Speech API)**
 - Browser's built-in speech recognition
@@ -1965,7 +1992,7 @@ At the start of each transition, `playTransition()` calls `pixiEffectManager.ini
 | TEKS Files (grades 1-5) | [DONE] COMPLETE |
 | UI/HTML Interface | [WIP] IN PROGRESS |
 | Dialogue Audio (Jarvis/Fury/Widow) | [TODO] NOT STARTED |
-| Cerebras API Integration | [TODO] NOT STARTED |
+| Groq API Integration | [TODO] NOT STARTED |
 | GSAP Animations + PixiJS Effects | [DONE] 5 transitions in pool COMPLETE + Fury SHIELD animation COMPLETE -- Black Widow overlay remaining |
 | **Transition Engine (FirewallSequence)** | [DONE] COMPLETE -- 6 randomized transitions, PixiJS integration hooks |
 | **PixiJS Foundation** | [DONE] COMPLETE -- PixiEffectManager singleton, 45 filters, GSAP ticker sync |
@@ -2132,7 +2159,7 @@ const TEST_PROBLEMS = {
 **Critical Principle:** LLM generates problem TEXT, JavaScript calculates the ANSWER. Never trust the LLM to do arithmetic.
 
 ```javascript
-// Cerebras returns this:
+// Groq returns this:
 {
   "problem": "Tony needs to power 24 suits. Each suit needs 3 arc reactors. How many reactors total?",
   "operation": "MULTIPLY",
@@ -2145,7 +2172,7 @@ const TEST_PROBLEMS = {
 ```
 
 **Build:**
-- [ ] Cerebras API integration (use Llama 70B or Qwen3 235B -- speed doesn't matter for pre-generation)
+- [ ] Groq API integration (Llama 3.3 70B Versatile via Cloudflare Worker -- speed doesn't matter for pre-generation)
 - [ ] "Generate Mission" button calls API
 - [ ] Progress indicator during generation ("Generating problem 3 of 13...")
 - [ ] **Teacher Review Screen** * -- shows all 13 problems with answers
@@ -2172,7 +2199,7 @@ const TEST_PROBLEMS = {
 - [ ] Implement three-layer response system:
   - **Layer 1:** Generic wrong answer response (instant, from response bank)
   - **Layer 2:** Pattern-specific hint (instant, based on detected error pattern)
-  - **Layer 3:** Dynamic Cerebras fallback (for edge cases, ~1 sec delay)
+  - **Layer 3:** Dynamic Groq fallback (for edge cases, ~1 sec delay)
 - [ ] Connect pattern detection results to hint selection (HINT-PAT-XX IDs)
 - [ ] Test all 11 error patterns trigger correct hints
 - [ ] Implement Black Widow hint system (appears 2-4 times randomly)

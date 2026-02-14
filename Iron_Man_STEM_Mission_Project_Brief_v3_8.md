@@ -1,8 +1,10 @@
-# Iron Man STEM Mission - Complete Project Brief v3.7
+# Iron Man STEM Mission - Complete Project Brief v3.8
 
-**Version:** 3.7  
-**Last Updated:** February 12, 2026  
-**Status:** Active Development -- Phase 3 COMPLETE, Phase 4 Next
+**Version:** 3.8  
+**Last Updated:** February 13, 2026  
+**Status:** Active Development -- Phase 3 COMPLETE, Phase 4 IN PROGRESS
+
+**v3.8 Changes:** Migrated AI backend from Cerebras to Groq (Llama 3.3 70B Versatile) via Cloudflare Worker proxy. Fixed all "Replit" references to local file:// deployment. Added Problem Type Taxonomy (7 types covering all TEKS content standards). Expanded Problem Schema with primaryType, validationTypes, diagram descriptor, and answer format fields. Added Process Standards exclusion note (handled as system-prompt defaults, not selectable parameters). Added Cross-Curricular Mode for science-themed math word problems. Added Teacher Review Screen spec (Option C split panel with per-problem feedback). Added Multi-Layer Validation Pipeline (5 layers, Tier 2 configuration with self-consistency voting and Chain-of-Verification). Added teks-rules.json file spec. Added SVG Diagram Generator architecture (template library with registry pattern, HUD theming, GSAP DrawSVGPlugin animation). Added PDF Upload architecture (pdf.js extraction, Groq parsing, hybrid missions). Rewrote Phase 4 as Prompts 2-6 build sequence. Updated Section 13 implementation files. Updated Asset Status, Phase Summary Table, and Important Reminders.
 
 **v3.7 Changes:** Phase 3 Sound Integration complete (all 23 sounds wired). Updated hint system: Jarvis gives text hint on 1st wrong answer, Widow appears deterministically on 2nd wrong (no coin flip). Removed ambient arc-reactor-hum loop (file retained, calls removed). Added two-tier transition sound architecture (breach-complete base + type-specific accent). Added typeof soundManager guard pattern to Claude Code Guidelines. Replaced ui-hover.wav and ui-click.wav with cleaner files. Added JARVIS_GENERIC_HINTS placeholder array in app.js. Updated CONFIG constants to match implemented values. Updated Phase 3 checklist to DONE.
 
@@ -27,20 +29,29 @@
    - [Dynamic Mode Details](#dynamic-mode-details)
    - [Benchmark Tracking](#benchmark-tracking--new) [NEW]
 2. [Technical Architecture](#2-technical-architecture)
+   - [Provider Architecture (Phase 4)](#provider-architecture-phase-4) [NEW v3.8]
    - [PixiJS GPU Effects Architecture](#pixijs-gpu-effects-architecture--v32) [NEW]
 3. [Mission Narrative](#3-mission-narrative)
 4. [Mission Structure](#4-mission-structure)
 5. [Visual Design](#5-visual-design)
 6. [Pattern Detection System](#6-pattern-detection-system) [NEW]
-7. [AI Problem Generation](#7-ai-problem-generation) [NEW]
+7. [AI Problem Generation](#7-ai-problem-generation) [EXPANDED v3.8]
+   - [Problem Type Taxonomy](#problem-type-taxonomy) [NEW v3.8]
+   - [Cross-Curricular Mode](#cross-curricular-mode) [NEW v3.8]
+   - [Process Standards Note](#process-standards-note) [NEW v3.8]
 8. [Mission Integration Architecture](#8-mission-integration-architecture) [NEW]
-9. [Response Bank Reference](#9-response-bank-reference)
-10. [Audio Architecture](#10-audio-architecture)
-11. [Teacher Controls](#11-teacher-controls)
-12. [Configuration Constants](#12-configuration-constants) [NEW]
-13. [Implementation Files](#13-implementation-files) [NEW]
-14. [Build Phases](#14-build-phases)
-15. [Claude Code Guidelines](#15-claude-code-guidelines)
+9. [Teacher Review Screen](#9-teacher-review-screen) [NEW v3.8]
+10. [Multi-Layer Validation Pipeline](#10-multi-layer-validation-pipeline) [NEW v3.8]
+11. [SVG Diagram Generator](#11-svg-diagram-generator) [NEW v3.8]
+12. [PDF Upload Architecture](#12-pdf-upload-architecture) [NEW v3.8]
+13. [Response Bank Reference](#13-response-bank-reference)
+14. [Audio Architecture](#14-audio-architecture)
+15. [Teacher Controls](#15-teacher-controls)
+16. [Configuration Constants](#16-configuration-constants) [NEW]
+17. [Implementation Files](#17-implementation-files) [NEW, UPDATED v3.8]
+18. [Build Phases](#18-build-phases) [UPDATED v3.8]
+19. [Claude Code Guidelines](#19-claude-code-guidelines)
+20. [Module Integration Architecture](#20-module-integration-architecture)
 
 ---
 
@@ -56,7 +67,7 @@ An immersive, AI-powered classroom experience where the teacher (dressed as Iron
 
 **Hardware:** Surface Laptop 5 (12th Gen i7, 16GB RAM), single screen display to TV via HDMI (1920x1080), Bluetooth earpiece mic with mute button
 
-**Deployment:** Replit (preferred) -- zero-setup browser-based hosting. App runs on teacher's laptop, not student Chromebooks. No local installation required.
+**Deployment:** Local file:// on teacher's Surface Laptop, displayed via HDMI to classroom TV (1920x1080). No server, no hosting -- double-click index.html. Only cloud component is the Cloudflare Worker proxy for API calls during pre-lesson setup.
 
 ### Core Design Principles
 
@@ -90,7 +101,7 @@ PRE-LESSON (5-15 minutes before class):
 +--------------------------------------------------------------------------+
 | 1. Teacher selects grade + TEKS checkboxes                               |
 | 2. Click "Generate Mission"                                              |
-| 3. Groq (Llama 3.3 70B Versatile) generates problems (10-30 seconds)    |
+| 3. Groq (Llama 3.3 70B Versatile) generates problems (10-30 seconds)     |
 | 4. Problems display on screen for teacher review                         |
 | 5. Teacher can "Regenerate" any problem that looks wrong                 |
 | 6. Click "Approve & Synthesize"                                          |
@@ -149,7 +160,7 @@ WRONG ANSWER SUBMITTED
 |  LAYER 3: Dynamic Mode (OPTIONAL, ~1 second delay)          |
 |  ---------------------------------------------------------  |
 |  ONLY triggered when teacher says: "Jarvis, analyze this"   |
-|  Chain: Web Speech API -> Groq -> Cartesia                |
+|  Chain: Web Speech API -> Groq -> Cartesia                    |
 |  Jarvis gives truly custom explanation of the problem       |
 |  Latency: 700-1500ms (feels like "processing")              |
 |  Fallback: "Experiencing interference, sir" + text input    |
@@ -239,7 +250,7 @@ Track session data for educator review and portfolio documentation.
 
 **2. AI Backend (Groq API via Cloudflare Worker)**
 - **Groq** for problem generation during pre-lesson setup, accessed via Cloudflare Worker proxy (https://ironman-api.shanewaldrop123.workers.dev) to handle CORS for file:// origins
-- **Model:** Llama 3.3 70B Versatile — selected for highest instruction-following score (IFEval 92.1) per deep research analysis. For K-5 problem generation, controllability > raw capability.
+- **Model:** Llama 3.3 70B Versatile -- selected for highest instruction-following score (IFEval 92.1), strong math reasoning (MATH-CoT 77.0), and multilingual robustness (MGSM 91.1) per deep research analysis. For K-5 problem generation, controllability > raw capability.
 - Generates 10 math problems + 3 science questions per mission
 - Problems include metadata for pattern detection (see Section 7)
 - 14,400 free requests/day on Groq free tier -- one mission uses ~13 requests (less than 0.1% of daily limit)
@@ -247,16 +258,15 @@ Track session data for educator review and portfolio documentation.
 - **During lesson:** ZERO API calls (everything pre-generated)
 - **Dynamic mode only:** Groq called for Layer 3 "Jarvis, analyze this" requests
 
-### Provider Architecture (Phase 4)
+### Provider Architecture (Phase 4) [NEW v3.8]
 
-```
-Browser (file://) --> Cloudflare Worker --> Groq API --> Llama 3.3 70B Versatile
-                      (CORS proxy)          (API key stored
-                                             as Worker secret)
-```
+    Browser (file://) --> Cloudflare Worker --> Groq API --> Llama 3.3 70B Versatile
+                          (CORS proxy)          (API key stored as Worker secret)
 
 **Why Groq + Llama 3.3 70B:**
-- IFEval 92.1 — highest instruction-following score among open-weight models (per deep research report)
+- IFEval 92.1 -- highest instruction-following score among open-weight models (per deep research report)
+- MATH-CoT 77.0 -- strong mathematical chain-of-thought reasoning for problem generation
+- MGSM 91.1 -- multilingual math robustness (relevant for bilingual classrooms)
 - For K-5 generation, controllability matters more than raw capability
 - Explicit child safety documentation in model card
 - Groq free tier: 14,400 requests/day (mission uses ~13)
@@ -271,7 +281,7 @@ Browser (file://) --> Cloudflare Worker --> Groq API --> Llama 3.3 70B Versatile
 **Optional: Llama Guard Safety Pass:**
 - Groq offers Llama Guard 3 8B as a free endpoint
 - Can classify generated problems before Teacher Review Screen
-- Toggleable — teacher can enable/disable
+- Toggleable -- teacher can enable/disable
 - Logs warnings (e.g., "Problem 7 flagged for review") rather than hard-blocking
 
 **3. Voice Input (Web Speech API)**
@@ -1029,15 +1039,33 @@ When Black Widow appears, she uses her own hint versions for the same patterns:
 
 ---
 
-## 7. AI Problem Generation [NEW]
+## 7. AI Problem Generation [EXPANDED v3.8]
 
 ### Core Principle
 
-**All problems are generated at session start.** When the teacher selects a grade level and clicks "Begin Mission," the system calls the AI API to generate 10 math problems + 3 science questions BEFORE the mission flow begins.
+**All problems are generated at session start.** When the teacher selects a grade level, TEKS checkboxes, and clicks "Generate Mission," the system calls Groq via the Cloudflare Worker to generate 10 math problems + 3 science questions BEFORE the mission flow begins. The LLM generates problem TEXT and structured metadata; JavaScript independently calculates the ANSWER. Never trust the LLM to do arithmetic.
 
-### Problem Schema
+### Problem Type Taxonomy [NEW v3.8]
 
-Each generated problem MUST follow this exact structure:
+Reading all five grade-level TEKS files reveals fundamentally different KINDS of problems, not just different numbers in the same kind of problem. Seven distinct problem types identified, each requiring different generation instructions, answer formats, and validation logic:
+
+**COMPUTATION** -- "add 347 + 285" or "multiply 12 x 15." Numeric answer that math.js can independently verify. Standards like 3.4A ("solve with fluency one-step and two-step problems involving addition and subtraction within 1,000") and 5.3B ("multiply with fluency a three-digit number by a two-digit number"). Core type, most straightforward to validate.
+
+**COMPARISON** -- Use >, <, or = to compare two values. Standards like 2.2D ("use place value to compare and order whole numbers up to 1,200 using comparative language, numbers, and symbols") and 4.2C ("compare and order whole numbers to 1,000,000,000"). Answer is a symbol, not a number. LLM generates two values, validator independently computes which is larger, student picks correct symbol. Deterministically verifiable.
+
+**FRACTION** -- Spans computation (adding fractions with unlike denominators), comparison (which fraction is larger), identification (what fraction does this picture represent), equivalence (are these two fractions equivalent). Standards like 3.3A ("represent fractions with denominators of 2, 3, 4, 6, and 8") and 5.3H ("addition and subtraction of fractions with unequal denominators"). Math.js handles fraction arithmetic natively, but validation rules need fraction-specific constraints like allowed denominator sets per grade level.
+
+**GEOMETRY AND MEASUREMENT** -- Split into two sub-types. Some are computational: 4.5D ("solve problems related to perimeter and area of rectangles"), 5.4H ("solve problems related to volume"), 4.7E ("determine measure of unknown angle"). Numeric answers, verifiable. Others are identification/classification: 1.6D ("identify two-dimensional shapes including circles, triangles, rectangles"), 4.6A ("identify points, lines, line segments, rays, angles, perpendicular and parallel lines"). Multiple-choice by nature.
+
+**DATA ANALYSIS** -- Requires visual context -- cannot ask "what does bar graph show" without a bar graph. Standards like 3.8B ("solve problems using data represented with frequency table, dot plot, pictograph, or bar graph") and 5.9C ("solve problems using data from scatterplot"). SVG diagram generator (Section 11) becomes essential. System generates data, renders graph as SVG, asks question about it. Answer still numeric or multiple-choice, therefore verifiable.
+
+**FINANCIAL LITERACY** -- Ranges from vocabulary ("define money earned as income" at grade 1) to light computation ("calculate profit in given situation" at grade 4) to conceptual understanding ("explain difference between gross income and net income" at grade 5). Computational ones validate normally. Conceptual ones need multiple-choice format so there is a verifiable correct answer.
+
+**CONCEPTUAL/EXPLANATION** -- Appear across several strands: "explain that unit fraction 1/b represents quantity formed by one part of whole" (3.3C), "describe meaning of parentheses and brackets in numeric expression" (5.4E). Understanding checks, not calculations. Need multiple-choice with one correct answer and plausible distractors -- different LLM generation pattern than "generate word problem."
+
+### Problem Schema [UPDATED v3.8]
+
+Each generated problem MUST follow this structure. Schema expanded from v3.7 to support all seven problem types:
 
 ```javascript
 {
@@ -1046,30 +1074,59 @@ Each generated problem MUST follow this exact structure:
   "narrative": "Jarvis is calculating the power output for the repulsor beam.",
   "expression": "302 - 167 = ?",
   "correctAnswer": 135,
-  "answerType": "integer",  // "integer" | "decimal" | "fraction"
+  "answerType": "integer",       // "integer" | "decimal" | "fraction" | "comparison" | "multipleChoice"
+  "answerUnit": null,            // "cookies" | "square inches" | "degrees" | null (for bare math)
+  "primaryType": "computation",  // Display label for Teacher Review Screen
+  "validationTypes": ["computation"],  // Array -- drives which validation rules apply
   "problemData": {
-    "operation": "SUBTRACT",           // Pattern detector uses this
-    "operands": [302, 167],            // And this
+    "operation": "SUBTRACT",
+    "operands": [302, 167],
     "teksCode": "3.4A",
-    "difficulty": "medium",            // "easy" | "medium" | "hard"
-    "diagnosticFor": ["STOP_BORROW_AT_ZERO"]  // The 0 in 302 reveals this bug
+    "difficulty": "medium",      // "easy" | "medium" | "hard"
+    "diagnosticFor": ["STOP_BORROW_AT_ZERO"],
+    "scienceTeksConnection": null  // Cross-curricular: e.g., "3.9B" or null
+  },
+  "diagram": null                // SVG diagram descriptor or null -- see Section 11
+}
+```
+
+**Multiple-choice answer format** (for identification, conceptual, and financial literacy types):
+```javascript
+{
+  "answerType": "multipleChoice",
+  "correctAnswer": "B",
+  "options": [
+    { "letter": "A", "text": "A triangle" },
+    { "letter": "B", "text": "A rectangle" },
+    { "letter": "C", "text": "A pentagon" },
+    { "letter": "D", "text": "A hexagon" }
+  ]
+}
+```
+
+**Comparison answer format:**
+```javascript
+{
+  "answerType": "comparison",
+  "correctAnswer": ">",          // ">" | "<" | "="
+  "problemData": {
+    "operation": "COMPARE",
+    "operands": [4567, 4576]
   }
 }
 ```
 
-### Operation Codes
+### Operation Codes [EXPANDED v3.8]
 
 The `operation` field must be one of:
-- `ADD`
-- `SUBTRACT`
-- `MULTIPLY`
-- `DIVIDE`
-- `FRACTION_ADD`
-- `FRACTION_SUBTRACT`
-- `FRACTION_MULTIPLY`
-- `DECIMAL_ADD`
-- `DECIMAL_SUBTRACT`
-- `DECIMAL_MULTIPLY`
+- `ADD`, `SUBTRACT`, `MULTIPLY`, `DIVIDE`
+- `FRACTION_ADD`, `FRACTION_SUBTRACT`, `FRACTION_MULTIPLY`
+- `DECIMAL_ADD`, `DECIMAL_SUBTRACT`, `DECIMAL_MULTIPLY`
+- `COMPARE` -- for comparison problems (>, <, =)
+- `IDENTIFY` -- for identification/classification (multiple choice)
+- `MEASURE` -- for measurement computation (perimeter, area, volume, angles)
+- `DATA_READ` -- for reading data displays (bar graphs, dot plots, etc.)
+- `CONCEPTUAL` -- for understanding checks (multiple choice)
 
 ### Fraction Answer Format
 
@@ -1121,15 +1178,47 @@ For Fury's science questions at firewalls 3, 6, 9:
 }
 ```
 
+### Cross-Curricular Mode [NEW v3.8]
+
+Math word problems can incorporate science TEKS themes, creating cross-curricular connections that Texas administrators value ("making connections across different TEKS").
+
+**How it works:**
+- Teacher already selects both math AND science TEKS on setup screen
+- Cross-Curricular Mode toggle on setup screen (ON by default)
+- When enabled, system prompt includes one paragraph telling LLM to theme word problems around the selected science concepts while maintaining math rigor
+- Example: If math TEKS is 3.4A (addition/subtraction within 1,000) and science TEKS is 3.9B (organisms and environments), the LLM might generate: "Tony Stark's research lab has 456 rainforest plant specimens. If 189 specimens need to be moved to the new biodome, how many remain in the lab?"
+- The math is unchanged. The science context is flavor text that reinforces science vocabulary.
+
+**Architecture impact:** ZERO. This is pure prompt engineering -- one paragraph in the system prompt. No new UI elements, no new API calls, no new validation logic. The setup screen already has both math and science TEKS selections.
+
+**Teacher Review Screen integration:**
+- Purple badge on each problem indicating which science TEKS it connects to (if any)
+- Per-problem feedback can request different science pairing or disable cross-curricular for specific problems
+
+### Process Standards Note [NEW v3.8]
+
+Texas TEKS include Mathematical Process Standards (X.1A through X.1G at every grade level) covering things like "apply mathematics to problems arising in everyday life, society, and the workplace" and "use a problem-solving model that incorporates analyzing given information."
+
+**Decision: Excluded from teks-rules.json and setup screen.**
+
+These are not selectable parameters. They are addressed through default generation guidelines embedded in the system prompt, consistent with how STAAR (Texas state assessment) treats them -- as implicit qualities of all well-constructed math problems rather than standalone assessment targets. STAAR tags questions to content standards like 3.4A or 4.3E, never to process standards in isolation.
+
+The system prompt includes a brief preamble: "All generated problems should use real-world contexts when appropriate, be solvable through clear mathematical reasoning, and be expressed in grade-appropriate language. When a problem can naturally incorporate multiple representations (equation, diagram, verbal description), prefer that approach."
+
+This covers the spirit of all seven process standards without adding teacher-facing complexity.
+
 ### AI Prompt Structure
 
 The AI prompt must enforce:
-1. **Schema compliance** -- Output must match expected structure exactly
+1. **Schema compliance** -- Output must match expected structure exactly (use Groq response_format: { type: "json_object" })
 2. **TEKS alignment** -- Problems must target selected standards
-3. **Diagnostic value** -- Some problems should reveal common errors
-4. **Difficulty progression** -- Firewalls 1-3 easier, 4-7 medium, 8-10 harder
-5. **Narrative wrapping** -- Each problem needs Iron Man themed context
-6. **Grade appropriateness** -- Number ranges match grade expectations
+3. **Problem type correctness** -- Each problem's type must match what the target TEKS requires
+4. **Diagnostic value** -- Some problems should reveal common errors
+5. **Difficulty progression** -- Firewalls 1-3 easier, 4-7 medium, 8-10 harder
+6. **Narrative wrapping** -- Each problem needs Iron Man themed context
+7. **Grade appropriateness** -- Number ranges match grade expectations
+8. **Cross-curricular theming** -- When enabled, incorporate science TEKS vocabulary
+9. **Diagram descriptor** -- Include diagram field when visual would aid understanding (see Section 11)
 
 ### Grade-Specific Number Ranges
 
@@ -1140,6 +1229,47 @@ The AI prompt must enforce:
 | 3 | Within 1,000 | Facts to 10x10 | Related division facts |
 | 4 | Within 10,000 | 4-digit x 1-digit, 2-digit x 2-digit | 4-digit x 1-digit |
 | 5 | Decimals to thousandths | Decimals to hundredths | Decimals, fractions |
+
+### teks-rules.json File Spec [NEW v3.8]
+
+Static JSON lookup file containing every content standard across grades 1-5 (excluding process standards X.1A-X.1G). Each entry encodes validation constraints that are programmatically checkable.
+
+**Entry structure:**
+```javascript
+{
+  "3.4A": {
+    "text": "solve with fluency one-step and two-step problems involving addition and subtraction within 1,000",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": ["computation"],
+    "operations": ["ADD", "SUBTRACT"],
+    "maxOperandDigits": 3,
+    "maxResult": 1000,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": ["numberLine", "stripDiagram"],
+    "stepCount": [1, 2]
+  },
+  "3.3A": {
+    "text": "represent fractions with denominators of 2, 3, 4, 6, and 8",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": ["fraction", "identification"],
+    "operations": ["IDENTIFY"],
+    "allowedDenominators": [2, 3, 4, 6, 8],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": ["fractionBar", "fractionCircle"]
+  }
+}
+```
+
+**Data sources:** TEA Machine-Readable TEKS at teks.texasgateway.org (IMS Global CASE format, JSON-LD via REST API) and Common Standards Project open-source API (github.com/commonstandardsproject/api).
+
+**Coverage:** Approximately 60-70% of the ~150 student expectations across grades 1-5 contain quantifiable constraints checkable programmatically. The remaining 30-40% (too conceptual for rule-based validation) are handled by the LLM self-assessment layer in the validation pipeline (Section 10).
+
+**Consumers:** Problem generation system prompt (tells LLM what constraints to follow), validation pipeline Layers 3 and 4 (Section 10), Teacher Review Screen problem type badges (Section 9).
 
 ---
 
@@ -1312,7 +1442,276 @@ if (!isCorrect) {
 
 ---
 
-## 9. Response Bank Reference
+## 9. Teacher Review Screen [NEW v3.8]
+
+### Design: Option C -- Split Panel Layout
+
+The Teacher Review Screen appears after mission generation completes. It uses a split-panel design with problem list on the left and detail/feedback panel on the right.
+
+**Left Panel -- Problem List:**
+- Scrollable list of all 13 problems (10 math + 3 science)
+- Each row shows: problem number, first ~40 characters of problem text, primary type badge (colored), traffic light confidence badge (green/yellow/red)
+- Clicking a row selects it and loads detail in right panel
+- "Approve & Next" button on each row auto-advances to next problem
+- Sort by confidence ascending (problems needing attention appear first)
+
+**Right Panel -- Detail + Feedback:**
+- Full problem text with narrative
+- Complete answer with work shown (expression, operands, result)
+- All validation detail chips: Math Correct/Incorrect, TEKS Match/Mismatch, Grade OK/Flag, LLM Review status
+- Expandable "Why this score?" panel showing each validation signal and specific flags in plain language
+- Cross-curricular badge (purple) showing science TEKS connection if applicable
+- Llama Guard flag (orange warning banner with flag reason, if triggered)
+
+**Per-Problem Feedback System:**
+- Quick-action chips for common tweaks (zero typing required for most cases):
+  - "Easier Numbers" -- regenerate with simpler operands
+  - "Harder Numbers" -- regenerate with larger operands
+  - "Word Problem" -- convert bare math to word problem
+  - "Bare Math" -- convert word problem to bare expression
+- Free-text feedback field for anything custom (e.g., "Use division instead of multiplication")
+- Each feedback submission triggers one new Groq call containing the original problem + teacher's feedback
+- "Replace with Custom" button opens form: question text, answer, TEKS tag (dropdown), difficulty (dropdown), optional science TEKS connection
+
+**Primary/Secondary Problem Type Display:**
+- Primary type gets full-color badge (matching TEKS type color system -- cyan for computation, green for geometry, orange for data analysis, etc.)
+- Secondary types get smaller, outlined badges next to primary
+- Types derived from teks-rules.json entry, not LLM decision -- deterministic assignment
+
+**Validation Confidence Display:**
+- Traffic light badge: green circle (High Confidence), yellow triangle (Needs Review), red diamond (Likely Issues)
+  - Distinct shapes supplement colors for red-green colorblind accessibility (~10% of males)
+- Score shown as range label ("High Confidence"), NOT precise percentage -- UX research shows "87.3%" triggers suspicion
+- Detail chips per validation dimension (expandable)
+- Sort problems by confidence ascending so flagged items appear first
+
+**Approval Workflow:**
+- "Approve & Next" on each problem auto-advances
+- "Approve All" button at bottom for when teacher is satisfied
+- "Start Mission" button activates only after all problems approved
+- Approved problems locked (visual indicator changes), can be unlocked by clicking again
+
+**UPLOADED vs AI GENERATED Badges:**
+- For hybrid missions (PDF upload + AI generation), each problem shows badge indicating source
+- UPLOADED badge: blue outline
+- AI GENERATED badge: cyan outline
+
+---
+
+## 10. Multi-Layer Validation Pipeline [NEW v3.8]
+
+### Overview
+
+Five-layer progressive validation ensures every AI-generated problem passes automated quality checks before reaching the Teacher Review Screen. The system uses Tier 2 configuration (7-8 API calls per problem) for maximum rigor.
+
+### The Five Layers
+
+**Layer 1 -- Structural Validation (sync, instant):**
+Verify LLM returned valid JSON with all required fields from the problem schema. HARD GATE -- if schema malformed, problem immediately flagged red, can be regenerated without further checks. Uses safeParseLLMJson() to handle common LLM output errors (trailing commas, unquoted keys, single quotes).
+
+**Layer 2 -- Mathematical Verification (sync, instant):**
+Parse expression field with math.js (loaded via CDN at unpkg.com/mathjs@15.1.0/lib/browser/math.js, ~200KB, no build tooling required), compare computed result to expectedAnswer. HARD GATE -- if math wrong, composite score immediately capped at 0, problem gets red flag regardless of all other signals. Math.js handles fractions natively and supports BigNumber mode to avoid JavaScript floating-point traps (0.1 + 0.2 === 0.30000000000000004). For elementary math, configure Fraction mode for fraction problems, use epsilon comparison (Math.abs(a - b) < 1e-10) for decimals.
+
+**Layer 3 -- Content Policy and Sensibility Checks (sync, instant):**
+Validate grade-appropriate number ranges (lookup table: Grade 1 up to 20, Grade 3 up to 1,000, Grade 5 up to 1,000,000). Check nonsensical scenarios: fractional indivisible objects (4.5 "friends"), negative results for early grades, division by zero. Keyword-operation consistency as soft warning ("shared equally" should map to division, "altogether" to addition -- but generates warnings not failures, since "more" can indicate subtraction in context). Runs from static rules engine, no API calls.
+
+**Layer 4 -- TEKS Alignment Check (sync, instant):**
+Look up target TEKS code in teks-rules.json (Section 7), verify problem's operation type, operand sizes, number ranges, fraction denominators match standard's specifications. Returns 0-1 alignment score based on proportion of rules passed. Approximately 60-70% of TEKS student expectations contain quantifiable constraints checkable here.
+
+**Layer 5 -- LLM Second-Opinion Review (async, 1-3 seconds):**
+Separate Groq API call asks Llama 3.3 to evaluate generated problem (without seeing it generated it) against structured rubric covering clarity, solvability, grade-appropriateness, TEKS conceptual alignment. Uses Chain-of-Verification's factored approach -- reviewer call does NOT see generation prompt. Returns rubric scores in JSON.
+
+### Tier 2 Configuration (Primary Implementation Target)
+
+- 7-8 API calls per problem: 1 generation + 5 self-consistency samples + 1 LLM blind review + 1 Universal Self-Consistency selection
+- For 13 problems: ~91-104 calls per mission
+- Groq free tier gives 14,400 requests/day -- Tier 2 uses less than 1% of daily budget
+- Self-consistency voting: Generate same problem 5 times with temperature > 0, measure agreement. If 4 out of 5 agree on answer, confidence = 0.8
+- Chain-of-Verification blind review: In SEPARATE API call (without showing original output), ask LLM to solve generated problem and verify answer
+- Rate limiter: cap at 3 concurrent Groq requests
+- Progressive DOM updates: sync layers (1-4) display instantly, async layers (5) populate as results arrive
+  - Teacher sees "Math: check | TEKS: check | LLM Review: Checking..." with spinner
+  - Remaining badges pop in seconds later
+- Promise.allSettled() for graceful degradation if individual calls fail
+
+### Composite Scoring
+
+Hard gates enforce non-negotiable requirements; weighted average handles everything else:
+
+```
+function computeCompositeScore(signals) {
+  if (!signals.structuralValid) return { score: 0, category: 'red', reason: 'Invalid JSON structure' };
+  if (!signals.mathCorrect)     return { score: 0, category: 'red', reason: 'Math answer is incorrect' };
+
+  const score = 0.35 * signals.mathScore
+              + 0.10 * signals.structuralScore
+              + 0.15 * signals.contentScore
+              + 0.20 * signals.teksScore
+              + 0.20 * signals.llmReviewScore;
+
+  const category = score >= 0.85 ? 'green' : score >= 0.60 ? 'yellow' : 'red';
+  return { score: Math.round(score * 100), category, signals };
+}
+```
+
+**Weight rationale:**
+- Mathematical correctness (0.35) -- deterministic, binary, catches most dangerous errors
+- TEKS alignment (0.20) -- misaligned problems fail pedagogical purpose even if math correct
+- LLM self-assessment (0.20) -- catches qualitative issues rules cannot detect (confusing wording, ambiguous questions)
+- Content policy (0.15) -- catches grade-inappropriateness and nonsensical scenarios
+- Structural completeness (0.10) -- mostly sanity check
+
+### API Call Budget Summary
+
+| Configuration | Calls/Problem | Calls/Mission (13) | % of Groq Daily Limit |
+|--------------|---------------|--------------------|-----------------------|
+| Tier 1 (minimal) | 2 | ~26 | 0.2% |
+| Tier 2 (full) | 7-8 | ~91-104 | 0.7% |
+| With regenerations | +7-8 each | Varies | Still under 2% |
+
+### School District Value Proposition
+
+When an administrator asks "how do you know AI-generated problems are correct?" the answer is: "We run five independent generation passes and compare answers, then a separate AI reviewer checks the problem without seeing the original generation, then deterministic JavaScript independently computes the answer, then we verify TEKS alignment against the actual TEA standards database, and THEN the teacher reviews everything with a confidence dashboard showing exactly which checks passed or failed." Each layer individually defensible, combination genuinely more rigorous than most published edtech products. This aligns with the 1EdTech Consortium's December 2025 guidance calling for "risk-based oversight" of AI in education -- this system IS that guidance implemented.
+
+---
+
+## 11. SVG Diagram Generator [NEW v3.8]
+
+### Architecture: Hybrid Template Library
+
+LLM outputs structured JSON diagram descriptors. Vanilla JavaScript template library renders mathematically precise SVG. LLMs producing raw SVG is categorically unsafe for educational content -- academic research demonstrates even GPT-4o produces mathematically incorrect SVG diagrams 20-40% of the time. By constraining the LLM to output structured descriptors with numeric parameters, the system gains deterministic mathematical precision.
+
+### JSON Descriptor Schema
+
+The diagram field in the problem schema (Section 7) uses this format:
+
+```javascript
+{
+  "type": "numberLine",     // Must match a registered renderer
+  "params": {
+    "min": 0,
+    "max": 20,
+    "markers": [14],
+    "labels": true
+  }
+}
+```
+
+If no diagram is appropriate, the field is null. The LLM decides WHAT to draw (it understands which diagram fits which math concept), and deterministic code handles HOW to draw it (with mathematical precision).
+
+### Diagram Type Registry (Tier 1 -- Build First)
+
+These 8 types cover the most common K-5 TEKS visual requirements (used in 3+ grades each):
+
+| Type Key | Renders | TEKS Coverage |
+|----------|---------|---------------|
+| `numberLine` | Axis with ticks, labels, markers at precise positions | All 5 grades -- ordering, rounding, fractions, decimals |
+| `fractionBar` | Horizontal bar divided into equal parts, some shaded | Grades 3-5 -- fraction representation, comparison |
+| `fractionCircle` | Circle divided into equal sectors, some filled | Grades 3-5 -- fraction identification |
+| `array` | Grid of circles/dots in rows x columns | Grades 3-4 -- multiplication facts, equal groups |
+| `stripDiagram` | Labeled sections showing part-whole relationships | Grades 3-5 -- Texas's signature model (TEKS equivalent of tape diagrams) |
+| `areaModel` | Rectangle partitioned into sub-rectangles with product labels | Grades 3-5 -- multi-digit multiplication, decimal operations |
+| `barGraph` | Vertical/horizontal bars with labeled axes and data values | Grades 1-5 -- data representation and interpretation |
+| `dotPlot` | Number line with stacked dots above values | Grades 3-5 -- frequency data display |
+
+### Tier 2 Diagram Types (Build Second)
+
+pictographs, equal-sized groups, stem-and-leaf plots, unit square grids, input-output tables
+
+### Tier 3 Diagram Types (Build Later, Grade-Specific)
+
+coordinate planes (grade 5), scatterplots (grade 5), angle/circle models (grade 4), ten frames (grade 1)
+
+### Implementation: Vanilla JavaScript + SVG
+
+No SVG library required. Thin helper layer of ~50-100 lines vanilla JavaScript. Every SVG element created with document.createElementNS() (using createElement() produces DOM nodes that exist but never render). viewBox attribute for responsive scaling: set viewBox="0 0 800 400" for internal coordinate system that scales to any container.
+
+**DiagramRegistry pattern:**
+```javascript
+const DiagramRegistry = {
+  renderers: {},
+  register(type, renderFn) { this.renderers[type] = renderFn; },
+  render(descriptor, container) {
+    const fn = this.renderers[descriptor.type];
+    if (!fn) return null;  // Unknown type -- silently skip
+    return fn(descriptor.params, container);
+  }
+};
+```
+
+Each renderer validates parameters with sensible defaults and range clamping. If max <= min on number line, silently refuses to render rather than showing broken output.
+
+### Iron Man HUD Theming
+
+- Cyan (#00d4ff) strokes for axes and gridlines on near-black (#0a0a0a)
+- Filled shapes in translucent cyan (rgba(0, 212, 255, 0.3))
+- Warm gold (#ff9500) for highlights and emphasis
+- White text labels
+- CSS custom properties for theming: --diagram-stroke, --diagram-fill, --diagram-text
+- SVG glow effect: CSS drop-shadow(0 0 3px #00d4ff) drop-shadow(0 0 8px #00d4ff) -- GPU-accelerated
+- Orbitron font for numbers/headers, Rajdhani for longer labels (better readability for elementary students)
+
+### GSAP DrawSVGPlugin Animation
+
+GSAP now 100% free (April 2025, Webflow acquisition) including formerly premium DrawSVGPlugin. Animation sequence for "HUD powering on" effect:
+1. Border lines draw themselves (DrawSVGPlugin, 0.6s)
+2. Grid lines fade in with stagger (0.3s)
+3. Data elements scale up from zero with back.out ease (0.5s)
+4. Labels fade in with upward drift (0.4s)
+5. Brief brightness pulse completes boot-up
+
+Load from CDN (works from file://):
+```html
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13/dist/DrawSVGPlugin.min.js"></script>
+```
+
+### Integration with Problem Generation
+
+Diagram generation happens at problem-generation time (same API call), not render time. LLM has full problem context when choosing diagram type. Single round-trip minimizes latency. System prompt includes exact JSON schema and available diagram types so LLM does not request something the generator cannot render.
+
+---
+
+## 12. PDF Upload Architecture [NEW v3.8]
+
+### Overview
+
+Teachers have problems in PDFs (worksheets, textbooks, benchmark tests). The system uses the LLM itself as a parser to extract structured problem data from uploaded PDFs.
+
+### Extraction Flow
+
+1. Teacher clicks "Upload Problems" on setup screen
+2. Browser file picker accepts .pdf files
+3. pdf.js (Mozilla's JavaScript PDF parser, loaded via CDN) extracts text from PDF
+4. Extracted text sent to Groq via Cloudflare Worker
+5. Llama 3.3 70B parses text into problem schema JSON
+6. Parsed problems appear on Teacher Review Screen for verification
+
+### LLM Parsing Prompt
+
+System prompt for parsing: "Extract math/science problems from teacher worksheet. For each problem output JSON: {questionText, answer, operation, estimatedDifficulty, suggestedTeks}. If answer uncertain, mark needsReview: true."
+
+Teacher already selected grade level and TEKS on setup screen. When parsing prompt goes to Groq, it includes: "Here are the TEKS the teacher selected for this mission: [list]. Match each extracted problem to the most appropriate TEKS from THIS list." Open-book approach -- LLM does not need TEKS from memory. This is critical because Llama 3.3 70B's training data cutoff is December 2023, meaning Texas-specific TEKS codes (e.g., "3.4A", "3.10B") may not be memorized accurately. Providing the selected TEKS list in-context eliminates this risk entirely.
+
+### needsReview Flag
+
+Llama 3.3 70B does not output numerical confidence scores through standard API calls. Instead, the system prompt instructs: "Set needsReview to true if: (a) you cannot determine correct answer with certainty, (b) problem text is ambiguous or seems incomplete, (c) extracted text may be garbled or truncated, or (d) you had to guess at TEKS mapping." Rule-based self-assessment, not probabilistic confidence. Second validation layer: JavaScript independently computes answer and flags mismatches deterministically.
+
+### Hybrid Missions
+
+Teacher uploads PDF with 8 problems but mission needs 13 total. System extracts 8, AI generates 5 additional to complete the mission. Review Screen shows "UPLOADED" vs "AI GENERATED" badges on each problem.
+
+### Manual Custom Problems
+
+"Replace with Custom" button on each problem card in the Review Screen. Form appears with fields: question text, answer, TEKS tag (dropdown), difficulty (dropdown), optional science TEKS connection. Teacher can replace any AI-generated or uploaded problem with a hand-written one.
+
+### Scanned PDF Limitation
+
+Llama 3.3 70B is text-only -- cannot process images. Scanned PDFs require OCR which adds complexity. MVP handles digitally created PDFs (majority of teacher worksheets in 2025-2026). UI notes "works best with digitally created PDFs." Scanned PDF support deferred to future enhancement.
+
+---
+
+## 13. Response Bank Reference
 
 The complete response bank is in `response_bank.md` (750+ lines). Here's the structure:
 
@@ -1352,7 +1751,7 @@ The complete response bank is in `response_bank.md` (750+ lines). Here's the str
 
 ---
 
-## 10. Audio Architecture
+## 14. Audio Architecture
 
 ### Audio Status Summary
 
@@ -1548,7 +1947,7 @@ Until dialogue is recorded, the system can use browser TTS:
 
 ---
 
-## 11. Teacher Controls
+## 15. Teacher Controls
 
 ### Keyboard Shortcuts
 
@@ -1584,7 +1983,7 @@ Accept multiple formats:
 
 ---
 
-## 12. Configuration Constants [NEW]
+## 16. Configuration Constants [NEW]
 
 All tunable parameters in one place:
 
@@ -1628,7 +2027,7 @@ const CONFIG = {
 
 ---
 
-## 13. Implementation Files [NEW]
+## 17. Implementation Files [NEW, UPDATED v3.8]
 
 ### Complete JavaScript Modules
 
@@ -1651,7 +2050,22 @@ These files were created during Phase 2.5 (GSAP + PixiJS integration) and exist 
 | `firewall-sequence.js` | `js/firewall-sequence.js` | * Complete | Transition engine -- 6 randomized transitions, GSAP timeline orchestration |
 | `pixi-effect-manager.js` | `js/pixi-effect-manager.js` | * Complete | PixiJS singleton manager (single PIXI.Application, GSAP ticker sync) |
 
-### Script & CSS Load Order [v3.5]
+### Phase 4 Implementation Files [NEW v3.8]
+
+These files will be created during Phase 4 prompts:
+
+| File | Location | Status | Purpose |
+|------|----------|--------|---------|
+| `config.js` | `js/config.js` | * Complete (Prompt 1) | Groq Worker URL, model name, retry settings |
+| `cerebras-api.js` | `js/cerebras-api.js` | * Complete (Prompt 1) | API wrapper -- generateMission(), calculateAnswer() |
+| `validator.js` | `js/validator.js` | TODO (Prompt 3-4) | Five-layer validation pipeline with progressive async results |
+| `confidence.js` | `js/confidence.js` | TODO (Prompt 4) | Composite scoring and category assignment |
+| `teks-rules.json` | `data/teks-rules.json` | TODO (Prompt 3) | Static lookup of ~150 elementary math SEs with validation constraints |
+| `diagramRenderer.js` | `js/diagramRenderer.js` | TODO (Prompt 5) | DiagramRegistry pattern, SVG renderers for 8 diagram types |
+| `diagramAnimations.js` | `js/diagramAnimations.js` | TODO (Prompt 5) | GSAP DrawSVGPlugin "power-on" animation for diagrams |
+| `diagram-hud.css` | `css/diagram-hud.css` | TODO (Prompt 5) | CSS custom properties for diagram theming, SVG filter definitions |
+
+### Script & CSS Load Order [v3.5, UPDATED v3.8]
 
 This is the complete dependency chain for `index.html`. Files MUST load in this order or you'll get undefined reference errors. Claude Code should consult this table whenever adding or moving `<script>` or `<link>` tags.
 
@@ -1659,18 +2073,27 @@ This is the complete dependency chain for `index.html`. Files MUST load in this 
 |---|------|------|-------------------|
 | 1 | `augmented-ui` CSS (CDN) | `<link>` | External dependency -- base UI framework |
 | 2 | `css/im-animations.css` | `<link>` | Namespaced animation CSS -- loads AFTER augmented-ui so it can extend, BEFORE styles.css so styles.css can override |
+| 2.5 | `css/diagram-hud.css` | `<link>` | Diagram theming CSS -- loads with animation CSS [v3.8] |
 | 3 | `css/styles.css` | `<link>` | Main stylesheet -- last CSS file, can override anything above |
 | 4 | PixiJS 7.4.2 (CDN) | `<script>` | GPU rendering engine -- must load before anything that uses PIXI |
 | 5 | pixi-filters 5.3.0 (CDN) | `<script>` | 45 GPU filter effects -- requires PixiJS loaded first |
 | 6 | `node_modules/gsap/dist/gsap.min.js` | `<script>` | Animation engine -- must load before PixiPlugin and any GSAP users |
-| 7 | `node_modules/gsap/dist/PixiPlugin.min.js` | `<script>` | GSAP^PixiJS bridge -- requires both GSAP and PixiJS loaded |
+| 6.5 | GSAP DrawSVGPlugin (CDN) | `<script>` | SVG stroke animation -- requires GSAP loaded [v3.8] |
+| 7 | `node_modules/gsap/dist/PixiPlugin.min.js` | `<script>` | GSAP+PixiJS bridge -- requires both GSAP and PixiJS loaded |
 | 8 | `js/hud-config.js` | `<script>` | `window.HUD_CONFIG` -- read by nearly everything, load early |
 | 9 | `js/pixi-effect-manager.js` | `<script>` | `window.pixiEffectManager` -- requires PixiJS + GSAP, read by firewall-sequence |
 | 10 | `js/firewall-sequence.js` | `<script>` | `window.transitionEngine` -- requires hud-config + pixi-effect-manager |
 | 11 | `js/sound-manager.js` | `<script>` | Sound system -- independent, can load anywhere after DOM |
 | 12 | `js/pattern-detector.js` | `<script>` | Error analysis -- independent |
 | 13 | `js/mission-integration.js` | `<script>` | Mission orchestrator -- requires everything above |
-| 14 | `js/app.js` | `<script>` | Entry point -- last, wires everything together |
+| 13.5 | `js/config.js` | `<script>` | Groq config -- independent [v3.8] |
+| 13.6 | `js/cerebras-api.js` | `<script>` | API wrapper -- requires config.js [v3.8] |
+| 13.7 | math.js (CDN) | `<script>` | Expression evaluation for validation [v3.8] |
+| 13.8 | `js/validator.js` | `<script>` | Validation pipeline -- requires math.js + config [v3.8] |
+| 13.9 | `js/confidence.js` | `<script>` | Composite scoring -- requires validator.js [v3.8] |
+| 14 | `js/diagramRenderer.js` | `<script>` | SVG diagram registry [v3.8] |
+| 14.5 | `js/diagramAnimations.js` | `<script>` | Diagram GSAP animations -- requires GSAP + diagramRenderer [v3.8] |
+| 15 | `js/app.js` | `<script>` | Entry point -- last, wires everything together |
 
 ### pattern-detector.js
 
@@ -1982,7 +2405,7 @@ At the start of each transition, `playTransition()` calls `pixiEffectManager.ini
 
 ---
 
-## 14. Build Phases
+## 18. Build Phases
 
 ### Philosophy: Test Early, Test Independently
 
@@ -2005,7 +2428,12 @@ At the start of each transition, `playTransition()` calls `pixiEffectManager.ini
 | TEKS Files (grades 1-5) | [DONE] COMPLETE |
 | UI/HTML Interface | [WIP] IN PROGRESS |
 | Dialogue Audio (Jarvis/Fury/Widow) | [TODO] NOT STARTED |
-| Cerebras API Integration | [TODO] NOT STARTED |
+| Groq API Integration (via Cloudflare Worker) | [WIP] Prompt 1 COMPLETE -- API module + Worker deployed, CORS tested |
+| Teacher Review Screen | [TODO] NOT STARTED (Prompt 2-3) |
+| Multi-Layer Validation Pipeline | [TODO] NOT STARTED (Prompt 3-4) |
+| SVG Diagram Generator | [TODO] NOT STARTED (Prompt 5) |
+| PDF Upload System | [TODO] NOT STARTED (Prompt 6) |
+| teks-rules.json | [TODO] NOT STARTED |
 | GSAP Animations + PixiJS Effects | [DONE] 5 transitions in pool COMPLETE + Fury SHIELD animation COMPLETE -- Black Widow overlay remaining |
 | **Transition Engine (FirewallSequence)** | [DONE] COMPLETE -- 5 randomized transitions + Widow glitch, PixiJS integration, transition sounds wired |
 | **PixiJS Foundation** | [DONE] COMPLETE -- PixiEffectManager singleton, 45 filters, GSAP ticker sync |
@@ -2150,7 +2578,7 @@ const TEST_PROBLEMS = {
 | 3 | app.js | 12 gameplay event sounds across 9 functions |
 | 3.5 | app.js | Jarvis generic hints + Widow coin flip removal |
 | 4 | firewall-sequence.js | 6 transition sounds (1 base + 5 accents) |
-| 4.5 | firewall-sequence.js | Fixed typeof guards (window.soundManager → typeof) |
+| 4.5 | firewall-sequence.js | Fixed typeof guards (window.soundManager -> typeof) |
 | 5 | app.js | 9 ui-click + 1 ui-hover + 1 ui-type |
 
 **Sound -> Event Mapping (all 23 files):** [v3.5, UPDATED v3.7]
@@ -2182,41 +2610,91 @@ const TEST_PROBLEMS = {
 
 ---
 
-### Phase 4: AI Generation + Teacher Review * PRE-GENERATION PARADIGM
+### Phase 4: AI Generation + Teacher Review + Validation * PRE-GENERATION PARADIGM [UPDATED v3.8]
 
-**Goal:** Replace hardcoded test data with AI-generated problems. Teacher reviews before class.
+**Goal:** Replace hardcoded test data with AI-generated, validated, teacher-reviewed problems. This phase is split into 5 focused Claude Code Web prompts (Prompts 2-6), each building one self-contained feature.
 
 **Critical Principle:** LLM generates problem TEXT, JavaScript calculates the ANSWER. Never trust the LLM to do arithmetic.
 
 ```javascript
-// Cerebras returns this:
+// Groq returns this via Cloudflare Worker:
 {
   "problem": "Tony needs to power 24 suits. Each suit needs 3 arc reactors. How many reactors total?",
   "operation": "MULTIPLY",
   "operands": [24, 3],
-  "teks": "3.4F"
+  "teks": "3.4F",
+  "primaryType": "computation",
+  "diagram": null
 }
 
 // JavaScript calculates: 24 * 3 = 72
 // Answer is NEVER from the LLM
 ```
 
-**Build:**
-- [ ] Cerebras API integration (use Llama 70B or Qwen3 235B -- speed doesn't matter for pre-generation)
-- [ ] "Generate Mission" button calls API
-- [ ] Progress indicator during generation ("Generating problem 3 of 13...")
-- [ ] **Teacher Review Screen** * -- shows all 13 problems with answers
-- [ ] "Regenerate" button for individual problems that look wrong
-- [ ] Schema validation (reject malformed responses)
-- [ ] Store generated content in session object
-- [ ] "Start Mission" button launches gameplay with generated content
-- [ ] Fallback: load `test-problems.js` if API fails
+**Prompt 1: API Module + Cloudflare Worker [COMPLETE]**
+- [x] Cloudflare Worker proxy deployed at https://ironman-api.shanewaldrop123.workers.dev
+- [x] CORS tested: file:// -> Worker -> Groq -> SUCCESS
+- [x] js/config.js created with Worker URL, model name (llama-3.3-70b-versatile), retry settings
+- [x] js/cerebras-api.js created with generateMission(), calculateAnswer(), validateProblemSchema()
+- [x] Offline math verification working (calculateAnswer returns correct results)
+- [x] Script tags added to index.html
 
-**Test Criteria:**
-- [ ] Generate a full mission, review all problems
-- [ ] Regenerate a single problem, verify it updates
+**Prompt 2: Problem Generation Pipeline**
+- [ ] Wire "Generate Mission" button -> Cloudflare Worker -> Groq
+- [ ] System prompt with TEKS instructions, cross-curricular mode, structured JSON output (including diagram descriptor field)
+- [ ] Parse response, store in mission state
+- [ ] Progress indicator during generation ("Generating problem 3 of 13...")
+- [ ] Fallback: load test-problems.js if API fails
+- [ ] Testable: console shows valid JSON array of 13 problems
+
+**Prompt 3: Teacher Review Screen + Instant Validation Layers**
+- [ ] Build Option C split panel UI (Section 9) with ALL validation display elements from day one
+- [ ] Traffic light badges, validation detail chips, expandable "Why this score?" panel
+- [ ] Wire instant validation layers (Layers 1-4 from Section 10):
+  - Structural validation (valid JSON?)
+  - Deterministic math check (math.js computes expression, compares to expectedAnswer)
+  - Content policy checks (negative results, fractional people, grade-appropriate ranges)
+  - TEKS rule matching from teks-rules.json
+- [ ] LLM Review chip shows "Pending" placeholder (wired in Prompt 4)
+- [ ] Per-problem feedback with quick-action chips + free text
+- [ ] Approve workflow, confidence-based sort order
+- [ ] Testable: Review Screen displays with static test data, all sync validation badges populate
+
+**Prompt 4: Tier 2 Async Validation Layers**
+- [ ] Self-consistency voting (5 generation samples, temperature > 0, agreement scoring)
+- [ ] Chain-of-Verification blind review (separate Groq call, factored approach)
+- [ ] Universal Self-Consistency selection
+- [ ] Composite confidence scoring with hard gates and weighted averaging
+- [ ] Progressive UI updates -- "Pending" chips from Prompt 3 populate as async results arrive
+- [ ] Rate limiter for Groq calls (3 concurrent max)
+- [ ] Promise.allSettled() for graceful degradation
+- [ ] Touches only validator.js, confidence.js, and data-binding layer -- NOT Review Screen HTML/CSS
+- [ ] Testable: Full validation pipeline runs, all badges populate, composite scores display
+
+**Prompt 5: SVG Diagram Generator**
+- [ ] DiagramRegistry with 6-8 Tier 1 diagram types (Section 11)
+- [ ] Vanilla JavaScript SVG renderers (no library dependency)
+- [ ] Iron Man HUD theming with CSS custom properties
+- [ ] GSAP DrawSVGPlugin "power-on" animation
+- [ ] Integration with problem generation (diagram field in JSON response)
+- [ ] Testable: Each diagram type renders correctly with hardcoded test data at 1920x1080
+
+**Prompt 6: PDF Upload**
+- [ ] File picker accepting .pdf files
+- [ ] pdf.js text extraction
+- [ ] Groq parsing call with TEKS context
+- [ ] Hybrid missions (uploaded + AI-generated to fill 13 total)
+- [ ] UPLOADED vs AI GENERATED badges on Review Screen
+- [ ] Manual custom problem entry form
+- [ ] Testable: Upload a PDF, see extracted problems on Review Screen
+
+**Phase 4 Test Criteria (overall):**
+- [ ] Generate a full mission, review all problems on Review Screen
+- [ ] Verify validation badges display correctly (green/yellow/red)
+- [ ] Regenerate a single problem with feedback, verify it updates
 - [ ] Start mission and play through with generated content
 - [ ] Test API failure -> fallback to static problems
+- [ ] Upload a PDF, verify problems extracted and displayed
 
 ---
 
@@ -2229,7 +2707,7 @@ const TEST_PROBLEMS = {
 - [ ] Implement three-layer response system:
   - **Layer 1:** Generic wrong answer response (instant, from response bank)
   - **Layer 2:** Pattern-specific hint (instant, based on detected error pattern)
-  - **Layer 3:** Dynamic Cerebras fallback (for edge cases, ~1 sec delay)
+  - **Layer 3:** Dynamic Groq fallback (for edge cases, ~1 sec delay)
 - [ ] Connect pattern detection results to hint selection (HINT-PAT-XX IDs)
 - [ ] Test all 11 error patterns trigger correct hints
 - [ ] Implement Black Widow hint system (appears 2-4 times randomly)
@@ -2394,13 +2872,18 @@ class FirewallSequence {
 | **2** | Gameplay loop (hardcoded) | Complete mission flow, all 13 checkpoints, scoring | Phase 1 |
 | **2.5** | GSAP animations + PixiJS GPU effects | Transitions with GPU bloom/rays/particles, Fury SHIELD alert, MCU feel | Phase 2 |
 | **3** | Sound effects | All 23 SFX trigger correctly | Phase 2 |
-| **4** | AI generation + review | Pre-lesson workflow, problem quality, regeneration | Phase 2 |
+| **4 P1** | API module + Cloudflare Worker | file:// -> Worker -> Groq chain, offline math verification | Phase 2 |
+| **4 P2** | Problem generation pipeline | Generate 13 problems via Groq, store in mission state | Phase 4 P1 |
+| **4 P3** | Teacher Review Screen + sync validation | Split panel UI, instant validation (math, TEKS, content), feedback system | Phase 4 P2 |
+| **4 P4** | Async validation (Tier 2) | Self-consistency voting, LLM blind review, composite confidence scores | Phase 4 P3 |
+| **4 P5** | SVG diagram generator | 8 diagram types render at 1920x1080 with HUD theming | Phase 4 P2 |
+| **4 P6** | PDF upload + hybrid missions | Extract problems from PDF, mix with AI-generated | Phase 4 P3 |
 | **5** | Response intelligence | Pattern detection, hint quality, Widow/Fury intros | Phase 3, 4 |
 | **6** | Voice I/O + audio-visual sync | Jarvis speech, teacher voice commands, A/V sync with transitions | Phase 5 |
 | **7** | Polish + reporting | Classroom-ready experience, benchmark exports | All above |
 
 
-## 15. Claude Code Guidelines
+## 19. Claude Code Guidelines
 
 ### The Core Problem
 
@@ -2490,7 +2973,7 @@ After making changes, verify:
 
 ---
 
-## 16. Module Integration Architecture
+## 20. Module Integration Architecture
 
 ### Data Flow Overview
 
@@ -2721,10 +3204,18 @@ These are already implemented in `mission-integration.js`:
 4. **Black Widow logic is in flux** -- Current implementation may change based on classroom testing
 5. **Voice consistency is critical** -- All Jarvis audio must use the cloned voice
 6. **Entertainment first, education second** -- This should feel like a Marvel movie
-7. **Single screen only** -- Optimize for laptop display to TV via HDMI
+7. **Single screen only** -- Optimize for laptop display to TV via HDMI (1920x1080)
 8. **Pre-record everything possible** -- Minimize real-time API calls
 9. **Teacher controls everything** -- Students don't interact directly with the system
 10. **School appropriate always** -- All content must be safe for elementary students
+11. **ALL 8 transitions are RANDOM** including Access Granted. Correct/incorrect answers trigger response bank lines, NOT transitions. Transitions play between firewalls.
+12. **App runs locally from file://** on Surface Laptop via HDMI to classroom TV. NOT Replit.
+13. **Groq via Cloudflare Worker** -- API key never in client-side code. Worker handles CORS for file:// origins.
+14. **Process standards (X.1A-X.1G) are system-prompt defaults** -- Not selectable on setup screen. Addressed implicitly like STAAR treats them.
+15. **Teacher reviews EVERY problem** -- Validation pipeline flags issues, teacher makes final call. Students never see an unapproved problem.
+16. **LLM generates TEXT, JavaScript calculates ANSWER** -- Never trust the LLM to do arithmetic.
+17. **SVG diagrams are deterministic** -- Template library renders from structured descriptors. LLM never generates raw SVG.
+18. **TEKS not Common Core** -- All standards references are Texas TEKS. The system is built for Texas classrooms.
 
 ---
 
@@ -2744,12 +3235,28 @@ These are already implemented in `mission-integration.js`:
 - `pixi-effect-manager.js` -- [DONE] COMPLETE -- PixiJS singleton manager (single PIXI.Application, GSAP ticker sync, stage reset between transitions)
 - `hud-config.js` -- [DONE] COMPLETE -- Central `window.HUD_CONFIG` configuration object (colors, timing, easing, transition pool, mission structure)
 - `im-animations.css` -- [DONE] COMPLETE -- Namespaced CSS foundation (`.im-reactor-*`, `.im-panel-*`, `.im-glitch-*`, `.im-transition-*` class families, `--im-*` custom properties)
+- `config.js` -- [DONE] COMPLETE (Phase 4 P1) -- Groq Worker URL, model name, retry settings
+- `cerebras-api.js` -- [DONE] COMPLETE (Phase 4 P1) -- API wrapper for Groq via Cloudflare Worker
+
+**Phase 4 Files (planned):**
+- `validator.js` -- Five-layer validation pipeline
+- `confidence.js` -- Composite scoring and category assignment
+- `teks-rules.json` -- Static TEKS validation constraints (~150 entries)
+- `diagramRenderer.js` -- SVG diagram registry with 8+ renderers
+- `diagramAnimations.js` -- GSAP DrawSVGPlugin animations for diagrams
+- `diagram-hud.css` -- CSS custom properties and SVG filter definitions for HUD-themed diagrams
+
+**Research Reports (in Claude.ai project files):**
+- `Building_a_Multi-Layer_Confidence_System_for_LLM-Generated_Math_Problems.md` -- Validation pipeline research
+- `SVG_Math_Diagrams_for_a_TEKS-Aligned_Iron_Man_Learning_App.md` -- SVG diagram generation research
+- `claude_code_prompting_report.md` -- CC prompting best practices
+- `Building_Vanilla_JS_Features_with_Claude_Code_Web.md` -- Vanilla JS architecture patterns
+- `deep-research-report.md` -- Groq/Llama 3.3 70B selection research
 
 **Still Needed:**
 - All dialogue audio files (via Cartesia voice synthesis from response bank)
 - Nick Fury voice clone
 - Black Widow voice clone
-- PixiJS-enhanced transition effects (replacing CSS atmospheric effects with GPU-accelerated PixiJS -- in progress, starting with Access Granted)
 
 ---
 
@@ -2757,11 +3264,15 @@ These are already implemented in `mission-integration.js`:
 
 > * **Transition Engine** -- `FirewallSequence` class is BUILT and working. 6 randomized transitions play between firewalls. PixiJS foundation integrated. Currently rewriting individual transitions to use GPU-accelerated PixiJS effects (starting with Access Granted).
 
-> x **PixiJS Transition Rewrites** -- Access Granted is the first transition being upgraded from CSS/GSAP-only to CSS+GSAP+PixiJS hybrid (DOM text on top, GPU effects canvas underneath). Remaining 7 transitions will follow the same pattern.
+> x **PixiJS Transition Rewrites** -- Access Granted is the first transition being upgraded from CSS/GSAP-only to CSS+GSAP+PixiJS hybrid (DOM text on top, GPU effects canvas underneath). Remaining transitions will follow the same pattern.
 
 > x **Black Widow Logic** -- Appearance triggers still in flux. Current implementation is placeholder pending classroom testing.
 
 > x **CDN Dependencies** -- PixiJS libraries currently load from jsdelivr CDN. This works because the app runs on the teacher's laptop (not student Chromebooks), but should eventually be bundled locally for zero-CDN reliability in schools with strict content filters.
+
+> x **Phase 4 In Progress** -- Prompt 1 (API module + Cloudflare Worker) COMPLETE. Prompts 2-6 pending. See Phase 4 build checklist in Section 18 for detailed status.
+
+> x **teks-rules.json Not Yet Built** -- Static TEKS validation constraints file needs to be populated from TEA Machine-Readable TEKS data. Required for validation pipeline Layers 3-4.
 
 ---
 

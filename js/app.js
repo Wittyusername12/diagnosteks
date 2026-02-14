@@ -931,6 +931,7 @@ const App = {
 
       this.elements.answerInput.value = '';
       this.elements.answerInput.classList.remove('correct', 'incorrect');
+      this.elements.answerInput.placeholder = answerType === 'fraction' ? 'ENTER FRACTION (e.g. 5/6)' : 'ENTER DECRYPTION KEY';
       this.elements.answerInput.focus();
     }
   },
@@ -1256,9 +1257,10 @@ const App = {
     if (typeof soundManager !== 'undefined') soundManager.play('ui-type');
     console.log('[Sound] New problem loaded → ui-type');
 
-    // Classroom TV readability: increase font sizes (inline styles)
-    this.elements.problemNarrative.style.fontSize = '1.4rem';
-    this.elements.problemNarrative.style.lineHeight = '1.4';
+    // Classroom TV readability: increase font sizes (setProperty with important
+    // to override any CSS !important rules that may exist on .problem-narrative)
+    this.elements.problemNarrative.style.setProperty('font-size', '1.4rem', 'important');
+    this.elements.problemNarrative.style.setProperty('line-height', '1.4', 'important');
     this.elements.problemExpression.style.fontSize = '2.5rem';
     this.elements.problemExpression.style.fontWeight = '700';
     this.elements.problemExpression.style.lineHeight = '1.3';
@@ -1291,6 +1293,37 @@ const App = {
     }
 
     const userInput = this.elements.answerInput.value.trim();
+    const problem = this.missionState.currentProblem;
+    const correctAnswer = problem.correctAnswer;
+
+    // Fraction answer: parse "5/6" and compare by cross-multiplication
+    if (problem.answerType === 'fraction' && typeof correctAnswer === 'object') {
+      const fractionMatch = userInput.match(/^(-?\d+)\s*\/\s*(\d+)$/);
+      if (fractionMatch) {
+        const userNum = parseInt(fractionMatch[1]);
+        const userDen = parseInt(fractionMatch[2]);
+        if (userDen !== 0 && userNum * correctAnswer.denominator === correctAnswer.numerator * userDen) {
+          this.handleCorrectAnswer();
+        } else {
+          this.handleWrongAnswer();
+        }
+        return;
+      }
+      // Handle whole number input (e.g. "2" when answer is 2/1)
+      const wholeNum = parseFloat(userInput);
+      if (!isNaN(wholeNum) && correctAnswer.denominator === 1 && wholeNum === correctAnswer.numerator) {
+        this.handleCorrectAnswer();
+        return;
+      }
+      if (userInput === '') {
+        this.elements.jarvisDialogue.textContent = '"Enter a fraction like 5/6 or a whole number."';
+      } else {
+        this.handleWrongAnswer();
+      }
+      return;
+    }
+
+    // Standard numeric answer
     const userAnswer = parseFloat(userInput);
 
     if (isNaN(userAnswer)) {
@@ -1301,8 +1334,6 @@ const App = {
       }, 500);
       return;
     }
-
-    const correctAnswer = this.missionState.currentProblem.correctAnswer;
 
     if (userAnswer === correctAnswer) {
       this.handleCorrectAnswer();

@@ -1,9 +1,12 @@
 /**
- * IRON MAN STEM MISSION - Phase 2
- * Hardcoded Test Problems
+ * IRON MAN STEM MISSION - Fallback Problems
+ * Hardcoded test data for gameplay when API is unavailable.
  *
- * This file contains test data for the gameplay loop.
- * In Phase 4, these will be replaced by AI-generated problems.
+ * Grade 3, TEKS 3.4A (add/subtract within 1,000) and 3.3A (fractions)
+ * Science: TEKS 3.7A (forces) and 3.6A (properties of matter)
+ *
+ * 10 math problems (firewalls 1-10) + 3 science questions (after 3, 6, 9)
+ * Includes diagnostic problems targeting common misconceptions.
  *
  * Structure:
  * - 10 math problems (one for each firewall 1-10)
@@ -18,102 +21,152 @@ const TEST_PROBLEMS = {
     {
       id: 'fw-1',
       firewallNumber: 1,
-      narrative: 'Initializing breach sequence. Calculate power requirements.',
-      expression: '35 + 27 = ?',
-      correctAnswer: 62,
+      narrative: 'Jarvis is counting Iron Man suit components in the lab.',
+      expression: '125 + 43 = ?',
+      correctAnswer: 168,
       operation: 'ADD',
-      operands: [35, 27],
-      teks: '3.4A'
+      operands: [125, 43],
+      teks: '3.4A',
+      primaryType: 'computation',
+      difficulty: 'easy',
+      diagnosticFor: [],
+      answerType: 'integer',
+      scienceTeksConnection: null
     },
     {
       id: 'fw-2',
       firewallNumber: 2,
-      narrative: 'Decrypting arc reactor energy output.',
-      expression: '84 - 39 = ?',
-      correctAnswer: 45,
+      narrative: 'Pepper Potts is tracking remaining power cells at Stark Industries.',
+      expression: '94 - 37 = ?',
+      correctAnswer: 57,
       operation: 'SUBTRACT',
-      operands: [84, 39],
-      teks: '3.4A'
+      operands: [94, 37],
+      teks: '3.4A',
+      primaryType: 'computation',
+      difficulty: 'easy',
+      diagnosticFor: [],
+      answerType: 'integer',
+      scienceTeksConnection: null
     },
     {
       id: 'fw-3',
       firewallNumber: 3,
-      narrative: 'Bypassing security node. Compute access code.',
-      expression: '6 × 7 = ?',
-      correctAnswer: 42,
-      operation: 'MULTIPLY',
-      operands: [6, 7],
-      teks: '3.4F'
+      narrative: 'The Avengers Tower sensors detected two waves of energy signatures.',
+      expression: '256 + 138 = ?',
+      correctAnswer: 394,
+      operation: 'ADD',
+      operands: [256, 138],
+      teks: '3.4A',
+      primaryType: 'computation',
+      difficulty: 'easy',
+      diagnosticFor: [],
+      answerType: 'integer',
+      scienceTeksConnection: null
     },
     {
       id: 'fw-4',
       firewallNumber: 4,
-      narrative: 'Decoding Stark Industries manifest.',
-      expression: '96 ÷ 8 = ?',
-      correctAnswer: 12,
-      operation: 'DIVIDE',
-      operands: [96, 8],
-      teks: '3.4J'
+      narrative: 'Tony needs to calculate remaining shield energy after a blast.',
+      expression: '302 - 167 = ?',
+      correctAnswer: 135,
+      operation: 'SUBTRACT',
+      operands: [302, 167],
+      teks: '3.4A',
+      primaryType: 'computation',
+      difficulty: 'medium',
+      diagnosticFor: ['borrowing-across-zero'],
+      answerType: 'integer',
+      scienceTeksConnection: null
     },
     {
       id: 'fw-5',
       firewallNumber: 5,
-      narrative: 'Halfway through. Calculating shield frequency.',
-      expression: '156 + 78 = ?',
-      correctAnswer: 234,
+      narrative: 'Stark Industries ships arc reactor parts to two research facilities.',
+      expression: '475 + 368 = ?',
+      correctAnswer: 843,
       operation: 'ADD',
-      operands: [156, 78],
-      teks: '3.4A'
+      operands: [475, 368],
+      teks: '3.4A',
+      primaryType: 'computation',
+      difficulty: 'medium',
+      diagnosticFor: [],
+      answerType: 'integer',
+      scienceTeksConnection: null
     },
     {
       id: 'fw-6',
       firewallNumber: 6,
-      narrative: 'Penetrating inner firewall. Solve encryption key.',
-      expression: '243 - 158 = ?',
-      correctAnswer: 85,
+      narrative: 'The Helicarrier database shows encrypted files to decode.',
+      expression: '614 - 287 = ?',
+      correctAnswer: 327,
       operation: 'SUBTRACT',
-      operands: [243, 158],
-      teks: '3.4A'
+      operands: [614, 287],
+      teks: '3.4A',
+      primaryType: 'computation',
+      difficulty: 'medium',
+      diagnosticFor: [],
+      answerType: 'integer',
+      scienceTeksConnection: null
     },
     {
       id: 'fw-7',
       firewallNumber: 7,
-      narrative: 'Approaching core systems. Compute trajectory.',
-      expression: '9 × 8 = ?',
-      correctAnswer: 72,
-      operation: 'MULTIPLY',
-      operands: [9, 8],
-      teks: '3.4F'
+      narrative: 'Jarvis divides 12 vibranium samples equally into 4 containment pods.',
+      expression: '12 \u00F7 4 = ?',
+      correctAnswer: 3,
+      operation: 'DIVIDE',
+      operands: [12, 4],
+      teks: '3.3A',
+      primaryType: 'computation',
+      difficulty: 'medium',
+      diagnosticFor: [],
+      answerType: 'integer',
+      scienceTeksConnection: null
     },
     {
       id: 'fw-8',
       firewallNumber: 8,
-      narrative: 'Almost there. Divide the security hash.',
-      expression: '144 ÷ 12 = ?',
-      correctAnswer: 12,
-      operation: 'DIVIDE',
-      operands: [144, 12],
-      teks: '3.4J'
+      narrative: 'Tony calculates total memory needed for the security bypass.',
+      expression: '529 + 384 = ?',
+      correctAnswer: 913,
+      operation: 'ADD',
+      operands: [529, 384],
+      teks: '3.4A',
+      primaryType: 'computation',
+      difficulty: 'hard',
+      diagnosticFor: ['carrying-multiple-columns'],
+      answerType: 'integer',
+      scienceTeksConnection: null
     },
     {
       id: 'fw-9',
       firewallNumber: 9,
-      narrative: 'Final security layer. Calculate override code.',
-      expression: '467 + 285 = ?',
-      correctAnswer: 752,
-      operation: 'ADD',
-      operands: [467, 285],
-      teks: '3.4A'
+      narrative: 'Pepper divides 18 energy cores equally into 3 storage containers.',
+      expression: '18 \u00F7 3 = ?',
+      correctAnswer: 6,
+      operation: 'DIVIDE',
+      operands: [18, 3],
+      teks: '3.3A',
+      primaryType: 'computation',
+      difficulty: 'hard',
+      diagnosticFor: [],
+      answerType: 'integer',
+      scienceTeksConnection: null
     },
     {
       id: 'fw-10',
       firewallNumber: 10,
-      narrative: 'FINAL FIREWALL. This is it, recruits.',
-      expression: '25 × 4 = ?',
-      correctAnswer: 100,
-      operation: 'MULTIPLY',
-      operands: [25, 4],
-      teks: '3.4F'
+      narrative: 'FINAL FIREWALL. Calculate the override code to access the arc reactor plans.',
+      expression: '803 - 467 = ?',
+      correctAnswer: 336,
+      operation: 'SUBTRACT',
+      operands: [803, 467],
+      teks: '3.4A',
+      primaryType: 'computation',
+      difficulty: 'hard',
+      diagnosticFor: ['borrowing-across-zero'],
+      answerType: 'integer',
+      scienceTeksConnection: null
     }
   ],
 
@@ -121,40 +174,40 @@ const TEST_PROBLEMS = {
     {
       id: 'fury-1',
       afterFirewall: 3,
-      question: 'What is the main function of leaves on a plant?',
+      question: 'Agent verification protocol: Which of these is an example of a force acting on an object?',
       options: [
-        { letter: 'A', text: 'To make food through photosynthesis' },
-        { letter: 'B', text: 'To absorb water from the soil' },
-        { letter: 'C', text: 'To attract bees for pollination' },
-        { letter: 'D', text: 'To produce seeds' }
+        { letter: 'A', text: 'A magnet pulling a paperclip toward it' },
+        { letter: 'B', text: 'A rock sitting still on a table' },
+        { letter: 'C', text: 'The color of a ball changing in sunlight' },
+        { letter: 'D', text: 'Water evaporating from a puddle' }
       ],
       correctAnswer: 'A',
-      teks: '3.13B'
+      teks: '3.7A'
     },
     {
       id: 'fury-2',
       afterFirewall: 6,
-      question: 'What state of matter has a definite shape and volume?',
+      question: 'SHIELD science clearance check: What physical property can you measure to tell solids, liquids, and gases apart?',
       options: [
-        { letter: 'A', text: 'Gas' },
-        { letter: 'B', text: 'Liquid' },
-        { letter: 'C', text: 'Solid' },
-        { letter: 'D', text: 'Plasma' }
+        { letter: 'A', text: 'Color \u2014 solids are always darker than liquids' },
+        { letter: 'B', text: 'Shape \u2014 solids keep their shape, liquids take the shape of their container' },
+        { letter: 'C', text: 'Weight \u2014 gases always weigh more than liquids' },
+        { letter: 'D', text: 'Temperature \u2014 solids are always colder than gases' }
       ],
-      correctAnswer: 'C',
-      teks: '3.6B'
+      correctAnswer: 'B',
+      teks: '3.6A'
     },
     {
       id: 'fury-3',
       afterFirewall: 9,
-      question: 'Which force pulls objects toward Earth?',
+      question: 'Final security verification: What happens when you push a ball that is sitting still on a flat surface?',
       options: [
-        { letter: 'A', text: 'Magnetism' },
-        { letter: 'B', text: 'Friction' },
-        { letter: 'C', text: 'Gravity' },
-        { letter: 'D', text: 'Electricity' }
+        { letter: 'A', text: 'Nothing \u2014 the ball cannot move on its own' },
+        { letter: 'B', text: 'The ball moves in the direction you pushed it' },
+        { letter: 'C', text: 'The ball moves in the opposite direction of the push' },
+        { letter: 'D', text: 'The ball rises up into the air' }
       ],
-      correctAnswer: 'C',
+      correctAnswer: 'B',
       teks: '3.7A'
     }
   ]

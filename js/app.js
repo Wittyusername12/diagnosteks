@@ -644,7 +644,7 @@ const App = {
   // ============================================
   // MISSION CONFIGURATION
   // ============================================
-  generateMission() {
+  async generateMission() {
     // Validate selections
     if (this.state.selectedMathTeks.length === 0) {
       this.elements.teksValidationMessage.textContent = 'Select at least 1 math protocol';
@@ -654,6 +654,74 @@ const App = {
       this.elements.teksValidationMessage.textContent = 'Select at least 1 science protocol';
       return;
     }
+
+    // Get cross-curricular toggle state
+    const crossCurricularToggle = document.getElementById('cross-curricular-toggle');
+    const crossCurricular = crossCurricularToggle ? crossCurricularToggle.checked : true;
+
+    // Disable button to prevent double-clicks
+    const generateBtn = document.getElementById('btn-generate-mission');
+    if (generateBtn) {
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'GENERATING...';
+    }
+
+    // Show progress indicator
+    const msg = this.elements.teksValidationMessage;
+    msg.style.cssText = 'color: #00d4ff; font-family: Orbitron, sans-serif; font-size: 1.1rem; text-align: center; padding: 1rem 0;';
+    msg.textContent = 'GENERATING MISSION PROTOCOLS...';
+    this.updateMissionLog('[GEN] Contacting Groq API...');
+
+    try {
+      const result = await window.cerebrasAPI.generateMission(
+        this.state.selectedGrade,
+        this.state.selectedMathTeks,
+        this.state.selectedScienceTeks,
+        {
+          crossCurricular,
+          onMathComplete: () => {
+            msg.textContent = 'MATH PROTOCOLS LOADED... GENERATING SCIENCE PROTOCOLS...';
+            this.updateMissionLog('[GEN] Math problems received');
+          }
+        }
+      );
+
+      msg.textContent = 'ALL PROTOCOLS LOADED. CONFIGURING MISSION...';
+      this.updateMissionLog(`[GEN] AI generated ${result.math.length} math + ${result.science.length} science`);
+
+      // Store generated problems for game consumption
+      window.TEST_PROBLEMS.math = result.math;
+      window.TEST_PROBLEMS.science = result.science;
+
+      // Store combined array for console debugging
+      this.missionState.problems = [...result.math, ...result.science];
+      window.missionState = this.missionState;
+
+      console.log('[Generation] Mission problems:', result);
+
+      // Brief pause for UX
+      await new Promise(r => setTimeout(r, 500));
+
+    } catch (error) {
+      console.error('[Generation] API call failed:', error);
+      msg.style.color = '#ff6b35';
+      msg.textContent = 'GENERATION FAILED. LOADING BACKUP PROTOCOLS...';
+      this.updateMissionLog('[GEN] API failed \u2014 using fallback problems');
+
+      // TEST_PROBLEMS already has fallback data from test-problems.js
+      this.missionState.problems = [...window.TEST_PROBLEMS.math, ...window.TEST_PROBLEMS.science];
+      window.missionState = this.missionState;
+
+      await new Promise(r => setTimeout(r, 1500));
+    }
+
+    // Reset button and progress indicator
+    if (generateBtn) {
+      generateBtn.disabled = false;
+      generateBtn.textContent = 'GENERATE MISSION';
+    }
+    msg.style.cssText = '';
+    msg.textContent = '';
 
     // Update summary screen
     this.elements.summaryGrade.textContent = `GRADE ${this.state.selectedGrade}`;
@@ -765,6 +833,9 @@ const App = {
    * Start a new mission - initialize all gameplay state
    */
   startMission() {
+    // Preserve generated problems through reset
+    const savedProblems = this.missionState.problems;
+
     // Reset mission state
     this.missionState = {
       currentFirewall: 1,
@@ -782,8 +853,10 @@ const App = {
       widowIntroPlayed: false,
       widowAppearances: 0,
       lastWidowFirewall: -10,
-      wrongAttemptsThisFirewall: 0
+      wrongAttemptsThisFirewall: 0,
+      problems: savedProblems || [...window.TEST_PROBLEMS.math, ...window.TEST_PROBLEMS.science]
     };
+    window.missionState = this.missionState;
 
     this.state.missionInProgress = true;
     this.state.currentFirewall = 1;

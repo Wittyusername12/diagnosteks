@@ -179,6 +179,7 @@ VALID OPERATION CODES:
 
 ANSWER TYPES:
 - For computation (ADD, SUBTRACT, MULTIPLY, DIVIDE): operands as positive integers, answerType = "integer"
+- For FRACTION operations (FRACTION_ADD, FRACTION_SUBTRACT, FRACTION_MULTIPLY): operands as fraction objects {"numerator": N, "denominator": D}, answerType = "fraction"
 - For COMPARE: two operands, answerType = "comparison", do NOT include correctAnswer
 - For IDENTIFY, CONCEPTUAL: "options" array and "correctAnswer" letter, answerType = "multipleChoice"
 
@@ -192,6 +193,7 @@ CRITICAL RULES:
 4. For DIVIDE: first operand must be evenly divisible by second.
 5. Mix operations across the ${count} problems when the selected TEKS allow it.
 6. Use ONLY the TEKS codes listed above.
+7. Every narrative MUST be a complete sentence that clearly describes a specific scenario. BAD: "Tony Stark's lab has" (incomplete fragment). GOOD: "Tony Stark needs to combine two containers of arc reactor fluid in his lab. How much fluid does he have in total?" Always write complete thoughts that explain the situation and what needs to be solved.
 
 DIFFICULTY PROGRESSION:
 - Problems 1-3: easier (simpler numbers, one-step). Set "difficulty": "easy"
@@ -383,6 +385,28 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
         };
       }
 
+      // For fraction operations: handle fraction object operands
+      if (operation.startsWith('FRACTION_')) {
+        const operands = this._validateFractionOperands(p.operands);
+        const correctAnswer = this._computeFractionAnswer(operation, operands);
+        const expression = this._formatFractionExpression(operation, operands);
+        return {
+          id: `fw-${firewallNumber}`,
+          firewallNumber,
+          narrative: p.narrative || `Firewall ${firewallNumber} detected.`,
+          expression,
+          correctAnswer,
+          operation,
+          operands,
+          teks: p.teksCode || p.teks || '',
+          primaryType: p.primaryType || 'computation',
+          difficulty: p.difficulty || 'medium',
+          diagnosticFor: p.diagnosticFor || [],
+          answerType: 'fraction',
+          scienceTeksConnection: p.scienceTeksConnection || null
+        };
+      }
+
       // Standard computation: JS calculates the answer independently
       const operands = this._validateOperands(p.operands, operation);
       const correctAnswer = this._computeAnswer(operation, operands);
@@ -556,6 +580,70 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
       'FRACTION_ADD': '+', 'FRACTION_SUBTRACT': '-', 'FRACTION_MULTIPLY': '\u00D7'
     };
     return `${a} ${symbols[operation] || '+'} ${b} = ?`;
+  }
+
+  /* =========================================
+     FRACTION HELPERS
+     ========================================= */
+
+  _gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+      [a, b] = [b, a % b];
+    }
+    return a || 1;
+  }
+
+  _normalizeFraction(n) {
+    if (typeof n === 'object' && n !== null && 'numerator' in n) {
+      return { numerator: Number(n.numerator) || 0, denominator: Number(n.denominator) || 1 };
+    }
+    const num = Number(n);
+    return { numerator: isNaN(num) ? 0 : num, denominator: 1 };
+  }
+
+  _simplifyFraction(num, den) {
+    if (den === 0) return { numerator: 0, denominator: 1 };
+    if (den < 0) { num = -num; den = -den; }
+    const g = this._gcd(Math.abs(num), den);
+    return { numerator: num / g, denominator: den / g };
+  }
+
+  _validateFractionOperands(operands) {
+    if (!Array.isArray(operands) || operands.length < 2) {
+      return [{ numerator: 1, denominator: 2 }, { numerator: 1, denominator: 4 }];
+    }
+    return [this._normalizeFraction(operands[0]), this._normalizeFraction(operands[1])];
+  }
+
+  _computeFractionAnswer(operation, operands) {
+    const [a, b] = operands;
+    let num, den;
+    switch (operation) {
+      case 'FRACTION_ADD':
+        num = a.numerator * b.denominator + b.numerator * a.denominator;
+        den = a.denominator * b.denominator;
+        break;
+      case 'FRACTION_SUBTRACT':
+        num = a.numerator * b.denominator - b.numerator * a.denominator;
+        den = a.denominator * b.denominator;
+        break;
+      case 'FRACTION_MULTIPLY':
+        num = a.numerator * b.numerator;
+        den = a.denominator * b.denominator;
+        break;
+      default:
+        num = a.numerator * b.denominator + b.numerator * a.denominator;
+        den = a.denominator * b.denominator;
+    }
+    return this._simplifyFraction(num, den);
+  }
+
+  _formatFractionExpression(operation, operands) {
+    const fmt = (f) => f.denominator === 1 ? `${f.numerator}` : `${f.numerator}/${f.denominator}`;
+    const symbols = { 'FRACTION_ADD': '+', 'FRACTION_SUBTRACT': '-', 'FRACTION_MULTIPLY': '\u00D7' };
+    return `${fmt(operands[0])} ${symbols[operation] || '+'} ${fmt(operands[1])} = ?`;
   }
 
   /* =========================================

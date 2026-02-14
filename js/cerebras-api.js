@@ -182,6 +182,9 @@ ANSWER TYPES:
 - For COMPARE: two operands, answerType = "comparison", do NOT include correctAnswer
 - For IDENTIFY, CONCEPTUAL: "options" array and "correctAnswer" letter, answerType = "multipleChoice"
 
+COMPARE NARRATIVE REQUIREMENTS:
+For COMPARE problems: the narrative MUST clearly describe two quantities being compared. Example: "Jarvis scanned 4,567 data packets from the east server and 4,576 from the west server. Which server processed more packets? Compare the numbers." The expression should be formatted as "operand1 ? operand2" where ? is what the student determines. Do NOT use incomplete narratives like "Tony Stark's lab has" — always explain WHAT is being compared and WHY.
+
 CRITICAL RULES:
 1. Do NOT include any answer or correctAnswer field for computation problems. The game engine computes answers independently.
 2. For computation: operands must produce a POSITIVE WHOLE NUMBER result.

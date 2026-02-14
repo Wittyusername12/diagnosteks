@@ -819,6 +819,142 @@ const App = {
     this.elements.firewallCount.textContent = `[${this.state.currentFirewall - 1}/${this.state.totalFirewalls} FIREWALLS]`;
   },
 
+  /**
+   * Set up the answer input area based on the current problem's answerType.
+   * For comparison: show >, <, = buttons. For multipleChoice: show A/B/C/D buttons.
+   * For default (integer/decimal/fraction): show the standard text input + DECRYPT.
+   */
+  _setupAdaptiveInput(problem) {
+    const answerType = problem.answerType || 'integer';
+    const answerSection = this.elements.answerInput.parentElement;
+    const decryptBtn = document.getElementById('btn-decrypt');
+
+    // Remove any existing adaptive buttons from a previous problem
+    const existing = document.getElementById('adaptive-answer-area');
+    if (existing) existing.remove();
+
+    if (answerType === 'comparison') {
+      // Hide text input and DECRYPT button
+      this.elements.answerInput.style.display = 'none';
+      if (decryptBtn) decryptBtn.style.display = 'none';
+
+      const container = document.createElement('div');
+      container.id = 'adaptive-answer-area';
+      container.style.cssText = 'display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 100%;';
+
+      const label = document.createElement('div');
+      label.style.cssText = 'font-family: Orbitron, sans-serif; font-size: 0.9rem; color: #00d4ff; letter-spacing: 0.15em; text-transform: uppercase;';
+      label.textContent = 'CHOOSE THE CORRECT SYMBOL';
+      container.appendChild(label);
+
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display: flex; gap: 1rem; justify-content: center;';
+
+      ['<', '=', '>'].forEach(symbol => {
+        const btn = document.createElement('button');
+        btn.textContent = symbol;
+        btn.style.cssText = 'font-family: Orbitron, sans-serif; font-size: 2rem; font-weight: 700; color: #00d4ff; background: rgba(0, 212, 255, 0.08); border: 2px solid #00d4ff; min-width: 80px; min-height: 70px; cursor: pointer; transition: all 0.2s ease;';
+        btn.addEventListener('mouseenter', () => {
+          btn.style.background = 'rgba(0, 212, 255, 0.2)';
+          btn.style.boxShadow = '0 0 15px rgba(0, 212, 255, 0.3)';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.background = 'rgba(0, 212, 255, 0.08)';
+          btn.style.boxShadow = 'none';
+        });
+        btn.addEventListener('click', () => {
+          if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
+          this.submitAdaptiveAnswer(symbol);
+        });
+        btnRow.appendChild(btn);
+      });
+
+      container.appendChild(btnRow);
+      answerSection.appendChild(container);
+
+    } else if (answerType === 'multipleChoice') {
+      // Hide text input and DECRYPT button
+      this.elements.answerInput.style.display = 'none';
+      if (decryptBtn) decryptBtn.style.display = 'none';
+
+      const options = problem.options || [];
+
+      const container = document.createElement('div');
+      container.id = 'adaptive-answer-area';
+      container.style.cssText = 'display: flex; flex-direction: column; gap: 0.6rem; width: 100%;';
+
+      const label = document.createElement('div');
+      label.style.cssText = 'font-family: Orbitron, sans-serif; font-size: 0.9rem; color: #00d4ff; letter-spacing: 0.15em; text-transform: uppercase; text-align: center;';
+      label.textContent = 'SELECT YOUR ANSWER';
+      container.appendChild(label);
+
+      const grid = document.createElement('div');
+      grid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;';
+
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'font-family: Rajdhani, sans-serif; font-size: 1.1rem; font-weight: 600; color: #00d4ff; background: rgba(0, 212, 255, 0.08); border: 2px solid #00d4ff; padding: 0.75rem 1rem; min-height: 60px; cursor: pointer; transition: all 0.2s ease; text-align: left; display: flex; align-items: center; gap: 0.75rem;';
+
+        const letterSpan = document.createElement('span');
+        letterSpan.style.cssText = 'font-family: Orbitron, sans-serif; font-size: 1.3rem; font-weight: 700; min-width: 1.5rem;';
+        letterSpan.textContent = opt.letter;
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = opt.text;
+
+        btn.appendChild(letterSpan);
+        btn.appendChild(textSpan);
+
+        btn.addEventListener('mouseenter', () => {
+          btn.style.background = 'rgba(0, 212, 255, 0.2)';
+          btn.style.boxShadow = '0 0 15px rgba(0, 212, 255, 0.3)';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.background = 'rgba(0, 212, 255, 0.08)';
+          btn.style.boxShadow = 'none';
+        });
+        btn.addEventListener('click', () => {
+          if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
+          this.submitAdaptiveAnswer(opt.letter);
+        });
+
+        grid.appendChild(btn);
+      });
+
+      container.appendChild(grid);
+      answerSection.appendChild(container);
+
+    } else {
+      // Default: show text input + DECRYPT button (integer, decimal, fraction)
+      this.elements.answerInput.style.display = '';
+      if (decryptBtn) decryptBtn.style.display = '';
+
+      this.elements.answerInput.value = '';
+      this.elements.answerInput.classList.remove('correct', 'incorrect');
+      this.elements.answerInput.focus();
+    }
+  },
+
+  /**
+   * Submit an answer from an adaptive button (comparison symbol or MC letter).
+   * Uses the same correct/wrong answer flow as checkAnswer().
+   */
+  submitAdaptiveAnswer(answer) {
+    if (typeof animator !== 'undefined' && animator.isAnimating) {
+      return;
+    }
+    if (!this.missionState.currentProblem) {
+      return;
+    }
+
+    const correctAnswer = this.missionState.currentProblem.correctAnswer;
+    if (answer === correctAnswer) {
+      this.handleCorrectAnswer();
+    } else {
+      this.handleWrongAnswer();
+    }
+  },
+
   // Navigate to Fury screen (for testing)
   showFuryScreen() {
     this.updateMissionLog('[INT] Nick Fury intercepted');
@@ -1120,10 +1256,19 @@ const App = {
     if (typeof soundManager !== 'undefined') soundManager.play('ui-type');
     console.log('[Sound] New problem loaded → ui-type');
 
-    // Clear answer input
-    this.elements.answerInput.value = '';
-    this.elements.answerInput.classList.remove('correct', 'incorrect');
-    this.elements.answerInput.focus();
+    // Classroom TV readability: increase font sizes (inline styles)
+    this.elements.problemNarrative.style.fontSize = '1.4rem';
+    this.elements.problemNarrative.style.lineHeight = '1.4';
+    this.elements.problemExpression.style.fontSize = '2.5rem';
+    this.elements.problemExpression.style.fontWeight = '700';
+    this.elements.problemExpression.style.lineHeight = '1.3';
+    this.elements.jarvisDialogue.style.fontSize = '1.1rem';
+    this.elements.answerInput.style.fontSize = '1.5rem';
+    const decryptBtn = document.getElementById('btn-decrypt');
+    if (decryptBtn) decryptBtn.style.fontSize = '1.2rem';
+
+    // Set up adaptive answer input based on problem's answerType
+    this._setupAdaptiveInput(problem);
 
     // Update firewall grid and progress
     this.updateFirewallGrid();
@@ -1755,9 +1900,12 @@ const App = {
           this.updateMissionLog('[KEY] R pressed - Resume');
           break;
         case 'Enter':
-          // Submit answer on firewall screen
+          // Submit answer on firewall screen (text input problems only)
           if (this.state.currentScreen === 'firewall') {
-            this.checkAnswer();
+            const at = this.missionState.currentProblem?.answerType;
+            if (at !== 'comparison' && at !== 'multipleChoice') {
+              this.checkAnswer();
+            }
           }
           break;
         case 'KeyF':

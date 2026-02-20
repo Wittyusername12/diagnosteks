@@ -5,6 +5,16 @@
    Cloudflare Worker → Groq inference
    ========================================= */
 
+// Combine all exemplar batches into a single pool (loaded via script tags before this file)
+const ALL_EXEMPLARS = [
+  ...(typeof PROBLEM_EXEMPLARS !== 'undefined' ? PROBLEM_EXEMPLARS : []),
+  ...(typeof BATCH2_SUPPORTING_EXEMPLARS !== 'undefined' ? BATCH2_SUPPORTING_EXEMPLARS : []),
+  ...(typeof BATCH3_MISSING_TEKS_EXEMPLARS !== 'undefined' ? BATCH3_MISSING_TEKS_EXEMPLARS : [])
+];
+if (ALL_EXEMPLARS.length > 0) {
+  console.log(`[CerebrasAPI] Exemplar bank loaded: ${ALL_EXEMPLARS.length} total exemplars`);
+}
+
 class CerebrasAPI {
   constructor(config) {
     this.config = config || window.CEREBRAS_CONFIG || {};
@@ -67,9 +77,16 @@ class CerebrasAPI {
       scienceTeksDescriptions = this._getTeksDescriptions(gradeLevel, 'science', scienceTeksCodes);
     }
 
+    // Select relevant few-shot exemplars from the combined bank
+    let exemplars = [];
+    if (typeof selectExemplars === 'function' && ALL_EXEMPLARS.length > 0) {
+      exemplars = selectExemplars(teksCodes, ALL_EXEMPLARS);
+      console.log(`[CerebrasAPI] Selected ${exemplars.length} exemplars for TEKS: ${teksCodes.join(', ')}`);
+    }
+
     const messages = [
-      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, scienceTeksDescriptions, crossCurricular) },
-      { role: 'user', content: `Generate 10 math problems for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}` }
+      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, scienceTeksDescriptions, crossCurricular, exemplars) },
+      { role: 'user', content: `Generate 10 math problems for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}. Output operation and operands so JavaScript can independently calculate each answer.` }
     ];
 
     const raw = await this._callWorker(messages, 0.7);
@@ -142,10 +159,22 @@ class CerebrasAPI {
      PROMPT BUILDERS
      ========================================= */
 
-  _buildMathSystemPrompt(gradeLevel, teksDescriptions, scienceTeksDescriptions, crossCurricular) {
+  _buildMathSystemPrompt(gradeLevel, teksDescriptions, scienceTeksDescriptions, crossCurricular, exemplars) {
     const count = this.config.mathProblemsPerMission || 10;
 
-    let prompt = `You are a K-5 math problem generator for an Iron Man themed classroom mission. You generate structured JSON problem data. You do NOT calculate answers \u2014 you provide the operation and operands, and separate software calculates the answer independently.
+    // Grade-specific number ranges
+    const numberRanges = {
+      1: 'Addition/Subtraction: within 20. No multiplication or division.',
+      2: 'Addition/Subtraction: within 1,000. No multiplication or division.',
+      3: 'Addition/Subtraction: within 1,000. Multiplication: facts to 10\u00D710. Division: related division facts.',
+      4: 'Addition/Subtraction: within 10,000. Multiplication: 4-digit \u00D7 1-digit, 2-digit \u00D7 2-digit. Division: 4-digit \u00F7 1-digit.',
+      5: 'Decimals to thousandths. Multiplication: decimals to hundredths. Division: decimals, fractions.'
+    };
+
+    // === BLOCK 1: ROLE AND RULES ===
+    let prompt = `You are a TEKS-aligned math problem generator for Texas elementary classrooms, themed around Iron Man and the Avengers. You generate structured JSON problem data. You do NOT calculate answers \u2014 you provide the operation and operands, and separate software calculates the answer independently.
+
+All generated problems should use real-world contexts when appropriate, be solvable through clear mathematical reasoning, and be expressed in grade-appropriate language.
 
 Respond with ONLY a JSON object. No markdown, no explanation, no preamble.
 
@@ -170,6 +199,9 @@ THE TEACHER SELECTED THESE MATH TEKS:
 ${teksDescriptions}
 Every problem MUST target one of these standards. Distribute problems across the selected TEKS \u2014 do not put all problems on one standard.
 
+GRADE ${gradeLevel} NUMBER RANGES:
+${numberRanges[gradeLevel] || numberRanges[3]}
+
 VALID OPERATION CODES:
 - ADD, SUBTRACT, MULTIPLY, DIVIDE \u2014 standard integer arithmetic
 - FRACTION_ADD, FRACTION_SUBTRACT, FRACTION_MULTIPLY \u2014 fraction operations (use fraction objects: {"numerator": 1, "denominator": 4})
@@ -184,7 +216,7 @@ ANSWER TYPES:
 - For IDENTIFY, CONCEPTUAL: "options" array and "correctAnswer" letter, answerType = "multipleChoice"
 
 COMPARE NARRATIVE REQUIREMENTS:
-For COMPARE problems: the narrative MUST clearly describe two quantities being compared. Example: "Jarvis scanned 4,567 data packets from the east server and 4,576 from the west server. Which server processed more packets? Compare the numbers." The expression should be formatted as "operand1 ? operand2" where ? is what the student determines. Do NOT use incomplete narratives like "Tony Stark's lab has" — always explain WHAT is being compared and WHY.
+For COMPARE problems: the narrative MUST clearly describe two quantities being compared. Example: "Jarvis scanned 4,567 data packets from the east server and 4,576 from the west server. Which server processed more packets? Compare the numbers." The expression should be formatted as "operand1 ? operand2" where ? is what the student determines. Do NOT use incomplete narratives like "Tony Stark's lab has" \u2014 always explain WHAT is being compared and WHY.
 
 CRITICAL RULES:
 1. Do NOT include any answer or correctAnswer field for computation problems. The game engine computes answers independently.
@@ -204,14 +236,19 @@ NARRATIVE WRAPPING:
 Each problem needs a 1-2 sentence Iron Man themed narrative (max 25 words). Use characters: Tony Stark, Jarvis, Pepper Potts, the Avengers. Settings: Stark Industries lab, the Helicarrier, Avengers Tower. Keep narratives age-appropriate and engaging for elementary students.
 
 DIAGNOSTIC PROBLEMS:
-Design at least 2 problems to reveal common student errors. Examples: carrying/borrowing across zeros, reversible digit answers, fraction misconceptions. Set "diagnosticFor" to an array describing the misconception (e.g., ["borrowing-across-zero"]).
+Design at least 2 problems to reveal common student errors. Examples: carrying/borrowing across zeros, reversible digit answers, fraction misconceptions. Set "diagnosticFor" to an array describing the misconception (e.g., ["borrowing-across-zero"]).`;
 
-GRADE APPROPRIATENESS:
-This is grade ${gradeLevel}. Use number ranges appropriate for this grade level. Do not generate problems beyond what the selected TEKS require.
+    // === BLOCK 2: FEW-SHOT EXEMPLARS ===
+    if (exemplars && exemplars.length > 0) {
+      prompt += `
 
-PROCESS STANDARDS:
-All problems should use real-world contexts, be solvable through clear mathematical reasoning, and use grade-appropriate language.`;
+FEW-SHOT EXEMPLARS:
+Study these examples carefully. They show the quality standard you must match \u2014 the difficulty level, narrative style, and distractor reasoning. Generate ORIGINAL problems inspired by these patterns. Do NOT copy or closely paraphrase any example.
 
+${JSON.stringify(exemplars, null, 2)}`;
+    }
+
+    // === BLOCK 3: CROSS-CURRICULAR + FINAL INSTRUCTIONS ===
     if (crossCurricular && scienceTeksDescriptions) {
       prompt += `
 

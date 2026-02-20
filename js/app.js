@@ -669,7 +669,7 @@ const App = {
     // Show progress indicator
     const msg = this.elements.teksValidationMessage;
     msg.style.cssText = 'color: #00d4ff; font-family: Orbitron, sans-serif; font-size: 1.1rem; text-align: center; padding: 1rem 0;';
-    msg.textContent = 'GENERATING MISSION PROTOCOLS...';
+    msg.textContent = 'GENERATING 10 MATH PROBLEMS VIA GROQ...';
     this.updateMissionLog('[GEN] Contacting Groq API...');
 
     try {
@@ -679,14 +679,14 @@ const App = {
         this.state.selectedScienceTeks,
         {
           crossCurricular,
-          onMathComplete: () => {
-            msg.textContent = 'MATH PROTOCOLS LOADED... GENERATING SCIENCE PROTOCOLS...';
-            this.updateMissionLog('[GEN] Math problems received');
+          onMathComplete: (math) => {
+            msg.textContent = `${math.length} MATH PROBLEMS LOADED... GENERATING 3 SCIENCE QUESTIONS...`;
+            this.updateMissionLog(`[GEN] ${math.length} math problems received`);
           }
         }
       );
 
-      msg.textContent = 'ALL PROTOCOLS LOADED. CONFIGURING MISSION...';
+      msg.textContent = `ALL ${result.math.length + result.science.length} PROBLEMS LOADED. CONFIGURING MISSION...`;
       this.updateMissionLog(`[GEN] AI generated ${result.math.length} math + ${result.science.length} science`);
 
       // Store generated problems for game consumption

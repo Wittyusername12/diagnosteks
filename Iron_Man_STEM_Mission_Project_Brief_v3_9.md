@@ -1,8 +1,10 @@
-# Iron Man STEM Mission - Complete Project Brief v3.8
+# Iron Man STEM Mission - Complete Project Brief v3.9
 
-**Version:** 3.8  
-**Last Updated:** February 13, 2026  
-**Status:** Active Development -- Phase 3 COMPLETE, Phase 4 IN PROGRESS
+**Version:** 3.9  
+**Last Updated:** February 20, 2026  
+**Status:** Active Development -- Phase 3 COMPLETE, Phase 4 IN PROGRESS, Exemplar Bank COMPLETE
+
+**v3.9 Changes:** Added Few-Shot Exemplar Bank Architecture (Section 7) -- complete STAAR-extracted problem exemplar bank covering 100% of Grade 3 Math TEKS (135 items across 3 batches: 65 Readiness, 67 Supporting, 3 Synthetic for never-tested TEKS). Documented 21-field Storage Schema and 7-field Injection Schema. Added exemplar selection function spec with TEKS-budget scaling and diversity maximization. Documented 12-code simplified operation vocabulary for exemplar metadata (distinct from generation pipeline's 15 operation codes). Added three exemplar bank files and five audit reports to Files Reference. Updated Asset Status table with Exemplar Bank COMPLETE row. Updated Phase 4 Prompt 2 to reference exemplar bank as prerequisite input. Added few-shot prompting research report to Research Reports list. Updated Known Issues with exemplar bank completion milestone.
 
 **v3.8 Changes:** Migrated AI backend from Cerebras to Groq (Llama 3.3 70B Versatile) via Cloudflare Worker proxy. Fixed all "Replit" references to local file:// deployment. Added Problem Type Taxonomy (7 types covering all TEKS content standards). Expanded Problem Schema with primaryType, validationTypes, diagram descriptor, and answer format fields. Added Process Standards exclusion note (handled as system-prompt defaults, not selectable parameters). Added Cross-Curricular Mode for science-themed math word problems. Added Teacher Review Screen spec (Option C split panel with per-problem feedback). Added Multi-Layer Validation Pipeline (5 layers, Tier 2 configuration with self-consistency voting and Chain-of-Verification). Added teks-rules.json file spec. Added SVG Diagram Generator architecture (template library with registry pattern, HUD theming, GSAP DrawSVGPlugin animation). Added PDF Upload architecture (pdf.js extraction, Groq parsing, hybrid missions). Rewrote Phase 4 as Prompts 2-6 build sequence. Updated Section 13 implementation files. Updated Asset Status, Phase Summary Table, and Important Reminders.
 
@@ -39,6 +41,7 @@
    - [Problem Type Taxonomy](#problem-type-taxonomy) [NEW v3.8]
    - [Cross-Curricular Mode](#cross-curricular-mode) [NEW v3.8]
    - [Process Standards Note](#process-standards-note) [NEW v3.8]
+   - [Few-Shot Exemplar Bank](#few-shot-exemplar-bank) [NEW v3.9]
 8. [Mission Integration Architecture](#8-mission-integration-architecture) [NEW]
 9. [Teacher Review Screen](#9-teacher-review-screen) [NEW v3.8]
 10. [Multi-Layer Validation Pipeline](#10-multi-layer-validation-pipeline) [NEW v3.8]
@@ -1207,6 +1210,160 @@ The system prompt includes a brief preamble: "All generated problems should use 
 
 This covers the spirit of all seven process standards without adding teacher-facing complexity.
 
+### Few-Shot Exemplar Bank [NEW v3.9]
+
+**Purpose:** The Groq/Llama 3.3 70B system prompt includes carefully selected few-shot exemplars that show the LLM what a high-quality STAAR-style problem looks like. Without these, the LLM generates syntactically valid but pedagogically weak problems -- correct math with useless distractors, missing diagnostic value, and inconsistent difficulty targeting. The exemplar bank solves this by providing real STAAR problems (and 3 synthetic items for never-tested TEKS) as concrete patterns for the LLM to emulate.
+
+**Research basis:** The few-shot prompting research (see `Few-Shot_Prompting_for_STAAR-Quality_Educational_Content_with_Llama_3_3__Optimal_Exemplar_Selection__Formatting__and_Dynamic_Retrieval_Strategies.md`) established that 3-5 carefully curated exemplars per TEKS dramatically outperform zero-shot for Llama 3.3 70B. Quality and relevance matter more than quantity. Dynamic selection (picking exemplars that match the specific TEKS being generated) matches or exceeds 10+ static examples at a fraction of the token cost. The exemplar bank is the raw material that makes dynamic selection possible.
+
+**Three-Tier Flywheel Architecture:**
+
+The exemplar system has three layers that reinforce each other over time:
+
+**Tier 1 -- Seed Bank (this file set).** 135 gold-standard exemplars extracted from official STAAR released tests (2019-2025) plus 3 synthetic items. Read-only, admin-maintained. The selection function draws from this bank for EVERY system prompt, picking 1-5 relevant exemplars per TEKS depending on how many TEKS are selected (not all 135 -- see selection function below). This is what Claude Code sessions implement.
+
+**Tier 2 -- teks-rules.json constraints.** Static validation rules per TEKS (allowed number ranges, permitted operations, denominator sets, step counts). Constrains what the LLM can generate independently of exemplars. See Section 7 "teks-rules.json File Spec."
+
+**Tier 3 -- Organic Growth Library (future).** Every teacher-approved problem becomes a candidate exemplar. Stored in localStorage per teacher. Over time, the best teacher-vetted problems supplement the seed bank, creating a personalized exemplar set per classroom. Selection ratio: always pull at least 1 from seed bank, fill remaining slots with teacher exemplars if available.
+
+**Batch Structure:**
+
+The exemplar bank was extracted in three batches following a priority-ordered plan:
+
+| Batch | Scope | Items | TEKS | Source | Status |
+|-------|-------|-------|------|--------|--------|
+| 1 | Readiness Standards | 65 | 13 | STAAR 2019-2025 | COMPLETE, audited (Batch 1 Pass) |
+| 2 | Supporting Standards | 67 | 30 | STAAR 2019-2025 | COMPLETE, audited (Passes 1-5) |
+| 3 | Missing TEKS | 3 | 3 | Synthetic (author-drafted) | COMPLETE, teacher-approved |
+| **Total** | **All Grade 3 Math** | **135** | **46** | -- | **100% TEKS coverage** |
+
+Readiness standards were extracted first because TEA weights them more heavily on STAAR (~60-65% of test) and they appear on every released exam. Supporting standards were extracted second. Three TEKS (3.3A, 3.9C, 3.9F) were never tested on any released STAAR exam 2019-2025, so synthetic items were drafted to match neighboring TEKS patterns and reviewed by a teacher.
+
+**Coverage Statistics:** 135 items across 46 unique TEKS. Average 2.9 items per TEKS. Excellent coverage (5+ items): 12 TEKS. Good coverage (3-4 items): 13 TEKS. Moderate (2 items): 11 TEKS. Single item: 10 TEKS (including 3 synthetic). Every Grade 3 Math TEKS has at least one exemplar.
+
+**Item Type Distribution (by `staarItemType` field):** 125 MultipleChoice (92.6%, includes 3 synthetic), 3 InlineChoice adapted to MC (2.2%), 2 DragAndDrop adapted to MC (1.5%), 2 HotSpot adapted to MC (1.5%), 2 Griddable/free-response (1.5%), 1 Multiselect (0.7%). All interactive STAAR items were successfully adapted to MC format while preserving original mathematical content. Adaptation faithfulness was verified item-by-item during audits. The 3 synthetic Batch 3 items are also MultipleChoice and are distinguishable by `source: "synthetic"` rather than a separate item type.
+
+**Storage Schema (21 fields):** Every exemplar in the bank has these fields. This is the archival format stored in the JS files.
+
+```javascript
+{
+  // --- IDENTIFICATION (6 fields) ---
+  teks: "3.4A",              // Canonical format "X.YZ" (normalized from TEA's varying formats)
+  source: "STAAR",           // "STAAR" for extracted items, "synthetic" for Batch 3
+  year: 2023,                // Test administration year (2026 for synthetic)
+  itemNumber: 12,            // Position on original test
+  grade: 3,                  // Always 3 for this bank
+  subject: "math",           // Always "math" for this bank
+
+  // --- PROBLEM CONTENT (5 fields) ---
+  questionStem: "A store has 456 books...",  // Full problem text (visual items describe the image inline)
+  answerType: "multipleChoice",              // "multipleChoice" | "multiselect" | "integer"
+  correctAnswer: "B",                        // string "B" | array ["C","E"] | null (griddable)
+  correctAnswerValue: 292,                   // number (for verifiable computation) | null (conceptual)
+  options: [                                 // array of 4+ options | null (griddable)
+    { letter: "A", text: "164" },
+    { letter: "B", text: "292" },
+    { letter: "C", text: "392" },
+    { letter: "D", text: "344" }
+  ],
+
+  // --- DISTRACTOR RATIONALES (1 field, object with 3 keys) ---
+  distractorRationales: {
+    A: "Subtracted in wrong direction (4-6 instead of 6-4 with regrouping)...",
+    C: "Did not regroup from the hundreds place...",
+    D: "Added instead of subtracted..."
+  },
+
+  // --- SELECTION METADATA (8 fields) ---
+  operation: "SUBTRACT",              // One of 12 codes (see below)
+  strand: "Number and Operations",    // Deterministic from TEKS prefix
+  readinessOrSupporting: "Readiness", // TEA classification
+  reportingCategory: 2,               // TEA's 4 reporting categories (1-4)
+  problemType: "Computation",         // Human-readable label
+  stepCount: 1,                       // 1 or 2 (for TEKS requiring both)
+  hasVisual: false,                   // true if original STAAR item had diagram/table/image
+  staarItemType: "MultipleChoice",    // Original format before adaptation
+
+  // --- QUALITY ANNOTATION (1 field) ---
+  whyThisIsGood: "Tests borrowing across zero in hundreds place..."  // 300-600 chars explaining diagnostic value
+}
+```
+
+**Type Conventions (polymorphic fields):**
+- `correctAnswer`: string `"B"` for MC, array `["C","E"]` for multiselect, `null` for free-response (griddable/equation editor)
+- `correctAnswerValue`: number `292` for verifiable numeric answers, `null` for conceptual questions where answer is a concept not a number
+- `options`: array of `{letter, text}` objects for MC/multiselect, `null` for free-response
+
+**Injection Schema (7 fields):** When exemplars are injected into the Groq system prompt, the 21-field storage schema is stripped down to 7 fields. The stripping function removes identification metadata, selection metadata, and fields the LLM doesn't need to see. Token cost varies by exemplar length (shortest ~160 tokens for terse items like griddables, longest ~660 tokens for items with long stems and detailed rationales, average ~400 across all 135 items in compact JSON). A typical mission selecting 3-4 TEKS injects 8-9 exemplars totaling ~3,200-3,600 tokens. The maximum case (10 exemplars) is ~4,000 tokens. This is well within the Llama 3.3 70B 128K context window and represents ~3% of the available budget.
+
+```javascript
+// toInjectionFormat() strips storage schema --> injection schema
+function toInjectionFormat(exemplar) {
+  return {
+    teks: exemplar.teks,
+    questionStem: exemplar.questionStem,
+    answerType: exemplar.answerType,
+    options: exemplar.options,
+    distractorRationales: exemplar.distractorRationales,
+    correctAnswer: exemplar.correctAnswer,
+    whyThisIsGood: exemplar.whyThisIsGood
+  };
+}
+```
+
+**Exemplar Selection Function:** The selection function picks the best N exemplars for a given set of TEKS, balancing coverage with diversity. It returns injection-ready 7-field items (calls `toInjectionFormat` internally -- do NOT apply `toInjectionFormat` again to its output).
+
+Budget scaling (how many exemplars per TEKS, with hard cap of 10 total):
+- 1 TEKS selected --> 5 exemplars
+- 2 TEKS --> 5 per TEKS = 10 total
+- 3 TEKS --> 3 per TEKS = 9 total
+- 4 TEKS --> 2 per TEKS = 8 total
+- 5 TEKS --> 2 per TEKS = 10 total
+- 6+ TEKS --> 1 per TEKS
+
+Formula: `perTeks = max(1, min(5, floor(10 / selectedTeks.length)))`. Hard cap: `maxTotal = 10` (applied via `.slice(0, maxTotal)` after selection).
+
+For each TEKS, the function filters the exemplar bank to matching items, then uses `diverseSelect()` to pick the best N while maximizing diversity across operation (Priority 1) and stepCount (Priority 2), with remaining slots filled from the pool. Teacher-edited exemplars (Tier 3, future) are preferred when available.
+
+**Exemplar Bank Operation Codes (12 codes):** These are the simplified codes used in the exemplar bank's `operation` field for selection diversity. They are distinct from the 15 generation pipeline operation codes listed earlier in this section -- the generation codes include prefixed variants like `FRACTION_ADD` that tell the LLM what to generate, while these simplified codes drive the selection function's within-TEKS diversity logic.
+
+`ADD`, `SUBTRACT`, `MULTIPLY`, `DIVIDE` (arithmetic), `COMPARE` (number/fraction comparison), `CLASSIFY` (shape/type identification), `REPRESENT` (place value, number forms, fraction models), `MEASURE` (perimeter, area, time, length), `DATA_INTERPRET` (reading charts, tables, graphs), `PATTERN` (input-output tables, sequences), `FINANCIAL` (money concepts), `CONCEPTUAL` (understanding checks).
+
+**Strand Mapping (deterministic from TEKS prefix):** `3.2x`/`3.3x`/`3.4x` --> "Number and Operations", `3.5x` --> "Algebraic Reasoning", `3.6x`/`3.7x` --> "Geometry and Measurement", `3.8x` --> "Data Analysis", `3.9x` --> "Personal Financial Literacy".
+
+**Extraction Conventions (documented during 5-pass audit):**
+- All TEKS codes normalized to canonical `X.YZ` format (e.g., TEA's `3.4(A)` or `3.2.4.A` --> `3.4A`)
+- 2019-2022 even-numbered items used F/G/H/J answer letters (TEA convention to reduce copying); all normalized to A/B/C/D during extraction with distractor rationales remapped accordingly
+- Interactive STAAR items (InlineChoice, DragAndDrop, HotSpot) adapted to MC format; original format preserved in `staarItemType` field for traceability
+- Griddable/EquationEditor items stored with `correctAnswer: null`, `options: null`, `correctAnswerValue: [numeric answer]`
+- Tables described inline in questionStem when data is fully representable as text (hasVisual may be false even though original test showed a formatted table, because the LLM has all needed data from the text description)
+
+**Quality Audit Summary (5 passes, all 67 Batch 2 items + spot checks on Batch 1):**
+
+| Finding | Severity | Count | Resolution |
+|---------|----------|-------|------------|
+| Strand naming inconsistency (2024-2025 used TEA RC names instead of prefix-based names) | MODERATE | 13 items | FIXED -- all normalized to prefix-based convention |
+| Rationale phrasing variation (same concept, different words vs TEA) | MINOR | 1 item | Left as-is (defensible) |
+| hasVisual=false for inline-described tables | MINOR | 2 items | Left as-is (LLM has all data) |
+| Stale header comments (wrong counts) | MINOR | 2 comments | FIXED |
+| Duplicate section header | COSMETIC | 1 | FIXED |
+| Wrong correct answer, TEKS code, or distractor mapping | CRITICAL | **0** | -- |
+
+Zero critical errors across 135 items. Every correct answer, TEKS code, reporting category, and distractor rationale verified against official TEA source documents (answer keys, rationale PDFs, test PDFs, CSV ground truth).
+
+**Exemplar Bank Files (all in project folder and GitHub repo):**
+- `Batch_1_readiness_standards_exemplars.js` -- 65 items, 13 Readiness TEKS, exports `PROBLEM_EXEMPLARS`. **Also exports utility functions:** `toInjectionFormat(exemplar)` (strips 21-field --> 7-field), `selectExemplars(selectedTeks, exemplarBank)` (budget scaling + diverse selection), and `diverseSelect(pool, n)` (maximizes operation and stepCount diversity). These are ALREADY IMPLEMENTED and tested -- the integration task is to combine all 3 batch arrays into one and pass the combined array to these existing functions. Do NOT reimplement. **WARNING:** `selectExemplars` has a default parameter `exemplarBank = PROBLEM_EXEMPLARS` (Batch 1 only, 65 items). You MUST pass the combined 135-item array explicitly: `selectExemplars(selectedTeks, ALL_EXEMPLARS)`. Omitting the second argument silently limits search to Batch 1.
+- `Batch_2_supporting_standards_exemplars__1_.js` -- 67 items, 30 Supporting TEKS, exports `BATCH2_SUPPORTING_EXEMPLARS`. **NOTE:** The `__1_` suffix is a Claude.ai upload artifact from the revised version. This is the PRODUCTION file (with strand normalization fixes applied). If a non-suffixed `Batch_2_supporting_standards_exemplars.js` exists in the GitHub repo, it is SUPERSEDED -- do not use it.
+- `Batch_3_missing_teks_exemplars.js` -- 3 items, 3 never-tested TEKS, exports `BATCH3_MISSING_TEKS_EXEMPLARS`
+
+**Browser Integration (CRITICAL for Prompt 2):** The exemplar files use `const` declarations and conditional `module.exports` guards. In the browser (no bundler, loaded via `<script>` tags from `file://`), the `module.exports` block is skipped but the `const` arrays and `function` declarations are accessible to subsequent scripts in the global scope. To integrate:
+
+0. Copy the 3 exemplar files from the project folder into `js/`. Rename `Batch_2_supporting_standards_exemplars__1_.js` --> `Batch_2_supporting_standards_exemplars.js` (drop the `__1_` Claude.ai upload artifact). The other two filenames are clean.
+1. Add three `<script>` tags to `index.html` for the exemplar files. Position them in the load order AFTER `config.js` (slot 13.5) but BEFORE `cerebras-api.js` (slot 13.6). The order among the three exemplar files does not matter, but all three must load before cerebras-api.js. Suggested slots: 13.51, 13.52, 13.53. See the Script & CSS Load Order table in Section 17 (Implementation Files) for exact entries.
+2. In `cerebras-api.js`, combine all three arrays at the top of the file: `const ALL_EXEMPLARS = [...PROBLEM_EXEMPLARS, ...BATCH2_SUPPORTING_EXEMPLARS, ...BATCH3_MISSING_TEKS_EXEMPLARS];`
+3. When building the system prompt in `generateMission()`, call `selectExemplars(selectedTeks, ALL_EXEMPLARS)` -- this returns injection-ready 7-field JSON objects, already stripped by `toInjectionFormat`. Stringify them and embed in the system prompt after the instruction block but before the generation query.
+4. Do NOT use `require()` or `import` -- the app has no bundler and runs from `file://`.
+
 ### AI Prompt Structure
 
 The AI prompt must enforce:
@@ -1219,6 +1376,7 @@ The AI prompt must enforce:
 7. **Grade appropriateness** -- Number ranges match grade expectations
 8. **Cross-curricular theming** -- When enabled, incorporate science TEKS vocabulary
 9. **Diagram descriptor** -- Include diagram field when visual would aid understanding (see Section 11)
+10. **Few-shot exemplar injection** -- Include STAAR-sourced exemplars from the exemplar bank (Section 7 "Few-Shot Exemplar Bank"), stripped to injection schema, positioned after instructions but before the generation query per few-shot positioning research. Exemplars are dynamically selected to match the teacher's chosen TEKS (1-5 per TEKS depending on how many TEKS are selected, hard cap 10 total -- see selection function spec). **CRITICAL: The system prompt must explicitly instruct the LLM not to copy exemplars verbatim.** Include language like: *"Study these examples carefully. They show the quality standard you must match -- the difficulty level, narrative style, and distractor reasoning. Generate ORIGINAL problems inspired by these patterns. Do NOT copy or closely paraphrase any example."* The exemplar bank teaches patterns, not recycles problems. Without this instruction, the LLM may reproduce exemplars word-for-word instead of generating new content.
 
 ### Grade-Specific Number Ranges
 
@@ -2057,7 +2215,7 @@ These files will be created during Phase 4 prompts:
 | File | Location | Status | Purpose |
 |------|----------|--------|---------|
 | `config.js` | `js/config.js` | * Complete (Prompt 1) | Groq Worker URL, model name, retry settings |
-| `cerebras-api.js` | `js/cerebras-api.js` | * Complete (Prompt 1) | API wrapper -- generateMission(), calculateAnswer() |
+| `cerebras-api.js` | `js/cerebras-api.js` | * Complete (Prompt 1), needs Prompt 2 update | API wrapper -- generateMission(), calculateAnswer(). Prompt 2 adds: combine 3 exemplar arrays into ALL_EXEMPLARS, call selectExemplars(selectedTeks, ALL_EXEMPLARS), inject into system prompt. Requires exemplar files loaded first (slots 13.51-13.53) |
 | `validator.js` | `js/validator.js` | TODO (Prompt 3-4) | Five-layer validation pipeline with progressive async results |
 | `confidence.js` | `js/confidence.js` | TODO (Prompt 4) | Composite scoring and category assignment |
 | `teks-rules.json` | `data/teks-rules.json` | TODO (Prompt 3) | Static lookup of ~150 elementary math SEs with validation constraints |
@@ -2087,7 +2245,10 @@ This is the complete dependency chain for `index.html`. Files MUST load in this 
 | 12 | `js/pattern-detector.js` | `<script>` | Error analysis -- independent |
 | 13 | `js/mission-integration.js` | `<script>` | Mission orchestrator -- requires everything above |
 | 13.5 | `js/config.js` | `<script>` | Groq config -- independent [v3.8] |
-| 13.6 | `js/cerebras-api.js` | `<script>` | API wrapper -- requires config.js [v3.8] |
+| 13.51 | `js/Batch_1_readiness_standards_exemplars.js` | `<script>` | 65 Readiness exemplars + utility functions (selectExemplars, toInjectionFormat, diverseSelect) [v3.9] |
+| 13.52 | `js/Batch_2_supporting_standards_exemplars.js` | `<script>` | 67 Supporting exemplars (renamed from __1_ version) [v3.9] |
+| 13.53 | `js/Batch_3_missing_teks_exemplars.js` | `<script>` | 3 Synthetic exemplars for never-tested TEKS [v3.9] |
+| 13.6 | `js/cerebras-api.js` | `<script>` | API wrapper -- requires config.js + exemplar files [v3.8, UPDATED v3.9] |
 | 13.7 | math.js (CDN) | `<script>` | Expression evaluation for validation [v3.8] |
 | 13.8 | `js/validator.js` | `<script>` | Validation pipeline -- requires math.js + config [v3.8] |
 | 13.9 | `js/confidence.js` | `<script>` | Composite scoring -- requires validator.js [v3.8] |
@@ -2434,6 +2595,7 @@ At the start of each transition, `playTransition()` calls `pixiEffectManager.ini
 | SVG Diagram Generator | [TODO] NOT STARTED (Prompt 5) |
 | PDF Upload System | [TODO] NOT STARTED (Prompt 6) |
 | teks-rules.json | [TODO] NOT STARTED |
+| Few-Shot Exemplar Bank (135 items, 46 TEKS) | [DONE] COMPLETE v3.9 -- Batches 1-3 extracted, audited (5 passes), 100% Grade 3 Math TEKS coverage |
 | GSAP Animations + PixiJS Effects | [DONE] 5 transitions in pool COMPLETE + Fury SHIELD animation COMPLETE -- Black Widow overlay remaining |
 | **Transition Engine (FirewallSequence)** | [DONE] COMPLETE -- 5 randomized transitions + Widow glitch, PixiJS integration, transition sounds wired |
 | **PixiJS Foundation** | [DONE] COMPLETE -- PixiEffectManager singleton, 45 filters, GSAP ticker sync |
@@ -2641,7 +2803,8 @@ const TEST_PROBLEMS = {
 
 **Prompt 2: Problem Generation Pipeline**
 - [ ] Wire "Generate Mission" button -> Cloudflare Worker -> Groq
-- [ ] System prompt with TEKS instructions, cross-curricular mode, structured JSON output (including diagram descriptor field)
+- [ ] System prompt with TEKS instructions, cross-curricular mode, structured JSON output (including diagram descriptor field), and explicit "generate ORIGINAL problems, do NOT copy exemplars" instruction
+- [ ] Integrate Few-Shot Exemplar Bank: selection function picks 1-5 exemplars per selected TEKS from the 135-item bank (Batches 1-3), capped at 10 total, already stripped to injection schema by selectExemplars(), embeds in system prompt after instructions but before query (per few-shot positioning research)
 - [ ] Parse response, store in mission state
 - [ ] Progress indicator during generation ("Generating problem 3 of 13...")
 - [ ] Fallback: load test-problems.js if API fails
@@ -3225,6 +3388,9 @@ These are already implemented in `mission-integration.js`:
 - `response_bank.md` -- Complete pre-scripted dialogue (750+ lines)
 - `grade_1_sciencemath_teks.txt` through `Grade_5_sciencemath_teks.txt` -- TEKS standards
 - `Ironman_STEM_Script.pdf` -- Original mission script
+- `Batch_1_readiness_standards_exemplars.js` -- [DONE] 65 STAAR-extracted exemplars, 13 Readiness TEKS, audited clean
+- `Batch_2_supporting_standards_exemplars__1_.js` -- [DONE] 67 STAAR-extracted exemplars, 30 Supporting TEKS, audited clean (5 passes). PRODUCTION file (the non-suffixed version is superseded)
+- `Batch_3_missing_teks_exemplars.js` -- [DONE] 3 synthetic exemplars for never-tested TEKS (3.3A, 3.9C, 3.9F), teacher-approved
 - Various `.jpg`, `.png`, `.webp` -- Reference images
 
 **Complete JavaScript Modules (uploaded separately):**
@@ -3236,7 +3402,7 @@ These are already implemented in `mission-integration.js`:
 - `hud-config.js` -- [DONE] COMPLETE -- Central `window.HUD_CONFIG` configuration object (colors, timing, easing, transition pool, mission structure)
 - `im-animations.css` -- [DONE] COMPLETE -- Namespaced CSS foundation (`.im-reactor-*`, `.im-panel-*`, `.im-glitch-*`, `.im-transition-*` class families, `--im-*` custom properties)
 - `config.js` -- [DONE] COMPLETE (Phase 4 P1) -- Groq Worker URL, model name, retry settings
-- `cerebras-api.js` -- [DONE] COMPLETE (Phase 4 P1) -- API wrapper for Groq via Cloudflare Worker
+- `cerebras-api.js` -- [DONE] Phase 4 P1 complete (API wrapper). Prompt 2 will MODIFY this file to combine 3 exemplar arrays into ALL_EXEMPLARS, call selectExemplars(selectedTeks, ALL_EXEMPLARS), and inject exemplars into system prompt. Requires exemplar `<script>` tags loaded first (see Script Load Order slots 13.51-13.53).
 
 **Phase 4 Files (planned):**
 - `validator.js` -- Five-layer validation pipeline
@@ -3247,16 +3413,24 @@ These are already implemented in `mission-integration.js`:
 - `diagram-hud.css` -- CSS custom properties and SVG filter definitions for HUD-themed diagrams
 
 **Research Reports (in Claude.ai project files):**
-- `Building_a_Multi-Layer_Confidence_System_for_LLM-Generated_Math_Problems.md` -- Validation pipeline research
-- `SVG_Math_Diagrams_for_a_TEKS-Aligned_Iron_Man_Learning_App.md` -- SVG diagram generation research
+- `Building_a_Multi-Layer_Confidence_System_for_LLM-Generated_Math_Problems__Validation_Pipeline_and_TEKS_Alignment.md` -- Validation pipeline research
+- `SVG_Math_Diagrams_for_a_TEKS-Aligned_Iron_Man_Learning_App__Template_Architecture_and_LLM_Integration_Strategy.md` -- SVG diagram generation research
+- `Few-Shot_Prompting_for_STAAR-Quality_Educational_Content_with_Llama_3_3__Optimal_Exemplar_Selection__Formatting__and_Dynamic_Retrieval_Strategies.md` -- Few-shot exemplar selection, formatting, and dynamic retrieval strategies [NEW v3.9]
 - `claude_code_prompting_report.md` -- CC prompting best practices
-- `Building_Vanilla_JS_Features_with_Claude_Code_Web.md` -- Vanilla JS architecture patterns
+- `Building_Vanilla_JS_Features_with_Claude_Code_Web__Prompting_Strategies_and_Architectural_Patterns.md` -- Vanilla JS architecture patterns
 - `deep-research-report.md` -- Groq/Llama 3.3 70B selection research
 
 **Still Needed:**
 - All dialogue audio files (via Cartesia voice synthesis from response bank)
 - Nick Fury voice clone
 - Black Widow voice clone
+
+**Exemplar Bank Audit Reports (in Claude.ai project files):** [NEW v3.9]
+- `batch2-pass1-findings.md` -- Pass 1 audit: 2019 + 2021 (22 items, 0 critical, 0 moderate, 2 minor)
+- `batch2-pass2-findings.md` -- Pass 2 audit: 2022 (12 items, 0 critical, 0 moderate, 1 minor)
+- `batch2-pass3-findings.md` -- Pass 3 audit: 2023 + 2024 (22 items, 0 critical, 1 moderate systematic)
+- `batch2-pass4-findings.md` -- Pass 4 audit: 2025 (11 items, 0 critical, 1 moderate systematic same root cause)
+- `batch2-pass5-findings.md` -- Pass 5 final structural audit: all 67 items, cross-batch validation, master discrepancy registry
 
 ---
 
@@ -3270,9 +3444,11 @@ These are already implemented in `mission-integration.js`:
 
 > x **CDN Dependencies** -- PixiJS libraries currently load from jsdelivr CDN. This works because the app runs on the teacher's laptop (not student Chromebooks), but should eventually be bundled locally for zero-CDN reliability in schools with strict content filters.
 
-> x **Phase 4 In Progress** -- Prompt 1 (API module + Cloudflare Worker) COMPLETE. Prompts 2-6 pending. See Phase 4 build checklist in Section 18 for detailed status.
+> x **Phase 4 In Progress** -- Prompt 1 (API module + Cloudflare Worker) COMPLETE. Prompts 2-6 pending. Few-Shot Exemplar Bank (prerequisite for Prompt 2 system prompt) is now COMPLETE -- 135 items, 46 TEKS, 100% coverage. See Phase 4 build checklist in Section 18 for detailed status.
 
 > x **teks-rules.json Not Yet Built** -- Static TEKS validation constraints file needs to be populated from TEA Machine-Readable TEKS data. Required for validation pipeline Layers 3-4.
+
+> [DONE] **Few-Shot Exemplar Bank COMPLETE (v3.9)** -- 135 STAAR-extracted + synthetic exemplars covering all 46 Grade 3 Math TEKS. Three batch files ready for integration into Prompt 2 system prompt. Five-pass audit verified zero critical errors. See Section 7 "Few-Shot Exemplar Bank" for architecture and file references.
 
 ---
 

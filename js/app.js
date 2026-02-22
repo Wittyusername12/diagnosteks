@@ -362,6 +362,11 @@ const JARVIS_GENERIC_HINTS = [
   "You're closer than you think. One small adjustment could be all it takes."
 ];
 
+// Random line selector for response bank arrays
+function getRandomLine(lines) {
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
 // ============================================
 // APPLICATION STATE
 // ============================================
@@ -658,6 +663,10 @@ const App = {
     // Get cross-curricular toggle state
     const crossCurricularToggle = document.getElementById('cross-curricular-toggle');
     const crossCurricular = crossCurricularToggle ? crossCurricularToggle.checked : true;
+
+    // Get expression visibility toggle state
+    const expressionToggle = document.getElementById('show-expression-toggle');
+    this.missionState.showExpression = expressionToggle ? expressionToggle.checked : true;
 
     // Disable button to prevent double-clicks
     const generateBtn = document.getElementById('btn-generate-mission');
@@ -1252,8 +1261,16 @@ const App = {
     // Update UI
     this.elements.currentFirewallDisplay.textContent = firewallNumber;
     this.elements.problemNarrative.textContent = problem.narrative;
-    this.elements.problemExpression.textContent = problem.expression;
-    this.elements.jarvisDialogue.textContent = `"Decryption key required. ${problem.teks} protocol active."`;
+    // Show or hide expression based on teacher toggle
+    if (this.missionState.showExpression) {
+      this.elements.problemExpression.textContent = problem.expression;
+      this.elements.problemExpression.style.display = '';
+    } else {
+      this.elements.problemExpression.textContent = '';
+      this.elements.problemExpression.style.display = 'none';
+    }
+    // Clear Jarvis dialogue on new problem load — text appears only after answer
+    this.elements.jarvisDialogue.textContent = '';
     if (typeof soundManager !== 'undefined') soundManager.play('ui-type');
     console.log('[Sound] New problem loaded → ui-type');
 
@@ -1371,6 +1388,11 @@ const App = {
     soundManager.play('access-granted');
     soundManager.play('arc-reactor-pulse', { delay: 0.3 });
 
+    // Set Jarvis dialogue BEFORE animation (ScrambleText animates whatever text is in the element)
+    if (typeof JARVIS_CORRECT_LINES !== 'undefined') {
+      this.elements.jarvisDialogue.textContent = '"' + getRandomLine(JARVIS_CORRECT_LINES) + '"';
+    }
+
     // Play GSAP animation sequence, then advance
     animator.playCorrectSequence(() => {
       // Check if mission complete (after firewall 10)
@@ -1409,6 +1431,11 @@ const App = {
     // Sound: wrong answer feedback
     console.log('[Sound] Wrong answer → wrong-answer');
     soundManager.play('wrong-answer');
+
+    // Set Jarvis dialogue BEFORE animation (ScrambleText animates whatever text is in the element)
+    if (typeof JARVIS_WRONG_MATH_LINES !== 'undefined') {
+      this.elements.jarvisDialogue.textContent = '"' + getRandomLine(JARVIS_WRONG_MATH_LINES) + '"';
+    }
 
     // Play GSAP wrong answer animation (input is automatically unlocked after)
     animator.playWrongSequence(() => {
@@ -1578,8 +1605,12 @@ const App = {
     // Visual feedback
     buttonElement.classList.add('incorrect');
 
-    // Update Fury quote
-    this.elements.furyQuoteText.textContent = '"Incorrect. Try again. I don\'t have all day."';
+    // Update Fury quote with random response bank line
+    if (typeof FURY_WRONG_SCIENCE_LINES !== 'undefined') {
+      this.elements.furyQuoteText.textContent = '"' + getRandomLine(FURY_WRONG_SCIENCE_LINES) + '"';
+    } else {
+      this.elements.furyQuoteText.textContent = '"Incorrect. Try again. I don\'t have all day."';
+    }
 
     // Clear incorrect class after animation
     setTimeout(() => {

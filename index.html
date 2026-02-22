@@ -206,6 +206,16 @@
               </div>
             </div>
 
+            <div style="text-align: center; padding: 0.75rem 0;">
+              <label style="color: #ff6b00; font-family: 'Orbitron', sans-serif; font-size: 1.15rem; letter-spacing: 0.08em; cursor: pointer; display: inline-flex; align-items: center; gap: 0.75rem; font-weight: 700;">
+                <input type="checkbox" id="show-expression-toggle" checked style="accent-color: #ff6b00; width: 24px; height: 24px; cursor: pointer;">
+                SHOW MATH EXPRESSION
+              </label>
+              <div style="color: #ffb366; font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; margin-top: 0.35rem; letter-spacing: 0.03em;">
+                Display equation below word problem (uncheck for harder STAAR-style mode)
+              </div>
+            </div>
+
             <div class="screen-actions">
               <button class="action-btn" id="btn-back-to-grade">&lt; BACK</button>
               <button class="action-btn primary" id="btn-generate-mission">GENERATE MISSION</button>
@@ -596,6 +606,9 @@
 
   <!-- Sound Manager (Phase 3) -->
   <script src="js/sound-manager.js"></script>
+
+  <!-- Response Bank Data (Phase 4 Prompt 3) -->
+  <script src="js/response-bank-data.js"></script>
 
   <!-- App Scripts -->
   <script src="js/test-problems.js"></script>

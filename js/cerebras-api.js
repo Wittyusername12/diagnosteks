@@ -85,7 +85,7 @@ class CerebrasAPI {
     }
 
     const messages = [
-      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, scienceTeksDescriptions, crossCurricular, exemplars) },
+      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions) },
       { role: 'user', content: `Generate 10 math problems for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}. Output operation and operands so JavaScript can independently calculate each answer.` }
     ];
 
@@ -159,7 +159,7 @@ class CerebrasAPI {
      PROMPT BUILDERS
      ========================================= */
 
-  _buildMathSystemPrompt(gradeLevel, teksDescriptions, scienceTeksDescriptions, crossCurricular, exemplars) {
+  _buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions) {
     const count = this.config.mathProblemsPerMission || 10;
 
     // Grade-specific number ranges
@@ -181,10 +181,10 @@ Respond with ONLY a JSON object. No markdown, no explanation, no preamble.
 REQUIRED JSON STRUCTURE:
 {"problems": [
   {
-    "narrative": "Brief Iron Man themed context sentence",
-    "operation": "ADD",
-    "operands": [47, 28],
-    "teks": "3.4A",
+    "narrative": "Tony Stark is upgrading 4 suits of armor in his lab. Each suit needs 9 new power cells installed. How many power cells does Tony need to order in total?",
+    "operation": "MULTIPLY",
+    "operands": [4, 9],
+    "teks": "3.4F",
     "primaryType": "computation",
     "difficulty": "easy",
     "diagnosticFor": [],
@@ -192,6 +192,8 @@ REQUIRED JSON STRUCTURE:
     "scienceTeksConnection": null
   }
 ]}
+
+IMPORTANT: The "narrative" field IS the word problem the student sees. It must be a complete 2-4 sentence word problem (30-80 words) where the student figures out the operation from context. Do NOT include the operation or a bare equation in the narrative. The game engine builds the expression separately from the operation and operands you provide.
 
 Generate exactly ${count} problems.
 
@@ -225,15 +227,17 @@ CRITICAL RULES:
 4. For DIVIDE: first operand must be evenly divisible by second.
 5. Mix operations across the ${count} problems when the selected TEKS allow it.
 6. Use ONLY the TEKS codes listed above.
-7. Every narrative MUST be a complete sentence that clearly describes a specific scenario. BAD: "Tony Stark's lab has" (incomplete fragment). GOOD: "Tony Stark needs to combine two containers of arc reactor fluid in his lab. How much fluid does he have in total?" Always write complete thoughts that explain the situation and what needs to be solved.
+7. Every narrative MUST be a complete word problem (2-4 sentences) that describes a specific scenario and asks a clear question. The student must determine the operation from context — never state the operation or show a bare equation. BAD: "Tony Stark's lab has 4 × 9 power cells." GOOD: "Tony Stark needs to combine two containers of arc reactor fluid in his lab. One container holds 375 milliliters and the other holds 248 milliliters. How much fluid does he have in total?"
 
 DIFFICULTY PROGRESSION:
 - Problems 1-3: easier (simpler numbers, one-step). Set "difficulty": "easy"
 - Problems 4-7: medium difficulty. Set "difficulty": "medium"
 - Problems 8-${count}: harder (larger numbers, multi-step, or trickier concepts). Set "difficulty": "hard"
 
-NARRATIVE WRAPPING:
-Each problem needs a 1-2 sentence Iron Man themed narrative (max 25 words). Use characters: Tony Stark, Jarvis, Pepper Potts, the Avengers. Settings: Stark Industries lab, the Helicarrier, Avengers Tower. Keep narratives age-appropriate and engaging for elementary students.
+WORD PROBLEM QUALITY:
+Each problem's "narrative" must be a complete Iron Man themed WORD PROBLEM (2-4 sentences, 30-80 words). The word problem must describe a real scenario where the student figures out what operation to use from context. Do NOT include the operation or expression in the narrative — the student must determine that themselves. Use characters: Tony Stark, Jarvis, Pepper Potts, the Avengers. Settings: Stark Industries lab, the Helicarrier, Avengers Tower. Keep word problems age-appropriate and engaging for elementary students.
+BAD: "Tony has 4 times 9 power cells. 4 × 9 = ?"
+GOOD: "Tony Stark is upgrading 4 suits of armor in his lab. Each suit needs 9 new power cells installed. How many power cells does Tony need to order in total?"
 
 DIAGNOSTIC PROBLEMS:
 Design at least 2 problems to reveal common student errors. Examples: carrying/borrowing across zeros, reversible digit answers, fraction misconceptions. Set "diagnosticFor" to an array describing the misconception (e.g., ["borrowing-across-zero"]).`;

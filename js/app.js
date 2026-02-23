@@ -1387,9 +1387,10 @@ const App = {
     soundManager.play('access-granted');
     soundManager.play('arc-reactor-pulse', { delay: 0.3 });
 
-    // Set Jarvis dialogue BEFORE animation (ScrambleText animates whatever text is in the element)
+    // Pick response bank line and pass to animation (ScrambleText uses the parameter, not DOM)
+    let correctLine = '"Processing..."';
     if (typeof JARVIS_CORRECT_LINES !== 'undefined') {
-      this.elements.jarvisDialogue.textContent = '"' + getRandomLine(JARVIS_CORRECT_LINES) + '"';
+      correctLine = '"' + getRandomLine(JARVIS_CORRECT_LINES) + '"';
     }
 
     // Play GSAP animation sequence, then advance
@@ -1414,7 +1415,7 @@ const App = {
           this.loadFirewall(currentFW + 1);
         }
       }
-    });
+    }, correctLine);
   },
 
   /**
@@ -1431,9 +1432,10 @@ const App = {
     console.log('[Sound] Wrong answer → wrong-answer');
     soundManager.play('wrong-answer');
 
-    // Set Jarvis dialogue BEFORE animation (ScrambleText animates whatever text is in the element)
+    // Pick response bank line and pass to animation (ScrambleText uses the parameter, not DOM)
+    let wrongLine = '"Decryption failed..."';
     if (typeof JARVIS_WRONG_MATH_LINES !== 'undefined') {
-      this.elements.jarvisDialogue.textContent = '"' + getRandomLine(JARVIS_WRONG_MATH_LINES) + '"';
+      wrongLine = '"' + getRandomLine(JARVIS_WRONG_MATH_LINES) + '"';
     }
 
     // Play GSAP wrong answer animation (input is automatically unlocked after)
@@ -1452,7 +1454,7 @@ const App = {
 
       // Tier 2: Check if Widow should appear (2nd+ wrong answer)
       this.checkWidowHint();
-    });
+    }, wrongLine);
   },
 
   /**

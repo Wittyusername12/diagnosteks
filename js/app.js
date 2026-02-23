@@ -667,6 +667,7 @@ const App = {
     // Get expression visibility toggle state
     const expressionToggle = document.getElementById('show-expression-toggle');
     this.missionState.showExpression = expressionToggle ? expressionToggle.checked : true;
+    console.log('[ExprToggle] Stored showExpression:', this.missionState.showExpression);
 
     // Disable button to prevent double-clicks
     const generateBtn = document.getElementById('btn-generate-mission');
@@ -979,8 +980,9 @@ const App = {
    * Start a new mission - initialize all gameplay state
    */
   startMission() {
-    // Preserve generated problems through reset
+    // Preserve generated problems and settings through reset
     const savedProblems = this.missionState.problems;
+    const savedShowExpression = this.missionState.showExpression;
 
     // Reset mission state
     this.missionState = {
@@ -1000,6 +1002,7 @@ const App = {
       widowAppearances: 0,
       lastWidowFirewall: -10,
       wrongAttemptsThisFirewall: 0,
+      showExpression: savedShowExpression !== undefined ? savedShowExpression : true,
       problems: savedProblems || [...window.TEST_PROBLEMS.math, ...window.TEST_PROBLEMS.science]
     };
     window.missionState = this.missionState;
@@ -1261,14 +1264,10 @@ const App = {
     // Update UI
     this.elements.currentFirewallDisplay.textContent = firewallNumber;
     this.elements.problemNarrative.textContent = problem.narrative;
-    // Show or hide expression based on teacher toggle
-    if (this.missionState.showExpression) {
-      this.elements.problemExpression.textContent = problem.expression;
-      this.elements.problemExpression.style.display = '';
-    } else {
-      this.elements.problemExpression.textContent = '';
-      this.elements.problemExpression.style.display = 'none';
-    }
+    // Always set expression content; toggle only controls visibility
+    this.elements.problemExpression.textContent = problem.expression;
+    this.elements.problemExpression.style.display = this.missionState.showExpression ? '' : 'none';
+    console.log('[ExprToggle] Reading showExpression:', this.missionState.showExpression, 'display:', this.elements.problemExpression.style.display);
     // Clear Jarvis dialogue on new problem load — text appears only after answer
     this.elements.jarvisDialogue.textContent = '';
     if (typeof soundManager !== 'undefined') soundManager.play('ui-type');

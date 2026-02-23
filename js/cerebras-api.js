@@ -231,6 +231,12 @@ CRITICAL RULES:
 8. Every problem MUST use unique number combinations. Do not reuse the same operands across any two problems in the set. If problem 3 uses 945 and 378, no other problem may use those same numbers.
 9. Generate CREATIVE and DIVERSE scenarios. Do NOT use common textbook examples. Do NOT reuse any specific numbers that appear in the exemplars above. Vary your character names, settings, and number ranges widely. If you've used Stark Tower as a setting, try the Helicarrier or Wakanda next. If you've used 945-378 in one problem, use completely different numbers in the next.
 
+SESSION RANDOMIZATION SEED:
+This session's random seed is ${Math.floor(Math.random() * 900000) + 100000}. Use this to vary your number choices.
+- For addition/subtraction: prefer numbers in the range ${(() => { const lo = Math.floor(Math.random() * 5) * 100 + 100; return `${lo}–${lo + 400}`; })()}
+- For multiplication: prefer factor pairs like ${(() => { const a = Math.floor(Math.random() * 7) + 3; const b = Math.floor(Math.random() * 7) + 3; return `${a}×${b}`; })()} (vary from this starting point)
+- Do NOT reuse the same numbers you generated in any previous call. Every session must feel fresh.
+
 DIFFICULTY PROGRESSION:
 - Problems 1-3: easier (simpler numbers, one-step). Set "difficulty": "easy"
 - Problems 4-7: medium difficulty. Set "difficulty": "medium"
@@ -331,6 +337,7 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
             model: this.config.model,
             messages,
             temperature: temperature || this.config.temperature || 0.7,
+            top_p: 0.9,
             max_tokens: this.config.maxTokens || 4096,
             response_format: { type: 'json_object' }
           }),

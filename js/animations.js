@@ -166,7 +166,7 @@ class AnimationController {
    * Uses boxShadow and filter instead of borderColor (augmented-ui conflict)
    * @param {function} onComplete - Callback when animation finishes
    */
-  playCorrectSequence(onComplete) {
+  playCorrectSequence(onComplete, jarvisText) {
     this.lockInput();
 
     // Get elements (all confirmed to exist in index.html)
@@ -241,10 +241,10 @@ class AnimationController {
       }, '+=0.3');
     }
 
-    // Scramble "ACCESS GRANTED" text
-    if (dialogueContent) {
+    // Scramble Jarvis dialogue text (passed from app.js response bank)
+    if (dialogueContent && jarvisText) {
       timeline.add(() => {
-        this.scrambleText(dialogueContent, dialogueContent.textContent || '"Processing..."');
+        this.scrambleText(dialogueContent, jarvisText);
       }, 0.1);
     }
 
@@ -252,12 +252,6 @@ class AnimationController {
     timeline.to({}, { duration: HUD_CONFIG.timing.transitionDelay });
 
     this.currentTimeline = timeline;
-
-    // ScrambleText effect for "ACCESS GRANTED" reveal
-    if (dialogueContent) {
-      this.scrambleText(dialogueContent, dialogueContent.textContent || '"Processing..."');
-      console.log('[GSAP] Playing ScrambleText effect');
-    }
 
     console.log('[GSAP] Playing correct sequence - animating', glowTargets.length, 'panels');
   }
@@ -267,7 +261,7 @@ class AnimationController {
    * Uses boxShadow and filter instead of borderColor (augmented-ui conflict)
    * @param {function} onComplete - Callback when animation finishes
    */
-  playWrongSequence(onComplete) {
+  playWrongSequence(onComplete, jarvisText) {
     this.lockInput();
 
     // Get elements (all confirmed to exist in index.html)
@@ -313,11 +307,11 @@ class AnimationController {
       }, '+=0.3');
     }
 
-    // Update dialogue text
-    if (dialogueContent) {
+    // Scramble Jarvis dialogue text (passed from app.js response bank)
+    if (dialogueContent && jarvisText) {
       timeline.add(() => {
-        // Text already set by app.js before animation — keep it (don't overwrite with hardcoded text)
-      }, 0);
+        this.scrambleText(dialogueContent, jarvisText);
+      }, 0.1);
     }
 
     // Glow and shake the input field

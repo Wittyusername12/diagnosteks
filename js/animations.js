@@ -244,7 +244,7 @@ class AnimationController {
     // Scramble "ACCESS GRANTED" text
     if (dialogueContent) {
       timeline.add(() => {
-        this.scrambleText(dialogueContent, '"Access granted. Firewall breached. Well done, recruits."');
+        this.scrambleText(dialogueContent, dialogueContent.textContent || '"Processing..."');
       }, 0.1);
     }
 
@@ -255,7 +255,7 @@ class AnimationController {
 
     // ScrambleText effect for "ACCESS GRANTED" reveal
     if (dialogueContent) {
-      this.scrambleText(dialogueContent, '"ACCESS GRANTED. Firewall breached."');
+      this.scrambleText(dialogueContent, dialogueContent.textContent || '"Processing..."');
       console.log('[GSAP] Playing ScrambleText effect');
     }
 
@@ -316,7 +316,7 @@ class AnimationController {
     // Update dialogue text
     if (dialogueContent) {
       timeline.add(() => {
-        dialogueContent.textContent = '"Incorrect. Access denied. Try again, recruits."';
+        // Text already set by app.js before animation — keep it (don't overwrite with hardcoded text)
       }, 0);
     }
 

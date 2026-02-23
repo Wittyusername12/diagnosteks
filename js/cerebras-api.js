@@ -229,6 +229,7 @@ CRITICAL RULES:
 6. Use ONLY the TEKS codes listed above.
 7. Every narrative MUST be a complete word problem (2-4 sentences) that describes a specific scenario and asks a clear question. The student must determine the operation from context — never state the operation or show a bare equation. BAD: "Tony Stark's lab has 4 × 9 power cells." GOOD: "Tony Stark needs to combine two containers of arc reactor fluid in his lab. One container holds 375 milliliters and the other holds 248 milliliters. How much fluid does he have in total?"
 8. Every problem MUST use unique number combinations. Do not reuse the same operands across any two problems in the set. If problem 3 uses 945 and 378, no other problem may use those same numbers.
+9. Generate CREATIVE and DIVERSE scenarios. Do NOT use common textbook examples. Do NOT reuse any specific numbers that appear in the exemplars above. Vary your character names, settings, and number ranges widely. If you've used Stark Tower as a setting, try the Helicarrier or Wakanda next. If you've used 945-378 in one problem, use completely different numbers in the next.
 
 DIFFICULTY PROGRESSION:
 - Problems 1-3: easier (simpler numbers, one-step). Set "difficulty": "easy"

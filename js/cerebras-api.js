@@ -15,6 +15,190 @@ if (ALL_EXEMPLARS.length > 0) {
   console.log(`[CerebrasAPI] Exemplar bank loaded: ${ALL_EXEMPLARS.length} total exemplars`);
 }
 
+// ============================================================
+// RANDOM OPERAND GENERATOR — Per-TEKS constraints
+// JavaScript picks the numbers, LLM writes the narrative.
+// This guarantees variety because Math.random() is truly random,
+// unlike LLMs which converge on the same prototypical numbers.
+// ============================================================
+
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateOperandsForTeks(teks, problemIndex) {
+  const tier = problemIndex < 3 ? 'easy' : problemIndex < 7 ? 'medium' : 'hard';
+
+  switch (teks) {
+    case '3.4A':
+    case '3.5A': {
+      // Add/subtract within 1,000
+      const operation = problemIndex % 2 === 0 ? 'ADD' : 'SUBTRACT';
+      let a, b;
+      if (tier === 'easy') {
+        a = randomInt(20, 99);
+        b = randomInt(10, Math.min(99, operation === 'ADD' ? 200 - a : a - 1));
+      } else if (tier === 'medium') {
+        a = randomInt(200, 599);
+        b = randomInt(100, operation === 'ADD' ? Math.min(399, 999 - a) : a - 100);
+      } else {
+        a = randomInt(400, 950);
+        b = randomInt(150, operation === 'ADD' ? Math.min(550, 999 - a) : a - 100);
+      }
+      if (operation === 'SUBTRACT' && b >= a) [a, b] = [b, a];
+      return { operation, operands: [a, b], teks };
+    }
+
+    case '3.4F':
+    case '3.4D': {
+      // Multiply/divide facts within 10×10
+      const operation = problemIndex % 2 === 0 ? 'MULTIPLY' : 'DIVIDE';
+      let a, b;
+      if (tier === 'easy') {
+        a = randomInt(2, 5);
+        b = randomInt(2, 5);
+      } else if (tier === 'medium') {
+        a = randomInt(3, 8);
+        b = randomInt(3, 8);
+      } else {
+        a = randomInt(6, 10);
+        b = randomInt(6, 10);
+      }
+      if (operation === 'DIVIDE') {
+        return { operation, operands: [a * b, a], teks };
+      }
+      return { operation, operands: [a, b], teks };
+    }
+
+    case '3.4K':
+    case '3.5B': {
+      // Multiply/divide within 100
+      const operation = problemIndex % 2 === 0 ? 'MULTIPLY' : 'DIVIDE';
+      let a, b;
+      if (tier === 'easy') {
+        a = randomInt(2, 5);
+        b = randomInt(2, 9);
+      } else if (tier === 'medium') {
+        a = randomInt(3, 9);
+        b = randomInt(3, 9);
+      } else {
+        a = randomInt(5, 10);
+        b = randomInt(5, 10);
+      }
+      if (a * b > 100) b = Math.floor(100 / a);
+      if (b < 2) b = 2;
+      if (operation === 'DIVIDE') {
+        return { operation, operands: [a * b, a], teks };
+      }
+      return { operation, operands: [a, b], teks };
+    }
+
+    case '3.4G': {
+      // 2-digit × 1-digit
+      let a, b;
+      if (tier === 'easy') {
+        a = randomInt(10, 25);
+        b = randomInt(2, 4);
+      } else if (tier === 'medium') {
+        a = randomInt(15, 50);
+        b = randomInt(3, 6);
+      } else {
+        a = randomInt(30, 99);
+        b = randomInt(4, 9);
+      }
+      return { operation: 'MULTIPLY', operands: [a, b], teks };
+    }
+
+    case '3.4H':
+    case '3.4J':
+    case '3.5D': {
+      // Division (equal sharing, quotient from mult/div relationship)
+      let divisor, quotient;
+      if (tier === 'easy') {
+        divisor = randomInt(2, 5);
+        quotient = randomInt(2, 5);
+      } else if (tier === 'medium') {
+        divisor = randomInt(3, 8);
+        quotient = randomInt(3, 8);
+      } else {
+        divisor = randomInt(4, 10);
+        quotient = randomInt(4, 10);
+      }
+      return { operation: 'DIVIDE', operands: [divisor * quotient, divisor], teks };
+    }
+
+    case '3.6C': {
+      // Area of rectangles (side × side)
+      let a, b;
+      if (tier === 'easy') {
+        a = randomInt(2, 5);
+        b = randomInt(2, 5);
+      } else if (tier === 'medium') {
+        a = randomInt(3, 8);
+        b = randomInt(3, 8);
+      } else {
+        a = randomInt(5, 12);
+        b = randomInt(5, 12);
+      }
+      return { operation: 'MULTIPLY', operands: [a, b], teks };
+    }
+
+    case '3.7B': {
+      // Perimeter (add side lengths)
+      let a, b;
+      if (tier === 'easy') {
+        a = randomInt(3, 15);
+        b = randomInt(3, 15);
+      } else if (tier === 'medium') {
+        a = randomInt(10, 30);
+        b = randomInt(10, 30);
+      } else {
+        a = randomInt(20, 50);
+        b = randomInt(20, 50);
+      }
+      return { operation: 'ADD', operands: [a, b], teks };
+    }
+
+    default:
+      return null; // LLM picks numbers for unhandled TEKS
+  }
+}
+
+function generateMissionOperands(mathTeks, numProblems) {
+  const assignments = [];
+  const usedCombos = new Set();
+
+  for (let i = 0; i < numProblems; i++) {
+    const teksForThisProblem = mathTeks[i % mathTeks.length];
+    let attempt = 0;
+    let result = null;
+
+    do {
+      result = generateOperandsForTeks(teksForThisProblem, i);
+      attempt++;
+      if (result) {
+        const comboKey = `${result.operands.join(',')}`;
+        if (!usedCombos.has(comboKey)) {
+          usedCombos.add(comboKey);
+          break;
+        }
+        result = null; // Retry for unique combo
+      } else {
+        break; // null = LLM picks, no retry needed
+      }
+    } while (attempt < 20);
+
+    // Always include TEKS assignment, even for LLM-generated problems
+    assignments.push(result || { operation: null, operands: null, teks: teksForThisProblem });
+  }
+
+  console.log('[CerebrasAPI] Pre-generated operands:', assignments.map(a =>
+    a.operation ? `${a.operation} ${a.operands.join(',')}` : `LLM-generated (${a.teks})`
+  ));
+
+  return assignments;
+}
+
 class CerebrasAPI {
   constructor(config) {
     this.config = config || window.CEREBRAS_CONFIG || {};
@@ -84,13 +268,17 @@ class CerebrasAPI {
       console.log(`[CerebrasAPI] Selected ${exemplars.length} exemplars for TEKS: ${teksCodes.join(', ')}`);
     }
 
+    // Pre-generate random operands — JS picks numbers, LLM writes narrative
+    const count = this.config.mathProblemsPerMission || 10;
+    const operandAssignments = generateMissionOperands(teksCodes, count);
+
     const messages = [
-      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions) },
-      { role: 'user', content: `Generate 10 math problems for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}. Output operation and operands so JavaScript can independently calculate each answer.` }
+      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments) },
+      { role: 'user', content: `Generate ${count} math problems for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}. For pre-selected problems, use the EXACT numbers provided. Output operation and operands so JavaScript can independently calculate each answer.` }
     ];
 
     const raw = await this._callWorker(messages, 0.7);
-    return this._parseMathResponse(raw);
+    return this._parseMathResponse(raw, operandAssignments);
   }
 
   /**
@@ -159,7 +347,7 @@ class CerebrasAPI {
      PROMPT BUILDERS
      ========================================= */
 
-  _buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions) {
+  _buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments = []) {
     const count = this.config.mathProblemsPerMission || 10;
 
     // Grade-specific number ranges
@@ -231,12 +419,6 @@ CRITICAL RULES:
 8. Every problem MUST use unique number combinations. Do not reuse the same operands across any two problems in the set. If problem 3 uses 945 and 378, no other problem may use those same numbers.
 9. Generate CREATIVE and DIVERSE scenarios. Do NOT use common textbook examples. Do NOT reuse any specific numbers that appear in the exemplars above. Vary your character names, settings, and number ranges widely. If you've used Stark Tower as a setting, try the Helicarrier or Wakanda next. If you've used 945-378 in one problem, use completely different numbers in the next.
 
-SESSION RANDOMIZATION SEED:
-This session's random seed is ${Math.floor(Math.random() * 900000) + 100000}. Use this to vary your number choices.
-- For addition/subtraction: prefer numbers in the range ${(() => { const lo = Math.floor(Math.random() * 5) * 100 + 100; return `${lo}–${lo + 400}`; })()}
-- For multiplication: prefer factor pairs like ${(() => { const a = Math.floor(Math.random() * 7) + 3; const b = Math.floor(Math.random() * 7) + 3; return `${a}×${b}`; })()} (vary from this starting point)
-- Do NOT reuse the same numbers you generated in any previous call. Every session must feel fresh.
-
 DIFFICULTY PROGRESSION:
 - Problems 1-3: easier (simpler numbers, one-step). Set "difficulty": "easy"
 - Problems 4-7: medium difficulty. Set "difficulty": "medium"
@@ -268,6 +450,26 @@ CROSS-CURRICULAR MODE:
 The teacher also selected these science TEKS:
 ${scienceTeksDescriptions}
 Where natural, theme math word problems around these science concepts. The math must remain rigorous and aligned to the math TEKS \u2014 the science context is vocabulary reinforcement, not a separate learning objective. For cross-curricular problems, set "scienceTeksConnection" to the relevant science TEKS code. Example: "Tony Stark's research lab has 456 rainforest plant specimens. If 189 need to be moved to the new biodome, how many remain in the lab?"`;
+    }
+
+    // === BLOCK 4: PRE-SELECTED NUMBERS ===
+    if (operandAssignments && operandAssignments.length > 0) {
+      const opSymbols = { 'ADD': '+', 'SUBTRACT': '\u2212', 'MULTIPLY': '\u00D7', 'DIVIDE': '\u00F7' };
+      const lines = operandAssignments.map((a, i) => {
+        const diff = i < 3 ? 'easy' : i < 7 ? 'medium' : 'hard';
+        if (a.operation) {
+          return `Problem ${i + 1}: ${a.operation} ${a.operands[0]} ${opSymbols[a.operation] || '?'} ${a.operands[1]}, TEKS ${a.teks}, ${diff}`;
+        }
+        return `Problem ${i + 1}: (your choice of operation and numbers), TEKS ${a.teks}, ${diff}`;
+      });
+
+      prompt += `
+
+PRE-SELECTED NUMBERS (JavaScript-generated for guaranteed variety):
+For each problem below, write an Iron Man themed word problem that naturally incorporates the EXACT numbers shown. Echo back the operation and operands unchanged in your JSON response. Do NOT substitute different numbers.
+For problems marked "(your choice)", you select the operation and numbers following the rules above.
+
+${lines.join('\n')}`;
     }
 
     return prompt;
@@ -379,7 +581,7 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
      RESPONSE PARSING & VALIDATION
      ========================================= */
 
-  _parseMathResponse(raw) {
+  _parseMathResponse(raw, operandAssignments = []) {
     const parsed = this._extractJSON(raw);
     const problems = parsed.problems || parsed;
 
@@ -388,6 +590,15 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
     }
 
     return problems.map((p, index) => {
+      // Override with pre-selected operands (safety net — ensures correctness
+      // even if LLM substituted different numbers in its response)
+      const preSelected = operandAssignments[index];
+      if (preSelected && preSelected.operation) {
+        p.operation = preSelected.operation;
+        p.operands = preSelected.operands;
+        p.answerType = 'integer';
+      }
+
       const firewallNumber = p.firewallNumber || (index + 1);
       const operation = this._validateOperation(p.operation);
       const answerType = p.answerType || 'integer';

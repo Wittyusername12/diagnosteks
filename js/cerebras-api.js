@@ -33,7 +33,7 @@ function generateOperandsForTeks(teks, problemIndex) {
     case '3.4A':
     case '3.5A': {
       // Add/subtract within 1,000
-      const operation = problemIndex % 2 === 0 ? 'ADD' : 'SUBTRACT';
+      const operation = Math.random() < 0.5 ? 'ADD' : 'SUBTRACT';
       let a, b;
       if (tier === 'easy') {
         a = randomInt(20, 99);
@@ -52,7 +52,7 @@ function generateOperandsForTeks(teks, problemIndex) {
     case '3.4F':
     case '3.4D': {
       // Multiply/divide facts within 10×10
-      const operation = problemIndex % 2 === 0 ? 'MULTIPLY' : 'DIVIDE';
+      const operation = Math.random() < 0.5 ? 'MULTIPLY' : 'DIVIDE';
       let a, b;
       if (tier === 'easy') {
         a = randomInt(2, 5);
@@ -73,7 +73,7 @@ function generateOperandsForTeks(teks, problemIndex) {
     case '3.4K':
     case '3.5B': {
       // Multiply/divide within 100
-      const operation = problemIndex % 2 === 0 ? 'MULTIPLY' : 'DIVIDE';
+      const operation = Math.random() < 0.5 ? 'MULTIPLY' : 'DIVIDE';
       let a, b;
       if (tier === 'easy') {
         a = randomInt(2, 5);
@@ -298,7 +298,7 @@ class CerebrasAPI {
       { role: 'user', content: `Generate 3 science questions for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}` }
     ];
 
-    const raw = await this._callWorker(messages, 0.5);
+    const raw = await this._callWorker(messages, 0.2);
     return this._parseScienceResponse(raw);
   }
 
@@ -590,13 +590,27 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
     }
 
     return problems.map((p, index) => {
-      // Override with pre-selected operands (safety net — ensures correctness
+      // Override with pre-selected operands (safety net — ensures fresh numbers
       // even if LLM substituted different numbers in its response)
       const preSelected = operandAssignments[index];
       if (preSelected && preSelected.operation) {
-        p.operation = preSelected.operation;
+        // Override operands only — keeps numbers fresh from Math.random()
+        // Do NOT override operation — LLM's narrative determines the operation
+        // (e.g., TEKS 3.4A covers both ADD and SUBTRACT, so either is valid)
         p.operands = preSelected.operands;
         p.answerType = 'integer';
+
+        // Guard: ensure LLM's operation is compatible with pre-generated operands
+        const llmOp = (p.operation || '').toUpperCase();
+        const preOp = preSelected.operation;
+        if (preOp === 'DIVIDE' && llmOp === 'MULTIPLY') {
+          // Operands are [product, factor] — multiplying gives a huge number
+          p.operation = 'DIVIDE';
+        } else if (preOp === 'MULTIPLY' && llmOp === 'DIVIDE') {
+          // Operands are [a, b] small factors — dividing may not be clean
+          p.operation = 'MULTIPLY';
+        }
+        // For ADD/SUBTRACT: _validateOperands handles a<b swap, so either is fine
       }
 
       const firewallNumber = p.firewallNumber || (index + 1);

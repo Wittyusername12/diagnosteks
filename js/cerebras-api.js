@@ -463,11 +463,18 @@ Generate bare arithmetic expressions only — no word problem context. Set each 
 PROBLEM FORMAT: WORD PROBLEMS
 Every problem MUST be a rich real-world word problem with full narrative context (2-4 sentences, 30-80 words). No bare arithmetic expressions.`;
     } else {
-      // 'mix' format — explicit instruction to produce both types
+      // 'mix' format — explicit integer counts for word vs bare
+      const mixOptions = [
+        { word: Math.ceil(count * 0.6), bare: Math.floor(count * 0.4) },
+        { word: Math.ceil(count * 0.5), bare: Math.floor(count * 0.5) },
+        { word: Math.floor(count * 0.4), bare: Math.ceil(count * 0.6) },
+      ];
+      const ratio = mixOptions[Math.floor(Math.random() * mixOptions.length)];
+      console.log(`[CerebrasAPI] Mix format ratio: ${ratio.word} word / ${ratio.bare} bare`);
       prompt += `
 
 PROBLEM FORMAT: MIX
-Generate approximately HALF of the math problems as word problems with narrative context (e.g., "Iron Man has 5 boxes of 3 repulsor units each...") and approximately HALF as bare arithmetic expressions (e.g., set narrative to "Solve: 245 + 318 = ?" with no story context). The split does not need to be exactly 50/50, but there MUST be a clear mix of both formats. Do NOT generate all word problems.`;
+Generate exactly ${ratio.word} of the ${count} math problems as word problems with narrative context (characters, scenarios, Avengers themes, 2-4 sentences, 30-80 words). Generate exactly ${ratio.bare} of the ${count} math problems as bare arithmetic expressions — set their narrative to "Solve: [expression]" with no story context (under 10 words). This split is MANDATORY — do not generate all word problems. You MUST produce exactly ${ratio.bare} bare arithmetic problems.`;
     }
 
     // === BLOCK 5: PRE-SELECTED NUMBERS ===

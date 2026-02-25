@@ -115,7 +115,7 @@ const TeacherReview = (() => {
         answerType: p.answerType || 'integer',
         format: _detectFormat(displayText),
         crossCurricular: p.scienceTeksConnection
-          ? { scienceTeks: p.scienceTeksConnection, label: p.scienceTeksConnection }
+          ? { scienceTeks: p.scienceTeksConnection, label: p.scienceLabel || '' }
           : null,
         source: 'ai',
         gradeLevel: gradeLevel,
@@ -244,7 +244,7 @@ const TeacherReview = (() => {
           <div class="im-review-row-content">
             <p class="im-review-row-preview${isOk ? ' approved' : ''}">${_esc(preview)}${preview.length >= 50 ? '…' : ''}</p>
             <div class="im-review-row-meta">
-              <span class="im-review-row-teks">${_esc(prob.teks)}${prob.difficulty ? ' · ' + prob.difficulty : ''}</span>
+              <span class="im-review-row-teks" title="${_esc(prob.teks + ': ' + _getTeksDescription(prob.teks, prob.gradeLevel))}">${_esc(prob.teks)}${prob.difficulty ? ' · ' + prob.difficulty : ''}</span>
               ${prob.crossCurricular ? '<span class="im-review-row-cross">✦ cross</span>' : ''}
               ${isUp ? '<span class="im-review-row-uploaded">UPLOADED</span>' : ''}
             </div>
@@ -269,10 +269,11 @@ const TeacherReview = (() => {
   }
 
   function _renderValidationChip(label, status) {
-    const iconMap = { pass: '✅', warn: '⚠️', fail: '❌', pending: '⏳', skip: '—' };
+    const iconMap = { pass: '✅', warn: '⚠️', fail: '❌', pending: '⏳', skip: '—', override: '⚠️' };
     const icon = iconMap[status] || '⏳';
+    const displayLabel = status === 'override' ? `${label}: OVERRIDE` : label;
     const cls = `im-review-chip im-review-chip-${status || 'pending'}`;
-    return `<span class="${cls}">${icon} ${_esc(label)}${status === 'pending' ? ': Pending' : ''}</span>`;
+    return `<span class="${cls}">${icon} ${_esc(displayLabel)}${status === 'pending' ? ': Pending' : ''}</span>`;
   }
 
   function _renderRightPanel(p, v, isScience) {
@@ -300,12 +301,19 @@ const TeacherReview = (() => {
 
     // Badges row (TEKS, difficulty, operation, cross-curricular, uploaded, approved, ★ favorite)
     html += `<div class="im-review-badges">`;
-    html += `<span class="im-review-badge-teks ${isScience ? 'science' : 'math'}">${_esc(p.teks)}</span>`;
+    const teksDesc = _getTeksDescription(p.teks, p.gradeLevel);
+    html += `<span class="im-review-badge-teks ${isScience ? 'science' : 'math'}" title="${_esc(p.teks + (teksDesc ? ': ' + teksDesc : ''))}">${_esc(p.teks)}</span>`;
     if (p.difficulty) html += `<span class="im-review-badge-difficulty">${_esc(p.difficulty)}</span>`;
     if (p.operation) html += `<span class="im-review-badge-operation">${_esc(p.operation)}</span>`;
     if (p.format) html += `<span class="im-review-badge-format">${p.format === 'bare' ? 'PURE MATH' : 'WORD'}</span>`;
     if (isScience) html += `<span class="im-review-badge-science-type">SCIENCE · FURY INTERRUPTION</span>`;
-    if (p.crossCurricular) html += `<span class="im-review-badge-cross">✦ ${_esc(p.crossCurricular.scienceTeks)}: ${_esc(p.crossCurricular.label || '')}</span>`;
+    if (p.crossCurricular) {
+      const sciCode = p.crossCurricular.scienceTeks || '';
+      const sciLabel = p.crossCurricular.label && p.crossCurricular.label !== sciCode
+        ? p.crossCurricular.label
+        : _getTeksDescription(sciCode, p.gradeLevel);
+      html += `<span class="im-review-badge-cross" title="${_esc(sciCode + (sciLabel ? ': ' + sciLabel : ''))}">✦ ${_esc(sciCode)}${sciLabel ? ': ' + _esc(sciLabel) : ''}</span>`;
+    }
     if (p.source === 'uploaded') html += `<span class="im-review-badge-uploaded">UPLOADED</span>`;
     if (p.status === 'approved') html += `<span class="im-review-badge-approved">✓ APPROVED</span>`;
     html += `<button class="im-review-fav-btn${p.favorited ? ' active' : ''}" id="im-review-fav-btn">${p.favorited ? '★ Favorited' : '☆ Favorite'}</button>`;
@@ -374,6 +382,13 @@ const TeacherReview = (() => {
       <div class="im-review-quick-actions">
         ${quickActions.map(qa => `<button class="im-review-quick-btn" data-feedback="${_esc(qa.feedback)}">${qa.icon} ${_esc(qa.label)}</button>`).join('')}
       </div>
+      ${!isScience ? `<div class="im-review-teks-override">
+        <label class="im-review-override-label">
+          <input type="checkbox" class="im-review-override-checkbox" id="im-review-override-cb" ${p.teksOverride ? 'checked' : ''}>
+          <span class="im-review-override-text">${p.teksOverride ? '🔓' : '🔒'} TEKS Override</span>
+        </label>
+        <span class="im-review-override-hint">Allow numbers beyond TEKS limits for this problem</span>
+      </div>` : ''}
       <p class="im-review-feedback-subtitle">Or describe what you want changed:</p>
       <textarea class="im-review-feedback-textarea" id="im-review-feedback" rows="3"
         placeholder="${isScience
@@ -505,6 +520,20 @@ const TeacherReview = (() => {
   function _bindRightPanelEvents() {
     const p = _problems[_selectedIdx];
     if (!p) return;
+
+    // TEKS Override checkbox
+    const overrideCb = _container.querySelector('#im-review-override-cb');
+    if (overrideCb) {
+      overrideCb.addEventListener('change', () => {
+        p.teksOverride = overrideCb.checked;
+        // Re-validate with override state
+        const teksRules = window.TEKS_RULES || {};
+        if (window.ValidationEngine) {
+          _validation[p.id] = window.ValidationEngine.validateProblem(p, teksRules);
+        }
+        _render();
+      });
+    }
 
     // Favorite button
     const favBtn = _container.querySelector('#im-review-fav-btn');
@@ -665,6 +694,7 @@ const TeacherReview = (() => {
     const p = _problems[idx];
     if (!p || p.status === 'regenerating') return;
 
+    const savedOverride = p.teksOverride || false;
     p.status = 'regenerating';
     _render();
 
@@ -679,39 +709,57 @@ const TeacherReview = (() => {
         const feedbackRequestsScience = feedbackLower.includes('science') || feedbackLower.includes('cross-curricular') || feedbackLower.includes('cross curricular');
         const hasCross = !!(p.crossCurricular) || feedbackRequestsScience;
 
-        const newProblem = await window.cerebrasAPI.regenerateProblem(
-          _options.grade,
-          p.teks,
-          p.operation || '',
-          feedback,
-          {
-            format: _options.format || 'mix',
-            crossCurricular: hasCross,
-            scienceTeks: _options.scienceTeks,
-            isScience: isScience
-          }
-        );
+        const regenOpts = {
+          format: _options.format || 'mix',
+          crossCurricular: hasCross,
+          scienceTeks: _options.scienceTeks,
+          isScience: isScience
+        };
 
-        if (newProblem) {
+        const MAX_REGEN_RETRIES = 3;
+        let bestMapped = null;
+        let bestValidation = null;
+
+        for (let attempt = 0; attempt <= (savedOverride || isScience ? 0 : MAX_REGEN_RETRIES); attempt++) {
+          const newProblem = await window.cerebrasAPI.regenerateProblem(
+            _options.grade, p.teks, p.operation || '', feedback, regenOpts
+          );
+
+          if (!newProblem) continue;
+
           // Map the new problem to review schema
-          if (isScience) {
-            const mapped = _mapApiToReview([], [newProblem], _options.grade)[0];
-            if (mapped) Object.assign(p, mapped, { status: 'pending', feedback: '', favorited: false });
-          } else {
-            const mapped = _mapApiToReview([newProblem], [], _options.grade)[0];
-            if (mapped) Object.assign(p, mapped, { status: 'pending', feedback: '', favorited: false });
-          }
+          const mapped = isScience
+            ? _mapApiToReview([], [newProblem], _options.grade)[0]
+            : _mapApiToReview([newProblem], [], _options.grade)[0];
+          if (!mapped) continue;
 
-          // Re-validate this problem
+          mapped.teksOverride = savedOverride;
           const teksRules = window.TEKS_RULES || {};
-          if (window.ValidationEngine) {
-            _validation[p.id] = window.ValidationEngine.validateProblem(p, teksRules);
+          const v = window.ValidationEngine
+            ? window.ValidationEngine.validateProblem(mapped, teksRules)
+            : { category: 'yellow', chips: {}, flags: [] };
+
+          bestMapped = mapped;
+          bestValidation = v;
+
+          const hasTeksFailure = v.chips && v.chips.teks === 'fail';
+          if (!hasTeksFailure || savedOverride) {
+            if (savedOverride && hasTeksFailure) {
+              console.log(`[Review] Problem ${idx + 1}: TEKS violation overridden by teacher`);
+            }
+            break; // Good enough — use this one
           }
+          console.log(`[Review] Problem ${idx + 1}: TEKS violation on regeneration, retrying (${attempt + 1}/${MAX_REGEN_RETRIES})`);
+        }
+
+        if (bestMapped) {
+          Object.assign(p, bestMapped, { status: 'pending', feedback: '', favorited: false });
+          p.teksOverride = savedOverride;
+          if (bestValidation) _validation[p.id] = bestValidation;
         } else {
           p.status = 'pending';
         }
       } else {
-        // No API available — just reset status
         console.warn('[TeacherReview] regenerateProblem not available');
         p.status = 'pending';
         p.feedback = '';
@@ -895,6 +943,21 @@ const TeacherReview = (() => {
   }
 
   // ── Helpers ───────────────────────────────────────────────────
+
+  function _getTeksDescription(code, gradeLevel) {
+    if (!code) return '';
+    // Try TEKS_RULES_DATA first (math, detailed)
+    const rules = window.TEKS_RULES_DATA || {};
+    if (rules[code] && rules[code].text) return rules[code].text;
+    // Fall back to TEKS_DATA (has both math + science)
+    const grade = gradeLevel || (_options.grade);
+    if (typeof TEKS_DATA !== 'undefined' && TEKS_DATA[grade]) {
+      const all = [...(TEKS_DATA[grade].math || []), ...(TEKS_DATA[grade].science || [])];
+      const match = all.find(t => t.code === code);
+      if (match && match.description) return match.description;
+    }
+    return '';
+  }
 
   function _esc(str) {
     if (!str) return '';

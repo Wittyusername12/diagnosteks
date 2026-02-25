@@ -275,12 +275,16 @@ function validateProblem(problem, teksRules) {
   }
   flags.push(...teksFlags);
 
+  // ── TEKS Override handling ───────────────────────────────────
+  const teksOverridden = (problem.teksOverride === true && !teksAligned);
+  const effectiveTeksAligned = teksOverridden ? true : teksAligned;
+
   // ── Composite Score ──────────────────────────────────────────
   const signals = {
     structuralValid,
     mathCorrect,
-    teksAligned,
-    contentFlags
+    teksAligned: effectiveTeksAligned,
+    contentFlags: teksOverridden ? [...contentFlags, ...teksFlags.map(f => f.replace('VIOLATION', 'OVERRIDE'))] : contentFlags
   };
 
   const result = computeCompositeScore(signals);
@@ -289,7 +293,7 @@ function validateProblem(problem, teksRules) {
   const chips = {
     structure: structuralValid ? 'pass' : 'fail',
     content: contentFlags.length > 0 ? 'warn' : 'pass',
-    teks: teksAligned ? 'pass' : 'fail',
+    teks: teksOverridden ? 'override' : (teksAligned ? 'pass' : 'fail'),
     llm: 'pending'
   };
 

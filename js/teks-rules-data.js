@@ -1,0 +1,6199 @@
+// Auto-generated from teks-rules.json — do not edit manually
+window.TEKS_RULES_DATA = {
+  "1.2A": {
+    "text": "recognize instantly the quantity of structured arrangements",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "identification",
+    "validationTypes": [
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "array"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Subitizing - conceptual, no arithmetic"
+  },
+  "1.2B": {
+    "text": "compose and decompose numbers up to 120 in more than one way as so many hundreds, so many tens, and so many ones",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 1,
+        "maxDigits": 3,
+        "maxValue": 120
+      },
+      "operand2": {
+        "minDigits": 1,
+        "maxDigits": 3,
+        "maxValue": 120
+      }
+    },
+    "maxResult": 120,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Compose/decompose - result and all operands within 120"
+  },
+  "1.2C": {
+    "text": "use objects, pictures, and expanded and standard forms to represent numbers up to 120",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 120,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Representation - conceptual"
+  },
+  "1.2D": {
+    "text": "generate a number that is greater than or less than a given whole number up to 120",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "comparison",
+    "validationTypes": [
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 120
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 120
+      }
+    },
+    "maxResult": 120,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "All numbers must be 0-120"
+  },
+  "1.2E": {
+    "text": "use place value to compare whole numbers up to 120 using comparative language",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "comparison",
+    "validationTypes": [
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 120
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 120
+      }
+    },
+    "maxResult": 120,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "All numbers 0-120"
+  },
+  "1.2F": {
+    "text": "order whole numbers up to 120 using place value and open number lines",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "comparison",
+    "validationTypes": [
+      "comparison",
+      "ordering"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 120
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 120
+      }
+    },
+    "maxResult": 120,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "All numbers 0-120"
+  },
+  "1.2G": {
+    "text": "represent the comparison of two numbers to 100 using the symbols >, <, or =",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "comparison",
+    "validationTypes": [
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 100
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 100
+      }
+    },
+    "maxResult": 100,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "symbol",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers to 100 only (not 120)"
+  },
+  "1.3A": {
+    "text": "determine the sum of a multiple of 10 and a one-digit number in problems up to 99",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 10,
+        "maxValue": 90,
+        "mustBeMultipleOf": 10
+      },
+      "operand2": {
+        "minDigits": 1,
+        "maxDigits": 1,
+        "minValue": 0,
+        "maxValue": 9
+      }
+    },
+    "maxResult": 99,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Operand1 must be a multiple of 10, operand2 must be 1 digit, sum <=99"
+  },
+  "1.3B": {
+    "text": "solve word problems involving joining, separating, and comparing sets within 20 and unknowns as any one of the terms in the problem",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 20
+      }
+    },
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine",
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "All numbers and result within 20. Unknown can be any term."
+  },
+  "1.3C": {
+    "text": "compose 10 with two or more addends with and without concrete objects",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 10
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 10,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Result must equal exactly 10. Making 10."
+  },
+  "1.3D": {
+    "text": "apply basic fact strategies to add and subtract within 20, including making 10 and decomposing a number leading to a 10",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 20
+      }
+    },
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Basic facts within 20"
+  },
+  "1.3E": {
+    "text": "explain strategies used to solve addition and subtraction problems up to 20",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 20
+      }
+    },
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Explain strategies - conceptual but numbers constrained to within 20"
+  },
+  "1.3F": {
+    "text": "generate and solve problem situations when given a number sentence involving addition or subtraction of numbers within 20",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 20
+      }
+    },
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine",
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Within 20"
+  },
+  "1.4A": {
+    "text": "identify U.S. coins, including pennies, nickels, dimes, and quarters, by value and describe the relationships among them",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "money",
+    "validationTypes": [
+      "money",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 25,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Coin identification - conceptual"
+  },
+  "1.4B": {
+    "text": "write a number with the cent symbol to describe the value of a coin",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "money",
+    "validationTypes": [
+      "money"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 25,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Cent notation - conceptual"
+  },
+  "1.4C": {
+    "text": "use relationships to count by twos, fives, and tens to determine the value of a collection of pennies, nickels, and/or dimes",
+    "grade": 1,
+    "strand": "number and operations",
+    "primaryType": "money",
+    "validationTypes": [
+      "money",
+      "computation"
+    ],
+    "operations": [
+      "ADD"
+    ],
+    "operandConstraints": null,
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Skip counting coins - result is coin total in cents, max ~100. maxResult=100 inferred (collection of dimes up to $1), not explicit in TEKS."
+  },
+  "1.5A": {
+    "text": "recite numbers forward and backward from any given number between 1 and 120",
+    "grade": 1,
+    "strand": "algebraic reasoning",
+    "primaryType": "patterns",
+    "validationTypes": [
+      "patterns"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 120,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Oral counting - conceptual"
+  },
+  "1.5B": {
+    "text": "skip count by twos, fives, and tens to determine the total number of objects up to 120 in a set",
+    "grade": 1,
+    "strand": "algebraic reasoning",
+    "primaryType": "patterns",
+    "validationTypes": [
+      "patterns",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "allowedValues": [
+          2,
+          5,
+          10
+        ]
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 60
+      }
+    },
+    "maxResult": 120,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Skip counting by 2, 5, or 10. Result <=120."
+  },
+  "1.5C": {
+    "text": "use relationships to determine the number that is 10 more and 10 less than a given number up to 120",
+    "grade": 1,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "placeValue"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 120
+      },
+      "operand2": {
+        "exactValue": 10
+      }
+    },
+    "maxResult": 120,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Specifically +10 or -10 only"
+  },
+  "1.5D": {
+    "text": "represent word problems involving addition and subtraction of whole numbers up to 20 using concrete and pictorial models and number sentences",
+    "grade": 1,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 20
+      }
+    },
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine",
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Within 20"
+  },
+  "1.5E": {
+    "text": "understand that the equal sign represents a relationship where expressions on each side of the equal sign represent the same value(s)",
+    "grade": 1,
+    "strand": "algebraic reasoning",
+    "primaryType": "conceptual",
+    "validationTypes": [
+      "conceptual"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Equal sign concept - purely conceptual"
+  },
+  "1.5F": {
+    "text": "determine the unknown whole number in an addition or subtraction equation when the unknown may be any one of the three or four terms in the equation",
+    "grade": 1,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "algebra"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 20
+      }
+    },
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Missing addend/subtrahend/sum problems within 20. Operand maxValue=20 inferred from Grade 1 add/sub context, not explicit in SE text."
+  },
+  "1.5G": {
+    "text": "apply properties of operations to add and subtract two or three numbers",
+    "grade": 1,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 20
+      }
+    },
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Commutative, associative properties within 20. Operand maxValue=20 inferred from Grade 1 add/sub context, not explicit in SE text."
+  },
+  "1.6A": {
+    "text": "classify and sort regular and irregular two-dimensional shapes based on attributes using informal geometric language",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Shape classification - conceptual"
+  },
+  "1.6B": {
+    "text": "distinguish between attributes that define a two-dimensional or three-dimensional figure and attributes that do not define the shape",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Defining attributes - conceptual"
+  },
+  "1.6C": {
+    "text": "create two-dimensional figures, including circles, triangles, rectangles, and squares, as special rectangles, rhombuses, and hexagons",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Create shapes - hands-on"
+  },
+  "1.6D": {
+    "text": "identify two-dimensional shapes, including circles, triangles, rectangles, and squares, as special rectangles, rhombuses, and hexagons and describe their attributes using formal geometric language",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Shape identification - conceptual"
+  },
+  "1.6E": {
+    "text": "identify three-dimensional solids, including spheres, cones, cylinders, rectangular prisms (including cubes), and triangular prisms, and describe their attributes using formal geometric language",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "3D solid identification - conceptual"
+  },
+  "1.6F": {
+    "text": "compose two-dimensional shapes by joining two, three, or four figures to produce a target shape in more than one way if possible",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Compose shapes - hands-on"
+  },
+  "1.6G": {
+    "text": "partition two-dimensional figures into two and four fair shares or equal parts and describe the parts using words",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      4
+    ],
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "fractionCircle"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Halves and fourths only"
+  },
+  "1.6H": {
+    "text": "identify examples and non-examples of halves and fourths",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      4
+    ],
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "fractionCircle"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Halves and fourths only"
+  },
+  "1.7A": {
+    "text": "use measuring tools to measure the length of objects to reinforce the continuous nature of linear measurement",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Hands-on measurement"
+  },
+  "1.7B": {
+    "text": "illustrate that the length of an object is the number of same-size units of length that, when laid end-to-end with no gaps or overlaps, reach from one end of the object to the other",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Unit concept - conceptual"
+  },
+  "1.7C": {
+    "text": "measure the same object/distance with units of two different lengths and describe how and why the measurements differ",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Measurement comparison - conceptual"
+  },
+  "1.7D": {
+    "text": "describe a length to the nearest whole unit using a number and a unit",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Length description - conceptual"
+  },
+  "1.7E": {
+    "text": "tell time to the hour and half hour using analog and digital clocks",
+    "grade": 1,
+    "strand": "geometry and measurement",
+    "primaryType": "time",
+    "validationTypes": [
+      "time"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "time",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Time to hour/half hour"
+  },
+  "1.8A": {
+    "text": "collect, sort, and organize data in up to three categories using models/representations such as tally marks or T-charts",
+    "grade": 1,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "barGraph"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Data collection - conceptual"
+  },
+  "1.8B": {
+    "text": "use data to create picture and bar-type graphs",
+    "grade": 1,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "barGraph"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Create graphs - hands-on"
+  },
+  "1.8C": {
+    "text": "draw conclusions and generate and answer questions using information from picture and bar-type graphs",
+    "grade": 1,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "barGraph"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Graph interpretation - numbers should be grade-appropriate (within 20). maxResult=20 inferred from Grade 1 data/arithmetic range, not explicit in TEKS."
+  },
+  "1.9A": {
+    "text": "define money earned as income",
+    "grade": 1,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "1.9B": {
+    "text": "identify income as a means of obtaining goods and services, oftentimes making choices between wants and needs",
+    "grade": 1,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "1.9C": {
+    "text": "distinguish between spending and saving",
+    "grade": 1,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "1.9D": {
+    "text": "consider charitable giving",
+    "grade": 1,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "2.2A": {
+    "text": "compose and decompose numbers up to 1,200 in more than one way as a sum of so many thousands, hundreds, tens, and ones",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 1200
+      },
+      "operand2": {
+        "maxValue": 1200
+      }
+    },
+    "maxResult": 1200,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers and results within 1,200"
+  },
+  "2.2B": {
+    "text": "use standard, word, and expanded forms to represent numbers up to 1,200",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 1200
+      }
+    },
+    "maxResult": 1200,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers within 1,200"
+  },
+  "2.2C": {
+    "text": "generate a number that is greater than or less than a given whole number up to 1,200",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "comparison",
+    "validationTypes": [
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 1200
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 1200
+      }
+    },
+    "maxResult": 1200,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers 0-1200"
+  },
+  "2.2D": {
+    "text": "use place value to compare and order whole numbers up to 1,200 using comparative language, numbers, and symbols (>, <, or =)",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "comparison",
+    "validationTypes": [
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 1200
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 1200
+      }
+    },
+    "maxResult": 1200,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "symbol",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers 0-1200"
+  },
+  "2.2E": {
+    "text": "locate the position of a given whole number on an open number line",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1200,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Number line placement within 1,200"
+  },
+  "2.2F": {
+    "text": "name the whole number that corresponds to a specific point on a number line",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1200,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Number line reading within 1,200"
+  },
+  "2.3A": {
+    "text": "partition objects into equal parts and name the parts, including halves, fourths, and eighths, using words",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      4,
+      8
+    ],
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "fractionCircle"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Denominators limited to 2, 4, 8"
+  },
+  "2.3B": {
+    "text": "explain that the more fractional parts used to make a whole, the smaller the part; and the fewer the fractional parts, the larger the part",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      4,
+      8
+    ],
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "fractionBar"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Conceptual - inverse relationship"
+  },
+  "2.3C": {
+    "text": "use concrete models to count fractional parts beyond one whole using words and recognize how many parts it takes to equal one whole",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction"
+    ],
+    "operations": [
+      "ADD"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      4,
+      8
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "fractionCircle"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Counting unit fractions beyond 1 whole"
+  },
+  "2.3D": {
+    "text": "identify examples and non-examples of halves, fourths, and eighths",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      4,
+      8
+    ],
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "fractionCircle"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Denominators must be 2, 4, or 8"
+  },
+  "2.4A": {
+    "text": "recall basic facts to add and subtract within 20 with automaticity",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 20
+      },
+      "operand2": {
+        "maxValue": 20
+      }
+    },
+    "maxResult": 20,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Basic facts within 20 - automaticity"
+  },
+  "2.4B": {
+    "text": "add up to four two-digit numbers and subtract two-digit numbers using mental strategies and algorithms based on knowledge of place value and properties of operations",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 2,
+        "maxDigits": 2,
+        "minValue": 10
+      },
+      "operand2": {
+        "minDigits": 2,
+        "maxDigits": 2,
+        "minValue": 10
+      }
+    },
+    "maxResult": 396,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Up to four 2-digit addends (max sum ~396) or subtract 2-digit from 2-digit"
+  },
+  "2.4C": {
+    "text": "solve one-step and multi-step word problems involving addition and subtraction within 1,000 using a variety of strategies based on place value, including algorithms",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 1000
+      },
+      "operand2": {
+        "maxValue": 1000
+      }
+    },
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine",
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Within 1,000. Multi-step allowed."
+  },
+  "2.4D": {
+    "text": "generate and solve problem situations for a given mathematical number sentence involving addition and subtraction of whole numbers within 1,000",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 1000
+      },
+      "operand2": {
+        "maxValue": 1000
+      }
+    },
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Within 1,000"
+  },
+  "2.5A": {
+    "text": "determine the value of a collection of coins up to one dollar",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "money",
+    "validationTypes": [
+      "money",
+      "computation"
+    ],
+    "operations": [
+      "ADD"
+    ],
+    "operandConstraints": null,
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Coin counting up to 100 cents"
+  },
+  "2.5B": {
+    "text": "use the cent symbol, dollar sign, and the decimal point to name the value of a collection of coins",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "money",
+    "validationTypes": [
+      "money"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Notation - conceptual"
+  },
+  "2.6A": {
+    "text": "model, create, and describe contextual multiplication situations in which equivalent sets of concrete objects are joined",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 10
+      },
+      "operand2": {
+        "maxValue": 10
+      }
+    },
+    "maxResult": 100,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "array"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Intro to multiplication with small groups - modeling, not formal facts. Operand maxValues=10 inferred from early multiplication context, not explicit in TEKS."
+  },
+  "2.6B": {
+    "text": "model, create, and describe contextual division situations in which a set of concrete objects is separated into equivalent sets",
+    "grade": 2,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 2,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 10,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "array"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Intro to division with small equal groups - modeling. Operand maxValues (dividend=20, divisor 2-10) inferred from early division context, not explicit in TEKS."
+  },
+  "2.7A": {
+    "text": "determine whether a number up to 40 is even or odd using pairings of objects to represent the number",
+    "grade": 2,
+    "strand": "algebraic reasoning",
+    "primaryType": "identification",
+    "validationTypes": [
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 1,
+        "maxValue": 40
+      }
+    },
+    "maxResult": 40,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "array"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers 1-40 only"
+  },
+  "2.7B": {
+    "text": "use an understanding of place value to determine the number that is 10 or 100 more or less than a given number up to 1,200",
+    "grade": 2,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "placeValue"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 1200
+      },
+      "operand2": {
+        "allowedValues": [
+          10,
+          100
+        ]
+      }
+    },
+    "maxResult": 1200,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Specifically +10/-10/+100/-100 only. Numbers within 1,200."
+  },
+  "2.7C": {
+    "text": "represent and solve addition and subtraction word problems where unknowns may be any one of the terms in the problem",
+    "grade": 2,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "algebra"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 1000
+      },
+      "operand2": {
+        "maxValue": 1000
+      }
+    },
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Missing term problems within 1,000. Operand maxValue=1000 inferred from 2.4C \"within 1,000\" context, not explicit in SE text."
+  },
+  "2.8A": {
+    "text": "create two-dimensional shapes based on given attributes, including number of sides and vertices",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Create shapes - hands-on"
+  },
+  "2.8B": {
+    "text": "classify and sort three-dimensional solids, including spheres, cones, cylinders, rectangular prisms (including cubes as special rectangular prisms), and triangular prisms, based on attributes using formal geometric language",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "3D classification"
+  },
+  "2.8C": {
+    "text": "classify and sort polygons with 12 or fewer sides according to attributes, including identifying the number of sides and number of vertices",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Polygon classification"
+  },
+  "2.8D": {
+    "text": "compose two-dimensional shapes and three-dimensional solids with given properties or attributes",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Compose shapes"
+  },
+  "2.8E": {
+    "text": "decompose two-dimensional shapes such as cutting out a square from a rectangle, dividing a shape in half, or partitioning a rectangle into identical triangles and identify the resulting geometric parts",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Decompose shapes"
+  },
+  "2.9A": {
+    "text": "find the length of objects using concrete models for standard units of length",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Hands-on measurement"
+  },
+  "2.9B": {
+    "text": "describe the inverse relationship between the size of the unit and the number of units needed to equal the length of an object",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Inverse relationship - conceptual"
+  },
+  "2.9C": {
+    "text": "represent whole numbers as distances from any given location on a number line",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "placeValue"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1200,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Number line within grade-level range"
+  },
+  "2.9D": {
+    "text": "determine the length of an object to the nearest marked unit using rulers, yardsticks, meter sticks, or measuring tapes",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Hands-on measurement"
+  },
+  "2.9E": {
+    "text": "determine a solution to a problem involving length, including estimating lengths",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Length word problems"
+  },
+  "2.9F": {
+    "text": "use concrete models of square units to find the area of a rectangle by covering it with no gaps or overlaps, counting to find the total number of square units, and describing the measurement using a number and the unit",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement",
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "ADD"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 10
+      },
+      "operand2": {
+        "maxValue": 10
+      }
+    },
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "array",
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Area by counting square units - small rectangles. Operand maxValue=10 inferred from Grade 2 rectangle context, not explicit in TEKS."
+  },
+  "2.9G": {
+    "text": "read and write time to the nearest one-minute increment using analog and digital clocks and distinguish between a.m. and p.m.",
+    "grade": 2,
+    "strand": "geometry and measurement",
+    "primaryType": "time",
+    "validationTypes": [
+      "time"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "time",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Time to minute - conceptual"
+  },
+  "2.10A": {
+    "text": "explain that the length of a bar in a bar graph or the number of pictures in a pictograph represents the number of data points for a given category",
+    "grade": 2,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "barGraph"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Graph interpretation - conceptual"
+  },
+  "2.10B": {
+    "text": "organize a collection of data with up to four categories using pictographs and bar graphs with intervals of one or more",
+    "grade": 2,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "barGraph"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Create graphs - conceptual"
+  },
+  "2.10C": {
+    "text": "write and solve one-step word problems involving addition or subtraction using data represented within pictographs and bar graphs with intervals of one",
+    "grade": 2,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": 100,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "barGraph"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Data word problems - add/subtract from graphs. maxResult=100 inferred from Grade 2 data range, not explicit in TEKS."
+  },
+  "2.10D": {
+    "text": "draw conclusions and make predictions from information in a graph",
+    "grade": 2,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "barGraph"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Predictions from graphs - conceptual"
+  },
+  "2.11A": {
+    "text": "calculate how money saved can accumulate into a larger amount over time",
+    "grade": 2,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "2.11B": {
+    "text": "explain that saving is an alternative to spending",
+    "grade": 2,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "2.11C": {
+    "text": "distinguish between a deposit and a withdrawal",
+    "grade": 2,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "2.11D": {
+    "text": "identify examples of borrowing and distinguish between responsible and irresponsible borrowing",
+    "grade": 2,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "2.11E": {
+    "text": "identify examples of lending and use concepts of__(if applicable)",
+    "grade": 2,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "2.11F": {
+    "text": "differentiate between producers and consumers and calculate the cost to produce a simple item",
+    "grade": 2,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "3.2A": {
+    "text": "compose and decompose numbers up to 100,000 as a sum of so many ten thousands, so many thousands, so many hundreds, so many tens, and so many ones using objects, pictorial models, and numbers, including expanded notation as appropriate",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 100000
+      },
+      "operand2": {
+        "maxValue": 100000
+      }
+    },
+    "maxResult": 100000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers within 100,000. STAAR Readiness standard."
+  },
+  "3.2B": {
+    "text": "describe the mathematical relationships found in the base-10 place value system through the hundred thousands place",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 100000
+      }
+    },
+    "maxResult": 100000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "10x relationships. STAAR Supporting."
+  },
+  "3.2C": {
+    "text": "represent a number on a number line as being between two consecutive multiples of 10; 100; 1,000; or 10,000 and use words to describe relative size of numbers in order to round whole numbers",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue",
+      "rounding"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 100000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Rounding via number line. STAAR Supporting."
+  },
+  "3.2D": {
+    "text": "compare and order whole numbers up to 100,000 and represent comparisons using the symbols >, <, or =",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "comparison",
+    "validationTypes": [
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 100000
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 100000
+      }
+    },
+    "maxResult": 100000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "symbol",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers 0-100,000. STAAR Readiness."
+  },
+  "3.3A": {
+    "text": "represent fractions greater than zero and less than or equal to one with denominators of 2, 3, 4, 6, and 8 using concrete objects and pictorial models, including strip diagrams and number lines",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "fractionCircle",
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Fraction > 0 and <= 1. Denominators MUST be in {2,3,4,6,8}."
+  },
+  "3.3B": {
+    "text": "determine the corresponding fraction greater than zero and less than or equal to one with denominators of 2, 3, 4, 6, and 8 given a specified point on a number line",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "numberLine",
+      "fractionBar"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Number line fraction identification. Denominators {2,3,4,6,8}. STAAR Supporting (2025)."
+  },
+  "3.3C": {
+    "text": "explain that the unit fraction 1/b represents the quantity formed by one part of a whole that has been partitioned into b equal parts where b is a non-zero whole number",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "fractionCircle"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Unit fractions. Denominators {2,3,4,6,8}. STAAR Supporting."
+  },
+  "3.3D": {
+    "text": "compose and decompose a fraction a/b with a numerator greater than zero and less than or equal to b as a sum of parts 1/b",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "computation"
+    ],
+    "operations": [
+      "ADD"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Decompose fractions. Numerator > 0, numerator <= denominator."
+  },
+  "3.3E": {
+    "text": "solve problems involving partitioning an object or a set of objects among two or more recipients using pictorial representations of fractions with denominators of 2, 3, 4, 6, and 8",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "fractionCircle"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Partition/sharing problems. Denominators {2,3,4,6,8}. STAAR Supporting."
+  },
+  "3.3F": {
+    "text": "represent equivalent fractions with denominators of 2, 3, 4, 6, and 8 using a variety of objects and pictorial models, including number lines",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Equivalent fractions. Denominators {2,3,4,6,8}. STAAR Readiness."
+  },
+  "3.3G": {
+    "text": "explain that two fractions are equivalent if and only if they are both represented by the same point on the number line or represent the same portion of a same size whole for an area model",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Explain equivalence. Denominators {2,3,4,6,8}."
+  },
+  "3.3H": {
+    "text": "compare two fractions having the same numerator or denominator in problems by reasoning about their sizes and justifying the conclusion using symbols, words, objects, and pictorial models",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "answerFormat": "symbol",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Compare fractions with SAME numerator OR SAME denominator. STAAR Readiness."
+  },
+  "3.4A": {
+    "text": "solve with fluency one-step and two-step problems involving addition and subtraction within 1,000 using strategies based on place value, properties of operations, and the relationship between addition and subtraction",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 1,
+        "maxDigits": 4,
+        "maxValue": 1000
+      },
+      "operand2": {
+        "minDigits": 1,
+        "maxDigits": 4,
+        "maxValue": 1000
+      }
+    },
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine",
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Within 1,000. Fluency standard. STAAR Readiness."
+  },
+  "3.4B": {
+    "text": "round to the nearest 10 or 100 or use compatible numbers to estimate solutions to addition and subtraction problems",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "estimation",
+    "validationTypes": [
+      "estimation",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 1000
+      },
+      "operand2": {
+        "maxValue": 1000
+      }
+    },
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Rounding to 10 or 100. STAAR Supporting."
+  },
+  "3.4C": {
+    "text": "determine the value of a collection of coins and bills",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "money",
+    "validationTypes": [
+      "money",
+      "computation"
+    ],
+    "operations": [
+      "ADD"
+    ],
+    "operandConstraints": null,
+    "maxResult": 10000,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Coins AND bills now"
+  },
+  "3.4D": {
+    "text": "determine the total number of objects when equally-sized groups of objects are combined or arranged in arrays up to 10 by 10",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 1,
+        "maxValue": 10
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "array"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Both factors 1-10. Arrays/equal groups. STAAR Supporting."
+  },
+  "3.4E": {
+    "text": "represent multiplication facts by using a variety of approaches such as repeated addition, equal-sized groups, arrays, area models, equal jumps on a number line, and skip counting",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 1,
+        "maxValue": 10
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "array",
+      "numberLine",
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Multiplication fact representation. Factors 1-10. STAAR Supporting."
+  },
+  "3.4F": {
+    "text": "recall facts to multiply up to 10 by 10 with automaticity and recall the corresponding division facts",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 1,
+        "maxValue": 10
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Multiplication/division facts. Both factors 1-10. STAAR classification unverified - tested 2019-2022 but not on 2024/2025 released tests."
+  },
+  "3.4G": {
+    "text": "use strategies and algorithms, including the standard algorithm, to multiply a two-digit number by a one-digit number",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 2,
+        "maxDigits": 2,
+        "minValue": 10,
+        "maxValue": 99
+      },
+      "operand2": {
+        "minDigits": 1,
+        "maxDigits": 1,
+        "minValue": 2,
+        "maxValue": 9
+      }
+    },
+    "maxResult": 891,
+    "minResult": 20,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "2-digit x 1-digit EXACTLY. STAAR Supporting. operand2.minValue=2: \u00d71/\u00f71 excluded as identity operations per pedagogical design; TEKS 'one-digit' technically includes 1."
+  },
+  "3.4H": {
+    "text": "determine the number of objects in each group when a set of objects is partitioned into equal shares or a set of objects is shared equally",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 100
+      },
+      "operand2": {
+        "minValue": 2,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "array"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Equal sharing/partitioning. STAAR Supporting."
+  },
+  "3.4I": {
+    "text": "determine if a number is even or odd using divisibility rules",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "identification",
+    "validationTypes": [
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1000,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Even/odd identification"
+  },
+  "3.4J": {
+    "text": "determine a quotient using the relationship between multiplication and division",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 100
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 10,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Division facts via multiplication relationship. STAAR Supporting."
+  },
+  "3.4K": {
+    "text": "solve one-step and two-step problems involving multiplication and division within 100 using strategies based on objects; pictorial models, including arrays, area models, and equal groups; properties of operations; or recall of facts",
+    "grade": 3,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 100
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "array",
+      "areaModel",
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Word problems mult/div within 100. 1-2 steps. STAAR Readiness."
+  },
+  "3.5A": {
+    "text": "represent one- and two-step problems involving addition and subtraction of whole numbers to 1,000 using pictorial models, number lines, and equations",
+    "grade": 3,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "algebra"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 1000
+      },
+      "operand2": {
+        "maxValue": 1000
+      }
+    },
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine",
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Represent problems to 1,000. STAAR Readiness."
+  },
+  "3.5B": {
+    "text": "represent and solve one- and two-step multiplication and division problems within 100 using arrays, strip diagrams, and equations",
+    "grade": 3,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "algebra"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 100
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "array",
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Mult/div within 100. STAAR Readiness."
+  },
+  "3.5C": {
+    "text": "describe a multiplication expression as a comparison such as 3 x 24 represents 3 times as much as 24",
+    "grade": 3,
+    "strand": "algebraic reasoning",
+    "primaryType": "conceptual",
+    "validationTypes": [
+      "conceptual"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Multiplicative comparison - conceptual. STAAR Supporting."
+  },
+  "3.5D": {
+    "text": "determine the unknown whole number in a multiplication or division equation relating three whole numbers when the unknown is either a missing factor or product",
+    "grade": 3,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "algebra"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 100
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 10
+      }
+    },
+    "maxResult": 100,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Missing factor/product. Within 100."
+  },
+  "3.5E": {
+    "text": "represent real-world relationships using number pairs in a table and verbal descriptions",
+    "grade": 3,
+    "strand": "algebraic reasoning",
+    "primaryType": "patterns",
+    "validationTypes": [
+      "patterns"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Input-output tables. STAAR Readiness."
+  },
+  "3.6A": {
+    "text": "classify and sort two- and three-dimensional figures, including cones, cylinders, spheres, triangular and rectangular prisms, and cubes, based on attributes using formal geometric language",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Shape classification. STAAR Readiness."
+  },
+  "3.6B": {
+    "text": "use attributes to recognize rhombuses, parallelograms, trapezoids, rectangles, and squares as examples of quadrilaterals and draw examples of quadrilaterals that do not belong to any of these subcategories",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Quadrilateral classification. STAAR Supporting."
+  },
+  "3.6C": {
+    "text": "determine the area of rectangles with whole number side lengths in problems using multiplication related to the number of rows times the number of unit squares in each row",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "computation",
+      "geometry"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 1,
+        "maxValue": 12
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 12
+      }
+    },
+    "maxResult": 144,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel",
+      "array"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Area = rows x columns. Whole number sides. STAAR Readiness. Operand maxValue=12 inferred from typical Grade 3 rectangle side lengths, not explicit in TEKS."
+  },
+  "3.6D": {
+    "text": "decompose composite figures formed by rectangles into non-overlapping rectangles to determine the area of the original figure using the additive property of area",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "geometry"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "ADD"
+    ],
+    "operandConstraints": null,
+    "maxResult": 200,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      2,
+      3
+    ],
+    "validatable": true,
+    "notes": "Composite area. Multi-step."
+  },
+  "3.6E": {
+    "text": "decompose two congruent two-dimensional figures into parts with equal areas and express the area of each part as a unit fraction of the whole and recognize that equal shares of identical wholes need not have the same shape",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "geometry"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Area as fraction. STAAR Supporting."
+  },
+  "3.7A": {
+    "text": "represent fractions of halves, fourths, and eighths as distances from zero on a number line",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      4,
+      8
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Fractions on number line. Denominators {2,4,8} only."
+  },
+  "3.7B": {
+    "text": "determine the perimeter of a polygon or a missing length when given perimeter and remaining side lengths in problems",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "geometry"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Perimeter problems. STAAR Readiness."
+  },
+  "3.7C": {
+    "text": "determine the solutions to problems involving addition and subtraction of time intervals in minutes using pictorial models or tools such as a 15-minute event plus a 30-minute event equals 45 minutes",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "time"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": 180,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Time intervals in minutes. STAAR Supporting. maxResult=180 (3 hours in minutes) inferred from typical time-interval problems, not explicit in TEKS."
+  },
+  "3.7D": {
+    "text": "determine when it is appropriate to use measurements of liquid volume (capacity) or weight",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Capacity vs weight - conceptual. STAAR Supporting."
+  },
+  "3.7E": {
+    "text": "determine liquid volume (capacity) or weight using appropriate units and tools",
+    "grade": 3,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Measurement tools - hands-on"
+  },
+  "3.8A": {
+    "text": "summarize a data set with multiple categories using a frequency table, dot plot, pictograph, or bar graph with scaled intervals",
+    "grade": 3,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "barGraph",
+      "dotPlot"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Data display. STAAR Readiness."
+  },
+  "3.8B": {
+    "text": "solve one- and two-step problems using categorical data represented with a frequency table, dot plot, pictograph, or bar graph with scaled intervals",
+    "grade": 3,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "barGraph",
+      "dotPlot"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Data word problems. STAAR Supporting."
+  },
+  "3.9A": {
+    "text": "explain the connection between human capital/labor and income",
+    "grade": 3,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "3.9B": {
+    "text": "describe the relationship between the availability or scarcity of resources and how that impacts cost",
+    "grade": 3,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept. STAAR Supporting (2024)."
+  },
+  "3.9C": {
+    "text": "identify the costs and benefits of planned and unplanned spending decisions",
+    "grade": 3,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "3.9D": {
+    "text": "explain that credit is used when wants or needs exceed the ability to pay and that it is the borrower's responsibility to pay it back to the lender, usually with interest",
+    "grade": 3,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept. STAAR Supporting (2024-2025)."
+  },
+  "3.9E": {
+    "text": "list reasons to save and explain the benefit of a savings plan, including for college",
+    "grade": 3,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "3.9F": {
+    "text": "identify decisions involving income, spending, saving, credit, and charitable giving",
+    "grade": 3,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "4.2A": {
+    "text": "interpret the value of each place-value position as 10 times the position to the right and as one-tenth of the value of the place to its left",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1000000000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "10x relationship - conceptual"
+  },
+  "4.2B": {
+    "text": "represent the value of the digit in whole numbers through 1,000,000,000 and decimals to the hundredths using expanded notation and numerals",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "placevalue",
+    "validationTypes": [
+      "placeValue"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 1000000000
+      }
+    },
+    "maxResult": 1000000000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers to billion, decimals to hundredths"
+  },
+  "4.2C": {
+    "text": "compare and order whole numbers to 1,000,000,000 and represent comparisons using the symbols >, <, or =",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "comparison",
+    "validationTypes": [
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 1000000000
+      },
+      "operand2": {
+        "minValue": 0,
+        "maxValue": 1000000000
+      }
+    },
+    "maxResult": 1000000000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "symbol",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Numbers to 1 billion"
+  },
+  "4.2D": {
+    "text": "round whole numbers to a given place value through the hundred thousands place",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "estimation",
+    "validationTypes": [
+      "estimation"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 0,
+        "maxValue": 999999
+      }
+    },
+    "maxResult": 1000000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Round to 10, 100, 1000, 10000, 100000"
+  },
+  "4.2E": {
+    "text": "represent decimals, including tenths and hundredths, using concrete and visual models and money",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "decimal",
+    "validationTypes": [
+      "decimal"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      10,
+      100
+    ],
+    "answerFormat": "decimal",
+    "suggestedDiagrams": [
+      "numberLine",
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Decimals to hundredths"
+  },
+  "4.2F": {
+    "text": "compare and order decimals using concrete and visual models to the hundredths",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "decimal",
+    "validationTypes": [
+      "decimal",
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "symbol",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Decimal comparison to hundredths. operandConstraints null: Decimal precision (hundredths) is not capturable as operand range; answerFormat and allowedDenominators cover this."
+  },
+  "4.2G": {
+    "text": "relate decimals to fractions that name tenths and hundredths",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "decimal",
+    "validationTypes": [
+      "decimal",
+      "fraction"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      10,
+      100
+    ],
+    "answerFormat": "decimal",
+    "suggestedDiagrams": [
+      "numberLine",
+      "fractionBar"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Fraction-decimal equivalence. Denominators 10 and 100."
+  },
+  "4.2H": {
+    "text": "determine the corresponding decimal to the tenths or hundredths place of a specified point on a number line",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "decimal",
+    "validationTypes": [
+      "decimal"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Number line decimal identification"
+  },
+  "4.3A": {
+    "text": "represent a fraction a/b as a sum of fractions 1/b, where a and b are whole numbers and b > 0, including when a > b",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction"
+    ],
+    "operations": [
+      "ADD"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      12
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Fraction decomposition, including improper fractions (a > b)"
+  },
+  "4.3B": {
+    "text": "decompose a fraction in more than one way into a sum of fractions with the same denominator using concrete and pictorial models and recording results with symbolic representations",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "computation"
+    ],
+    "operations": [
+      "ADD"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      12
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Same denominator decomposition"
+  },
+  "4.3C": {
+    "text": "determine if two given fractions are equivalent using a variety of methods",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      12
+    ],
+    "answerFormat": "text",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Equivalent fraction identification"
+  },
+  "4.3D": {
+    "text": "compare two fractions with different numerators and different denominators and represent the comparison using the symbols >, =, or <",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      12
+    ],
+    "answerFormat": "symbol",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Unlike fractions comparison"
+  },
+  "4.3E": {
+    "text": "represent and solve addition and subtraction of fractions with equal denominators using objects and pictorial models that build to the number line and properties of operations",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      12
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Add/subtract fractions SAME denominator"
+  },
+  "4.3F": {
+    "text": "evaluate the reasonableness of sums and differences of fractions using benchmark fractions 0, 1/4, 1/2, 3/4, and 1, referring to the same whole",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "estimation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      12
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Benchmark fractions estimation"
+  },
+  "4.3G": {
+    "text": "represent fractions and decimals to the tenths or hundredths as distances from zero on a number line",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "decimal"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      100
+    ],
+    "answerFormat": "decimal",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Number line fractions/decimals"
+  },
+  "4.4A": {
+    "text": "add and subtract whole numbers and decimals to the hundredths place using the standard algorithm",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 10000
+      },
+      "operand2": {
+        "maxValue": 10000
+      }
+    },
+    "maxResult": 20000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Whole numbers AND decimals to hundredths. Standard algorithm. Operand maxValue=10000 inferred from grade-level context, not explicit in TEKS."
+  },
+  "4.4B": {
+    "text": "determine products of a number and 10 or 100 using properties of operations and place value understandings",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 10000
+      },
+      "operand2": {
+        "allowedValues": [
+          10,
+          100
+        ]
+      }
+    },
+    "maxResult": 1000000,
+    "minResult": 10,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Multiply by 10 or 100 specifically. operand1 maxValue=10000 inferred from grade-level context, not explicit in TEKS."
+  },
+  "4.4C": {
+    "text": "represent the product of 2 two-digit numbers using arrays, area models, or equations, including perfect squares through 15 by 15",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 2,
+        "maxDigits": 2,
+        "minValue": 10,
+        "maxValue": 99
+      },
+      "operand2": {
+        "minDigits": 2,
+        "maxDigits": 2,
+        "minValue": 10,
+        "maxValue": 99
+      }
+    },
+    "maxResult": 9801,
+    "minResult": 100,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel",
+      "array"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "2-digit x 2-digit. Perfect squares up to 15x15."
+  },
+  "4.4D": {
+    "text": "use strategies and algorithms, including the standard algorithm, to multiply up to a four-digit number by a one-digit number and to multiply a two-digit number by a two-digit number",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 1,
+        "maxDigits": 4,
+        "maxValue": 9999
+      },
+      "operand2": {
+        "minDigits": 1,
+        "maxDigits": 2,
+        "maxValue": 99
+      }
+    },
+    "maxResult": 89991,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Up to 4-digit x 1-digit OR 2-digit x 2-digit. Schema limitation: TEKS specifies (4-digit \u00d7 1-digit) OR (2-digit \u00d7 2-digit) but flat operand schema merges both. maxResult=89991 mitigates by rejecting products exceeding the 4\u00d71 case. System prompt should explicitly state both valid cases. Code-side OR-validator recommended for future enhancement."
+  },
+  "4.4E": {
+    "text": "represent the quotient of up to a four-digit whole number divided by a one-digit whole number using arrays, area models, or equations",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 1,
+        "maxDigits": 4,
+        "maxValue": 9999
+      },
+      "operand2": {
+        "minDigits": 1,
+        "maxDigits": 1,
+        "minValue": 2,
+        "maxValue": 9
+      }
+    },
+    "maxResult": 4999,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Up to 4-digit \u00f7 1-digit. Represent quotient. operand2.minValue=2: \u00d71/\u00f71 excluded as identity operations per pedagogical design; TEKS 'one-digit' technically includes 1."
+  },
+  "4.4F": {
+    "text": "use strategies and algorithms, including the standard algorithm, to divide up to a four-digit dividend by a one-digit divisor",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 1,
+        "maxDigits": 4,
+        "maxValue": 9999
+      },
+      "operand2": {
+        "minDigits": 1,
+        "maxDigits": 1,
+        "minValue": 2,
+        "maxValue": 9
+      }
+    },
+    "maxResult": 4999,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "4-digit \u00f7 1-digit. Standard algorithm. operand2.minValue=2: \u00d71/\u00f71 excluded as identity operations per pedagogical design; TEKS 'one-digit' technically includes 1."
+  },
+  "4.4G": {
+    "text": "round to the nearest 10, 100, or 1,000 or use compatible numbers to estimate solutions involving whole numbers",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "estimation",
+    "validationTypes": [
+      "estimation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxValue": 100000
+      },
+      "operand2": {
+        "maxValue": 100000
+      }
+    },
+    "maxResult": 100000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Estimation. Rounding to 10, 100, 1000. Operand maxValue=100000 inferred from grade-level context, not explicit in TEKS."
+  },
+  "4.4H": {
+    "text": "solve with fluency one- and two-step problems involving multiplication and division, including interpreting remainders",
+    "grade": 4,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxDigits": 4,
+        "maxValue": 9999
+      },
+      "operand2": {
+        "maxDigits": 2,
+        "maxValue": 99
+      }
+    },
+    "maxResult": 10000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "stripDiagram"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Fluency standard. Remainders possible. maxResult=10000 inferred from grade-level context, not explicit in TEKS."
+  },
+  "4.5A": {
+    "text": "represent multi-step problems involving the four operations with whole numbers using strip diagrams and equations with a letter standing for the unknown quantity",
+    "grade": 4,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "algebra"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 10000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "stripDiagram"
+    ],
+    "stepCount": [
+      2,
+      3,
+      4
+    ],
+    "validatable": true,
+    "notes": "Multi-step with all 4 operations. Variable as unknown."
+  },
+  "4.5B": {
+    "text": "represent problems using an input-output table and numerical expressions to generate a number pattern that follows a given rule",
+    "grade": 4,
+    "strand": "algebraic reasoning",
+    "primaryType": "patterns",
+    "validationTypes": [
+      "patterns"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 10000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Input-output tables"
+  },
+  "4.5C": {
+    "text": "use models to determine the formulas for the perimeter of a rectangle (l + w + l + w or 2l + 2w), including the special form for perimeter of a square (4s) and the area of a rectangle (l x w)",
+    "grade": 4,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "geometry"
+    ],
+    "operations": [
+      "ADD",
+      "MULTIPLY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 10000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Perimeter and area formulas"
+  },
+  "4.5D": {
+    "text": "solve problems related to perimeter and area of rectangles where dimensions are whole numbers",
+    "grade": 4,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "geometry"
+    ],
+    "operations": [
+      "ADD",
+      "MULTIPLY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 10000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Perimeter/area word problems. Whole number dimensions."
+  },
+  "4.6A": {
+    "text": "identify points, lines, line segments, rays, angles, and perpendicular and parallel lines",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Geometric terms"
+  },
+  "4.6B": {
+    "text": "identify and draw one or more lines of symmetry, if they exist, for a two-dimensional figure",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Symmetry"
+  },
+  "4.6C": {
+    "text": "apply knowledge of right angles to identify acute, right, and obtuse triangles",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Triangle classification"
+  },
+  "4.6D": {
+    "text": "classify two-dimensional figures based on the presence or absence of parallel or perpendicular lines or the presence or absence of angles of a specified size",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Figure classification"
+  },
+  "4.7A": {
+    "text": "illustrate the measure of an angle as the part of a circle whose center is at the vertex of the angle that is cut out by the rays of the angle",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 360,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Angle concept"
+  },
+  "4.7B": {
+    "text": "illustrate degrees as the units used to measure an angle, where 1/360 of any circle is one degree",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 360,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Degree concept"
+  },
+  "4.7C": {
+    "text": "determine the approximate measures of angles in degrees to the nearest whole number using a protractor",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 180,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Angle measurement. Angles \u2264 180 degrees."
+  },
+  "4.7D": {
+    "text": "draw an angle with a given measure",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 180,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Draw angle - hands-on"
+  },
+  "4.7E": {
+    "text": "determine the measure of an unknown angle formed by two non-overlapping adjacent angles given one or both angle measures",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "geometry"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": 180,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Unknown angle. Add/subtract angle measures."
+  },
+  "4.8A": {
+    "text": "identify relative sizes of measurement units within the customary and metric systems",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Unit relationships - conceptual"
+  },
+  "4.8B": {
+    "text": "convert measurements within the same measurement system, customary or metric, from a smaller unit into a larger unit or a larger unit into a smaller unit when given other equivalent measures represented in a table",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "measurement"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 100000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Unit conversion with table"
+  },
+  "4.8C": {
+    "text": "solve problems that deal with measurements of length, intervals of time, liquid volumes, mass, and money using addition, subtraction, multiplication, or division as appropriate",
+    "grade": 4,
+    "strand": "geometry and measurement",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "measurement"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 100000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Measurement word problems with all 4 operations"
+  },
+  "4.9A": {
+    "text": "represent data on a frequency table, dot plot, or stem-and-leaf plot marked with whole numbers and fractions",
+    "grade": 4,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "dotPlot",
+      "barGraph"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Data display including stem-and-leaf"
+  },
+  "4.9B": {
+    "text": "solve one- and two-step problems using data in whole number, decimal, and fraction form in a frequency table, dot plot, or stem-and-leaf plot",
+    "grade": 4,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 10000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": [
+      "dotPlot",
+      "barGraph"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Data word problems"
+  },
+  "4.10A": {
+    "text": "distinguish between fixed and variable expenses",
+    "grade": 4,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "4.10B": {
+    "text": "calculate profit in a given situation",
+    "grade": 4,
+    "strand": "personal financial literacy",
+    "primaryType": "computation",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Profit = revenue - cost. Financial computation."
+  },
+  "4.10C": {
+    "text": "compare the advantages and disadvantages of various savings options",
+    "grade": 4,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "4.10D": {
+    "text": "describe how to allocate a weekly allowance among spending; saving, including for college; and sharing",
+    "grade": 4,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "4.10E": {
+    "text": "describe the basic purpose of financial institutions, including keeping money safe, borrowing money, and lending",
+    "grade": 4,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "5.2A": {
+    "text": "represent the value of the digit in decimals through the thousandths using expanded notation and numerals",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "decimal",
+    "validationTypes": [
+      "decimal",
+      "placeValue"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      10,
+      100,
+      1000
+    ],
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Decimals to thousandths. Expanded notation."
+  },
+  "5.2B": {
+    "text": "compare and order two decimals to thousandths and represent comparisons using the symbols >, <, or =",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "decimal",
+    "validationTypes": [
+      "decimal",
+      "comparison"
+    ],
+    "operations": [
+      "COMPARE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "symbol",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Decimals to thousandths comparison"
+  },
+  "5.2C": {
+    "text": "round decimals to tenths or hundredths",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "estimation",
+    "validationTypes": [
+      "estimation",
+      "decimal"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": [
+      "numberLine"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Round to tenths or hundredths"
+  },
+  "5.3A": {
+    "text": "estimate to determine solutions to mathematical and real-world problems involving addition, subtraction, multiplication, or division",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "estimation",
+    "validationTypes": [
+      "estimation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Estimation with all 4 operations"
+  },
+  "5.3B": {
+    "text": "multiply with fluency a three-digit number by a two-digit number using the standard algorithm",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 3,
+        "maxDigits": 3,
+        "minValue": 100,
+        "maxValue": 999
+      },
+      "operand2": {
+        "minDigits": 2,
+        "maxDigits": 2,
+        "minValue": 10,
+        "maxValue": 99
+      }
+    },
+    "maxResult": 98901,
+    "minResult": 1000,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "3-digit x 2-digit EXACTLY. Fluency standard."
+  },
+  "5.3C": {
+    "text": "solve with proficiency for quotients of up to a four-digit dividend by a two-digit divisor using strategies and the standard algorithm",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minDigits": 1,
+        "maxDigits": 4,
+        "maxValue": 9999
+      },
+      "operand2": {
+        "minDigits": 2,
+        "maxDigits": 2,
+        "minValue": 10,
+        "maxValue": 99
+      }
+    },
+    "maxResult": 999,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Up to 4-digit \u00f7 2-digit. Proficiency standard."
+  },
+  "5.3D": {
+    "text": "represent multiplication of decimals with products to the hundredths using objects and pictorial models, including area models",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "decimal",
+    "validationTypes": [
+      "decimal",
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Decimal multiplication. Products to hundredths. operandConstraints null: TEKS constrains result precision (hundredths), not operand shape; no digit counts or ranges specified for factors."
+  },
+  "5.3E": {
+    "text": "solve for products of decimals to the hundredths, including situations involving money, using strategies based on place-value understandings, properties of operations, and the relationship to the multiplication of whole numbers",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "decimal"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Decimal multiplication to hundredths. Money contexts. operandConstraints null: TEKS constrains result precision (hundredths), not operand shape; no digit counts or ranges specified for factors."
+  },
+  "5.3F": {
+    "text": "represent quotients of decimals to the hundredths, up to four-digit dividends and two-digit whole number divisors, using objects and pictorial models, including area models",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "decimal",
+    "validationTypes": [
+      "decimal",
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxDigits": 4
+      },
+      "operand2": {
+        "minDigits": 2,
+        "maxDigits": 2,
+        "minValue": 10,
+        "maxValue": 99
+      }
+    },
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Decimal division. Up to 4-digit \u00f7 2-digit whole number."
+  },
+  "5.3G": {
+    "text": "solve for quotients of decimals to the hundredths, up to four-digit dividends and two-digit whole number divisors, using strategies and algorithms, including the standard algorithm",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "decimal"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "maxDigits": 4
+      },
+      "operand2": {
+        "minDigits": 2,
+        "maxDigits": 2,
+        "minValue": 10,
+        "maxValue": 99
+      }
+    },
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Decimal division standard algorithm."
+  },
+  "5.3H": {
+    "text": "represent and solve addition and subtraction of fractions with unequal denominators referring to the same whole using objects and pictorial models and properties of operations",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      12,
+      15,
+      20
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "fractionBar",
+      "numberLine"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "UNLIKE denominators. Must find common denominator. Key Grade 5 advancement."
+  },
+  "5.3I": {
+    "text": "represent and solve multiplication of a whole number and a fraction that refers to the same whole using objects and pictorial models, including area models",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "computation"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 1,
+        "maxValue": 20
+      },
+      "operand2": null
+    },
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      12
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "areaModel",
+      "fractionBar"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Whole number \u00d7 fraction. operand1 maxValue=20 inferred from grade-level context, not explicit in TEKS."
+  },
+  "5.3J": {
+    "text": "represent division of a unit fraction by a whole number and the division of a whole number by a unit fraction such as 1/3 \u00f7 7 and 7 \u00f7 1/3 using objects and pictorial models, including area models",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": [
+      "areaModel",
+      "fractionBar"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "UNIT fraction \u00f7 whole OR whole \u00f7 unit fraction. Represent only. unitFractionOnly=true: TEKS specifies 'unit fraction' meaning numerator must be 1. validateTEKSAlignment() should check this field.",
+    "unitFractionOnly": true
+  },
+  "5.3K": {
+    "text": "add and subtract positive rational numbers fluently",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "fraction",
+      "decimal"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Fluency with all positive rationals (fractions and decimals)"
+  },
+  "5.3L": {
+    "text": "divide whole numbers by unit fractions and unit fractions by whole numbers",
+    "grade": 5,
+    "strand": "number and operations",
+    "primaryType": "fraction",
+    "validationTypes": [
+      "fraction",
+      "computation"
+    ],
+    "operations": [
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10
+    ],
+    "answerFormat": "fraction",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Solve (not just represent). Unit fractions only. unitFractionOnly=true: TEKS specifies 'unit fraction' meaning numerator must be 1. validateTEKSAlignment() should check this field.",
+    "unitFractionOnly": true
+  },
+  "5.4A": {
+    "text": "identify prime and composite numbers",
+    "grade": 5,
+    "strand": "algebraic reasoning",
+    "primaryType": "identification",
+    "validationTypes": [
+      "identification"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 100,
+    "minResult": 2,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Prime/composite. Typically numbers up to 100. maxResult=100 inferred from standard pedagogical range, not explicit in TEKS."
+  },
+  "5.4B": {
+    "text": "represent and solve multi-step problems involving the four operations with whole numbers using equations with a letter standing for the unknown quantity",
+    "grade": 5,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "algebra"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 100000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "stripDiagram"
+    ],
+    "stepCount": [
+      2,
+      3,
+      4
+    ],
+    "validatable": true,
+    "notes": "Multi-step, all 4 operations, variable as unknown"
+  },
+  "5.4C": {
+    "text": "generate a numerical pattern when given a rule in the form y = ax or y = x + a and graph",
+    "grade": 5,
+    "strand": "algebraic reasoning",
+    "primaryType": "patterns",
+    "validationTypes": [
+      "patterns",
+      "algebra"
+    ],
+    "operations": [
+      "ADD",
+      "MULTIPLY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "y = ax or y = x + a patterns"
+  },
+  "5.4D": {
+    "text": "recognize the difference between additive and multiplicative numerical patterns given in a table or graph",
+    "grade": 5,
+    "strand": "algebraic reasoning",
+    "primaryType": "patterns",
+    "validationTypes": [
+      "patterns"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Additive vs multiplicative - conceptual"
+  },
+  "5.4E": {
+    "text": "describe the meaning of parentheses and brackets in a numeric expression",
+    "grade": 5,
+    "strand": "algebraic reasoning",
+    "primaryType": "conceptual",
+    "validationTypes": [
+      "conceptual"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Order of operations concept"
+  },
+  "5.4F": {
+    "text": "simplify numerical expressions that do not involve exponents, including up to two levels of grouping",
+    "grade": 5,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 10000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      2,
+      3,
+      4
+    ],
+    "validatable": true,
+    "notes": "Order of operations. Up to 2 levels of grouping. No exponents."
+  },
+  "5.4G": {
+    "text": "use concrete objects and pictorial models to develop the formulas for the volume of a rectangular prism, including the special form for a cube (V = l x w x h, V = s x s x s, and V = Bh)",
+    "grade": 5,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "geometry"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 1,
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 20
+      }
+    },
+    "maxResult": 8000,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "V = l\u00d7w\u00d7h, V = s\u00b3, V = Bh. Whole number dimensions. Operand maxValue=20 inferred from grade-level context, not explicit in TEKS."
+  },
+  "5.4H": {
+    "text": "represent and solve problems related to perimeter and/or area and related to volume",
+    "grade": 5,
+    "strand": "algebraic reasoning",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "geometry"
+    ],
+    "operations": [
+      "ADD",
+      "MULTIPLY"
+    ],
+    "operandConstraints": null,
+    "maxResult": 10000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1,
+      2,
+      3
+    ],
+    "validatable": true,
+    "notes": "Perimeter, area, AND volume word problems"
+  },
+  "5.5A": {
+    "text": "classify two-dimensional figures in a hierarchy of sets and subsets using graphic organizers based on their attributes and properties",
+    "grade": 5,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "geometry"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Shape hierarchy (e.g., all squares are rectangles)"
+  },
+  "5.6A": {
+    "text": "recognize a cube with side length of one unit as a unit cube having one cubic unit of volume and the volume of a three-dimensional figure as the number of unit cubes needed to fill it with no gaps or overlaps if possible",
+    "grade": 5,
+    "strand": "geometry and measurement",
+    "primaryType": "measurement",
+    "validationTypes": [
+      "measurement"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Unit cube concept"
+  },
+  "5.6B": {
+    "text": "determine the volume of a rectangular prism with whole number side lengths in problems related to the number of layers times the number of unit cubes in the area of the base",
+    "grade": 5,
+    "strand": "geometry and measurement",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "geometry"
+    ],
+    "operations": [
+      "MULTIPLY"
+    ],
+    "operandConstraints": {
+      "operand1": {
+        "minValue": 1,
+        "maxValue": 20
+      },
+      "operand2": {
+        "minValue": 1,
+        "maxValue": 20
+      }
+    },
+    "maxResult": 8000,
+    "minResult": 1,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "areaModel"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Volume = layers \u00d7 base area. Whole number sides. Operand maxValue=20 inferred from grade-level context, not explicit in TEKS."
+  },
+  "5.7A": {
+    "text": "solve problems by calculating conversions within a measurement system, customary or metric",
+    "grade": 5,
+    "strand": "geometry and measurement",
+    "primaryType": "computation",
+    "validationTypes": [
+      "computation",
+      "measurement"
+    ],
+    "operations": [
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 1000000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Unit conversion. Calculate (not just use table like Grade 4)."
+  },
+  "5.8A": {
+    "text": "describe the key attributes of the coordinate plane, including perpendicular number lines (axes) where the intersection (origin) of the two lines coincides with zero on each number line and the given point (0, 0); the x-coordinate, the first number in an ordered pair, indicates movement parallel to the x-axis starting at the origin; and the y-coordinate, the second number, indicates movement parallel to the y-axis starting at the origin",
+    "grade": 5,
+    "strand": "geometry and measurement",
+    "primaryType": "conceptual",
+    "validationTypes": [
+      "conceptual"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Coordinate plane vocabulary"
+  },
+  "5.8B": {
+    "text": "describe the process for graphing ordered pairs of numbers in the first quadrant of the coordinate plane",
+    "grade": 5,
+    "strand": "geometry and measurement",
+    "primaryType": "conceptual",
+    "validationTypes": [
+      "conceptual"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Graphing process - conceptual"
+  },
+  "5.8C": {
+    "text": "graph in the first quadrant of the coordinate plane ordered pairs of numbers arising from mathematical and real-world problems, including those generated by number patterns or found in an input-output table",
+    "grade": 5,
+    "strand": "geometry and measurement",
+    "primaryType": "geometry",
+    "validationTypes": [
+      "patterns"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Graphing ordered pairs - first quadrant only"
+  },
+  "5.9A": {
+    "text": "represent categorical data with bar graphs or frequency tables and numerical data, including data sets of measurements in fractions or decimals, with dot plots or stem-and-leaf plots",
+    "grade": 5,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": [
+      "barGraph",
+      "dotPlot"
+    ],
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Data display with fractions/decimals now"
+  },
+  "5.9B": {
+    "text": "represent discrete paired data on a scatterplot",
+    "grade": 5,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "integer",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Scatterplot - first introduction"
+  },
+  "5.9C": {
+    "text": "solve one- and two-step problems using data from a frequency table, dot plot, bar graph, stem-and-leaf plot, or scatterplot",
+    "grade": 5,
+    "strand": "data analysis",
+    "primaryType": "data",
+    "validationTypes": [
+      "data",
+      "computation"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT",
+      "MULTIPLY",
+      "DIVIDE"
+    ],
+    "operandConstraints": null,
+    "maxResult": 10000,
+    "minResult": 0,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": [
+      "barGraph",
+      "dotPlot"
+    ],
+    "stepCount": [
+      1,
+      2
+    ],
+    "validatable": true,
+    "notes": "Data word problems including scatterplot"
+  },
+  "5.10A": {
+    "text": "define income tax, payroll tax, sales tax, and property tax",
+    "grade": 5,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "5.10B": {
+    "text": "explain the difference between gross income and net income",
+    "grade": 5,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "5.10C": {
+    "text": "identify the advantages and disadvantages of different methods of payment, including check, credit card, debit card, and electronic payments",
+    "grade": 5,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "5.10D": {
+    "text": "develop a system for keeping and using financial records",
+    "grade": 5,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "5.10E": {
+    "text": "describe actions that might be taken to balance a budget when expenses exceed income",
+    "grade": 5,
+    "strand": "personal financial literacy",
+    "primaryType": "financial",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "IDENTIFY"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "text",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": false,
+    "notes": "Financial concept"
+  },
+  "5.10F": {
+    "text": "balance a simple budget",
+    "grade": 5,
+    "strand": "personal financial literacy",
+    "primaryType": "computation",
+    "validationTypes": [
+      "financial"
+    ],
+    "operations": [
+      "ADD",
+      "SUBTRACT"
+    ],
+    "operandConstraints": null,
+    "maxResult": null,
+    "minResult": null,
+    "allowedDenominators": null,
+    "answerFormat": "decimal",
+    "suggestedDiagrams": null,
+    "stepCount": [
+      1
+    ],
+    "validatable": true,
+    "notes": "Balance budget - add income, subtract expenses. Financial computation."
+  }
+};

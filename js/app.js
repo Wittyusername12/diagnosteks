@@ -424,17 +424,9 @@ const App = {
     this.showScreen('grade-select');
     this.checkResumeMission();
 
-    // Load teks-rules.json for validation engine
-    fetch('teks-rules.json')
-      .then(r => r.json())
-      .then(data => {
-        window.TEKS_RULES = data;
-        console.log('[App] teks-rules.json loaded:', Object.keys(data).length, 'entries');
-      })
-      .catch(err => {
-        console.warn('[App] Could not load teks-rules.json:', err.message);
-        window.TEKS_RULES = {};
-      });
+    // Load TEKS rules from pre-loaded script (file:// compatible — no fetch/CORS)
+    window.TEKS_RULES = window.TEKS_RULES_DATA || {};
+    console.log('[App] TEKS rules loaded:', Object.keys(window.TEKS_RULES).length, 'entries');
 
     // Initialize Teacher Review Screen
     const reviewContainer = document.getElementById('im-review-container');

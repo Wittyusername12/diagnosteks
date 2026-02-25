@@ -2429,8 +2429,9 @@ body {
 }
 
 .im-review-footer-right {
-  color: rgba(255,255,255,0.15);
-  font-size: 10px;
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  padding: 4px 0;
 }
 
 /* ── Format Selector (setup screen addition) ── */
@@ -2445,8 +2446,8 @@ body {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(0,229,255,0.12);
   color: rgba(255,255,255,0.4);
-  padding: 6px 16px;
-  font-size: 13px;
+  padding: 8px 20px;
+  font-size: 14px;
   cursor: pointer;
   font-family: var(--font-body);
   transition: all 0.2s;

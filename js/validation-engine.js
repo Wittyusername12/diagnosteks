@@ -143,18 +143,22 @@ function validateProblem(problem, teksRules) {
     }
 
     // Keyword-operation consistency (soft warning)
+    // Check ALL keyword groups first, then only flag if stated operation has NO matching keywords
     const opHints = [
-      { keywords: ['shared equally', 'split', 'each got', 'divided among', 'distributed'], expected: 'DIVIDE' },
-      { keywords: ['altogether', 'in all', 'total', 'combined', 'sum'], expected: 'ADD' },
-      { keywords: ['how many more', 'how many fewer', 'difference', 'left', 'remaining', 'how much more'], expected: 'SUBTRACT' },
-      { keywords: ['times', 'groups of', 'rows of', 'each had'], expected: 'MULTIPLY' },
+      { keywords: ['times', 'each', 'groups of', 'rows of', 'per', 'every', 'sets of', 'bags of', 'boxes of', 'packs of'], expected: 'MULTIPLY' },
+      { keywords: ['shared equally', 'split', 'each got', 'divided', 'fair share', 'distribute equally', 'per person', 'evenly'], expected: 'DIVIDE' },
+      { keywords: ['how many more', 'how many fewer', 'difference', 'left', 'remaining', 'gave away', 'took', 'ate', 'lost', 'spent', 'used', 'consumed', 'removed'], expected: 'SUBTRACT' },
+      { keywords: ['altogether', 'in all', 'total', 'combined', 'joined', 'plus', 'added'], expected: 'ADD' },
     ];
+    const suggestedOps = new Set();
     for (const hint of opHints) {
-      const match = hint.keywords.some(kw => textLower.includes(kw));
-      if (match && problem.operation && problem.operation !== hint.expected) {
-        contentFlags.push(`Layer 3 Content: Narrative suggests ${hint.expected} but operation is ${problem.operation} (may be intentional)`);
-        break;
+      if (hint.keywords.some(kw => textLower.includes(kw))) {
+        suggestedOps.add(hint.expected);
       }
+    }
+    if (suggestedOps.size > 0 && problem.operation && !suggestedOps.has(problem.operation)) {
+      const suggestedList = Array.from(suggestedOps).join(' or ');
+      contentFlags.push(`Layer 3 Content: Narrative suggests ${suggestedList} but operation is ${problem.operation} (may be intentional)`);
     }
   }
   flags.push(...contentFlags);

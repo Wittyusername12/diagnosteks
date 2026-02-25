@@ -197,6 +197,20 @@
             </div>
 
             <div style="text-align: center; padding: 0.75rem 0; margin-top: 0.75rem;">
+              <label style="color: #00e5ff; font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 0.08em; font-weight: 700; display: block; margin-bottom: 0.5rem;">
+                PROBLEM FORMAT
+              </label>
+              <div class="im-review-format-selector" id="format-selector" style="justify-content: center;">
+                <button class="im-review-format-btn" data-format="pure">Pure Math</button>
+                <button class="im-review-format-btn active" data-format="mix">Mix</button>
+                <button class="im-review-format-btn" data-format="word">Word Problems</button>
+              </div>
+              <div style="color: rgba(0,229,255,0.5); font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; margin-top: 0.35rem; letter-spacing: 0.03em;">
+                Choose how math problems are presented
+              </div>
+            </div>
+
+            <div style="text-align: center; padding: 0.75rem 0;">
               <label style="color: #ff6b00; font-family: 'Orbitron', sans-serif; font-size: 1.15rem; letter-spacing: 0.08em; cursor: pointer; display: inline-flex; align-items: center; gap: 0.75rem; font-weight: 700;">
                 <input type="checkbox" id="cross-curricular-toggle" checked style="accent-color: #ff6b00; width: 24px; height: 24px; cursor: pointer;">
                 CROSS-CURRICULAR MODE
@@ -213,20 +227,6 @@
               </label>
               <div style="color: #ffb366; font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; margin-top: 0.35rem; letter-spacing: 0.03em;">
                 Display equation below word problem (uncheck for harder STAAR-style mode)
-              </div>
-            </div>
-
-            <div style="text-align: center; padding: 0.75rem 0;">
-              <label style="color: #00e5ff; font-family: 'Orbitron', sans-serif; font-size: 1rem; letter-spacing: 0.08em; font-weight: 700; display: block; margin-bottom: 0.5rem;">
-                PROBLEM FORMAT
-              </label>
-              <div class="im-review-format-selector" id="format-selector" style="justify-content: center;">
-                <button class="im-review-format-btn" data-format="pure">Pure Math</button>
-                <button class="im-review-format-btn active" data-format="mix">Mix</button>
-                <button class="im-review-format-btn" data-format="word">Word Problems</button>
-              </div>
-              <div style="color: rgba(0,229,255,0.5); font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; margin-top: 0.35rem; letter-spacing: 0.03em;">
-                Choose how math problems are presented
               </div>
             </div>
 
@@ -641,6 +641,9 @@
   <script src="js/Batch_1_readiness_standards_exemplars.js"></script>
   <script src="js/Batch_2_supporting_standards_exemplars.js"></script>
   <script src="js/Batch_3_missing_teks_exemplars.js"></script>
+
+  <!-- TEKS Rules Data (converted from teks-rules.json for file:// compatibility) -->
+  <script src="js/teks-rules-data.js"></script>
 
   <!-- Validation Engine (Phase 4 Prompt 3 — Layers 1-4) -->
   <script src="js/validation-engine.js"></script>

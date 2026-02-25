@@ -230,7 +230,7 @@ class CerebrasAPI {
 
     // Generate math first (sequential for progress reporting)
     const math = await this.generateMathProblems(
-      gradeLevel, mathTeksCodes, scienceTeksCodes, options.crossCurricular
+      gradeLevel, mathTeksCodes, scienceTeksCodes, options.crossCurricular, options.format
     );
 
     if (options.onMathComplete) {
@@ -254,7 +254,7 @@ class CerebrasAPI {
    * @param {boolean} [crossCurricular] - Enable cross-curricular theming
    * @returns {Promise<Array>}
    */
-  async generateMathProblems(gradeLevel, teksCodes, scienceTeksCodes, crossCurricular) {
+  async generateMathProblems(gradeLevel, teksCodes, scienceTeksCodes, crossCurricular, format) {
     const teksDescriptions = this._getTeksDescriptions(gradeLevel, 'math', teksCodes);
     let scienceTeksDescriptions = null;
     if (crossCurricular && scienceTeksCodes && scienceTeksCodes.length > 0) {
@@ -273,7 +273,7 @@ class CerebrasAPI {
     const operandAssignments = generateMissionOperands(teksCodes, count);
 
     const messages = [
-      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments) },
+      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments, format) },
       { role: 'user', content: `Generate ${count} math problems for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}. For pre-selected problems, use the EXACT numbers provided. Output operation and operands so JavaScript can independently calculate each answer.` }
     ];
 
@@ -347,7 +347,7 @@ class CerebrasAPI {
      PROMPT BUILDERS
      ========================================= */
 
-  _buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments = []) {
+  _buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments = [], format = 'mix') {
     const count = this.config.mathProblemsPerMission || 10;
 
     // Grade-specific number ranges
@@ -452,7 +452,21 @@ ${scienceTeksDescriptions}
 Where natural, theme math word problems around these science concepts. The math must remain rigorous and aligned to the math TEKS \u2014 the science context is vocabulary reinforcement, not a separate learning objective. For cross-curricular problems, set "scienceTeksConnection" to the relevant science TEKS code. Example: "Tony Stark's research lab has 456 rainforest plant specimens. If 189 need to be moved to the new biodome, how many remain in the lab?"`;
     }
 
-    // === BLOCK 4: PRE-SELECTED NUMBERS ===
+    // === BLOCK 4: FORMAT INSTRUCTION ===
+    if (format === 'pure') {
+      prompt += `
+
+PROBLEM FORMAT: PURE MATH
+Generate bare arithmetic expressions only — no word problem context. Set each narrative to a minimal description like "Solve: [expression]" or "Calculate: [expression]". Keep narratives under 10 words.`;
+    } else if (format === 'word') {
+      prompt += `
+
+PROBLEM FORMAT: WORD PROBLEMS
+Every problem MUST be a rich real-world word problem with full narrative context (2-4 sentences, 30-80 words). No bare arithmetic expressions.`;
+    }
+    // 'mix' = no format constraint (default LLM behavior)
+
+    // === BLOCK 5: PRE-SELECTED NUMBERS ===
     if (operandAssignments && operandAssignments.length > 0) {
       const opSymbols = { 'ADD': '+', 'SUBTRACT': '\u2212', 'MULTIPLY': '\u00D7', 'DIVIDE': '\u00F7' };
       const lines = operandAssignments.map((a, i) => {
@@ -937,6 +951,142 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
 
     // Fallback: just list codes without descriptions
     return codes.join(', ');
+  }
+
+  /* =========================================
+     SINGLE PROBLEM REGENERATION
+     (for Teacher Review Screen)
+     ========================================= */
+
+  /**
+   * Regenerate a single problem for the review screen.
+   * Reuses the system prompt builder but adapted for one problem.
+   *
+   * @param {number} gradeLevel - 1 through 5
+   * @param {string} teksCode - e.g. '3.4A'
+   * @param {string} operation - e.g. 'ADD', 'MULTIPLY' (empty for science)
+   * @param {string} feedback - Teacher's feedback text (empty for random regen)
+   * @param {object} opts - { format, crossCurricular, scienceTeks, isScience }
+   * @returns {Promise<object>} Single problem in API schema
+   */
+  async regenerateProblem(gradeLevel, teksCode, operation, feedback, opts = {}) {
+    console.log(`[CerebrasAPI] Regenerating: grade=${gradeLevel} teks=${teksCode} feedback="${(feedback || '').substring(0, 40)}"`);
+
+    if (opts.isScience) {
+      return this._regenerateScienceProblem(gradeLevel, teksCode, feedback);
+    }
+    return this._regenerateMathProblem(gradeLevel, teksCode, operation, feedback, opts);
+  }
+
+  async _regenerateMathProblem(gradeLevel, teksCode, operation, feedback, opts) {
+    const teksDesc = this._getTeksDescriptions(gradeLevel, 'math', [teksCode]);
+
+    // Pre-generate operands for this TEKS
+    const operandResult = generateOperandsForTeks(teksCode, Math.floor(Math.random() * 10));
+
+    // Pull exemplars from ExemplarBank if available
+    let exemplars = [];
+    if (window.exemplarBank) {
+      exemplars = window.exemplarBank.getExemplars(teksCode, 5);
+    } else if (typeof selectExemplars === 'function' && ALL_EXEMPLARS.length > 0) {
+      exemplars = selectExemplars([teksCode], ALL_EXEMPLARS).slice(0, 5);
+    }
+
+    // Build a focused single-problem prompt
+    let prompt = `You are a TEKS-aligned math problem generator for Texas elementary classrooms, themed around Iron Man and the Avengers.
+
+Respond with ONLY a JSON object: {"problems": [{...}]}. Generate exactly 1 problem.
+
+TARGET TEKS: ${teksDesc}
+GRADE: ${gradeLevel}
+
+REQUIRED JSON FIELDS per problem:
+narrative (string, 30-80 word Iron Man themed word problem), operation (string), operands (array of numbers), teks (string), primaryType (string), difficulty (string), diagnosticFor (array), answerType (string), scienceTeksConnection (string or null)
+
+RULES:
+1. Do NOT include correctAnswer — JavaScript computes it.
+2. Operands must produce a POSITIVE WHOLE NUMBER result.
+3. For SUBTRACT: first operand > second. For DIVIDE: must divide evenly.
+4. Narrative must be a complete word problem (2-4 sentences). Do NOT show the operation or equation in the narrative.`;
+
+    // Format instruction
+    const format = opts.format || 'mix';
+    if (format === 'pure') {
+      prompt += '\n\nFORMAT: Generate a bare arithmetic expression only — no word problem context. Set narrative to a minimal description like "Solve: [expression]".';
+    } else if (format === 'word') {
+      prompt += '\n\nFORMAT: Generate a rich real-world word problem with context (2-4 sentences, 30-80 words).';
+    }
+
+    // Cross-curricular
+    if (opts.crossCurricular && opts.scienceTeks && opts.scienceTeks.length > 0) {
+      const sciDesc = this._getTeksDescriptions(gradeLevel, 'science', opts.scienceTeks);
+      prompt += `\n\nCROSS-CURRICULAR: Weave in science themes from: ${sciDesc}\nSet scienceTeksConnection to the relevant science TEKS code.`;
+    }
+
+    // Pre-selected numbers
+    if (operandResult && operandResult.operation) {
+      const opSymbols = { 'ADD': '+', 'SUBTRACT': '−', 'MULTIPLY': '×', 'DIVIDE': '÷' };
+      prompt += `\n\nPRE-SELECTED NUMBERS: ${operandResult.operation} ${operandResult.operands[0]} ${opSymbols[operandResult.operation] || '?'} ${operandResult.operands[1]}, TEKS ${teksCode}. Use these EXACT numbers in your problem.`;
+    }
+
+    // Few-shot exemplars
+    if (exemplars.length > 0) {
+      prompt += `\n\nFEW-SHOT EXEMPLARS (match this quality):\n${JSON.stringify(exemplars.slice(0, 3), null, 2)}`;
+    }
+
+    // Teacher feedback
+    if (feedback && feedback.trim()) {
+      prompt += `\n\nTEACHER FEEDBACK — address this: "${feedback}"`;
+    }
+
+    const messages = [
+      { role: 'system', content: prompt },
+      { role: 'user', content: `Generate 1 math problem for grade ${gradeLevel}, TEKS ${teksCode}.` }
+    ];
+
+    const raw = await this._callWorker(messages, 0.7);
+    const problems = this._parseMathResponse(raw, operandResult ? [operandResult] : []);
+
+    if (problems && problems.length > 0) {
+      return problems[0];
+    }
+    throw new Error('Regeneration returned no problems');
+  }
+
+  async _regenerateScienceProblem(gradeLevel, teksCode, feedback) {
+    const teksDesc = this._getTeksDescriptions(gradeLevel, 'science', [teksCode]);
+
+    let prompt = `You are generating a science quiz question for an Iron Man themed classroom mission. Nick Fury asks this question as a "security verification protocol."
+
+Respond with ONLY a JSON object: {"questions": [{...}]}. Generate exactly 1 question.
+
+TARGET TEKS: ${teksDesc}
+GRADE: ${gradeLevel}
+
+REQUIRED JSON FIELDS: afterFirewall (number), question (string), options (array of 4 objects {letter, text}), correctAnswer (letter A-D), teks (string)
+
+RULES:
+1. Questions must be factually accurate.
+2. Exactly one option must be correct.
+3. Distractors should be plausible but clearly wrong.
+4. Use grade-appropriate vocabulary.`;
+
+    if (feedback && feedback.trim()) {
+      prompt += `\n\nTEACHER FEEDBACK — address this: "${feedback}"`;
+    }
+
+    const messages = [
+      { role: 'system', content: prompt },
+      { role: 'user', content: `Generate 1 science question for grade ${gradeLevel}, TEKS ${teksCode}.` }
+    ];
+
+    const raw = await this._callWorker(messages, 0.2);
+    const questions = this._parseScienceResponse(raw);
+
+    if (questions && questions.length > 0) {
+      return questions[0];
+    }
+    throw new Error('Science regeneration returned no questions');
   }
 }
 

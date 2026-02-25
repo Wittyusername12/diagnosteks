@@ -424,6 +424,27 @@ const App = {
     this.showScreen('grade-select');
     this.checkResumeMission();
 
+    // Load teks-rules.json for validation engine
+    fetch('teks-rules.json')
+      .then(r => r.json())
+      .then(data => {
+        window.TEKS_RULES = data;
+        console.log('[App] teks-rules.json loaded:', Object.keys(data).length, 'entries');
+      })
+      .catch(err => {
+        console.warn('[App] Could not load teks-rules.json:', err.message);
+        window.TEKS_RULES = {};
+      });
+
+    // Initialize Teacher Review Screen
+    const reviewContainer = document.getElementById('im-review-container');
+    if (reviewContainer && window.TeacherReview) {
+      window.TeacherReview.init(reviewContainer);
+    }
+
+    // Format selector state (default: 'mix')
+    this.state.problemFormat = 'mix';
+
     // Initial mission log entries
     this.updateMissionLog('[INIT] Protocol: AVENGERS-1');
     this.updateMissionLog('[SYS] Breach sequence loaded');
@@ -441,7 +462,8 @@ const App = {
       'mission-configured': document.getElementById('screen-mission-configured'),
       'firewall': document.getElementById('screen-firewall'),
       'fury': document.getElementById('screen-fury'),
-      'victory': document.getElementById('screen-victory')
+      'victory': document.getElementById('screen-victory'),
+      'review': document.getElementById('screen-review')
     };
 
     // Other elements
@@ -669,6 +691,10 @@ const App = {
     this.missionState.showExpression = expressionToggle ? expressionToggle.checked : true;
     console.log('[ExprToggle] Stored showExpression:', this.missionState.showExpression);
 
+    // Get problem format selection
+    const activeFormat = document.querySelector('#format-selector .im-review-format-btn.active');
+    this.state.problemFormat = activeFormat ? activeFormat.dataset.format : 'mix';
+
     // Disable button to prevent double-clicks
     const generateBtn = document.getElementById('btn-generate-mission');
     if (generateBtn) {
@@ -689,6 +715,7 @@ const App = {
         this.state.selectedScienceTeks,
         {
           crossCurricular,
+          format: this.state.problemFormat,
           onMathComplete: (math) => {
             msg.textContent = `${math.length} MATH PROBLEMS LOADED... GENERATING 3 SCIENCE QUESTIONS...`;
             this.updateMissionLog(`[GEN] ${math.length} math problems received`);
@@ -756,7 +783,37 @@ const App = {
     });
 
     this.updateMissionLog('[GEN] Mission parameters configured');
-    this.showScreen('mission-configured');
+
+    // Show Teacher Review Screen instead of going straight to mission-configured
+    if (window.TeacherReview) {
+      const apiResult = {
+        math: window.TEST_PROBLEMS.math,
+        science: window.TEST_PROBLEMS.science
+      };
+      const self = this;
+      window.TeacherReview.show(apiResult, {
+        grade: this.state.selectedGrade,
+        mathTeks: this.state.selectedMathTeks,
+        scienceTeks: this.state.selectedScienceTeks,
+        format: this.state.problemFormat,
+        crossCurricular: crossCurricular,
+        onLaunch: function(approvedResult) {
+          // Replace problems with teacher-approved versions
+          window.TEST_PROBLEMS.math = approvedResult.math;
+          window.TEST_PROBLEMS.science = approvedResult.science;
+          self.missionState.problems = [...approvedResult.math, ...approvedResult.science];
+          window.missionState = self.missionState;
+          self.updateMissionLog('[REVIEW] Teacher approved all problems. Launching mission.');
+          window.TeacherReview.hide();
+          self.beginMission();
+        }
+      });
+      this.showScreen('review');
+      this.updateMissionLog('[REVIEW] Teacher reviewing generated problems...');
+    } else {
+      // Fallback: go directly to mission-configured if TeacherReview not loaded
+      this.showScreen('mission-configured');
+    }
   },
 
   beginMission() {
@@ -1869,6 +1926,15 @@ const App = {
     document.getElementById('btn-generate-mission')?.addEventListener('click', () => {
       if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
       this.generateMission();
+    });
+
+    // Format selector buttons (mutually exclusive)
+    document.querySelectorAll('#format-selector .im-review-format-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#format-selector .im-review-format-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.state.problemFormat = btn.dataset.format;
+      });
     });
 
     document.getElementById('btn-reconfigure')?.addEventListener('click', () => {

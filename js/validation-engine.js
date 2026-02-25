@@ -143,22 +143,69 @@ function validateProblem(problem, teksRules) {
     }
 
     // Keyword-operation consistency (soft warning)
-    // Check ALL keyword groups first, then only flag if stated operation has NO matching keywords
-    const opHints = [
-      { keywords: ['times', 'each', 'groups of', 'rows of', 'per', 'every', 'sets of', 'bags of', 'boxes of', 'packs of'], expected: 'MULTIPLY' },
-      { keywords: ['shared equally', 'split', 'each got', 'divided', 'fair share', 'distribute equally', 'per person', 'evenly'], expected: 'DIVIDE' },
-      { keywords: ['how many more', 'how many fewer', 'difference', 'left', 'remaining', 'gave away', 'took', 'ate', 'lost', 'spent', 'used', 'consumed', 'removed'], expected: 'SUBTRACT' },
-      { keywords: ['altogether', 'in all', 'total', 'combined', 'joined', 'plus', 'added'], expected: 'ADD' },
+    // Two-tier matching: PHRASE-level (high confidence) then WORD-level (lower confidence)
+    // Checks ALL operations before flagging, to handle overlapping keywords like "each"
+
+    // PHRASE-LEVEL patterns (more specific, higher confidence)
+    const phrases = [
+      // DIVIDE phrases
+      ['divide equally', 'DIVIDE'], ['divide among', 'DIVIDE'], ['divide between', 'DIVIDE'],
+      ['shared equally', 'DIVIDE'], ['split equally', 'DIVIDE'], ['split between', 'DIVIDE'],
+      ['split among', 'DIVIDE'], ['distribute equally', 'DIVIDE'], ['distribute among', 'DIVIDE'],
+      ['fair share', 'DIVIDE'], ['each get', 'DIVIDE'], ['each got', 'DIVIDE'],
+      ['each receive', 'DIVIDE'], ['each team', 'DIVIDE'], ['each group', 'DIVIDE'],
+      ['each person', 'DIVIDE'], ['each student', 'DIVIDE'], ['each friend', 'DIVIDE'],
+      ['per person', 'DIVIDE'], ['per team', 'DIVIDE'], ['per group', 'DIVIDE'],
+      ['how many boxes', 'DIVIDE'], ['how many groups', 'DIVIDE'], ['how many teams', 'DIVIDE'],
+      ['how many bags', 'DIVIDE'],
+      // MULTIPLY phrases
+      ['groups of', 'MULTIPLY'], ['rows of', 'MULTIPLY'], ['sets of', 'MULTIPLY'],
+      ['bags of', 'MULTIPLY'], ['boxes of', 'MULTIPLY'], ['packs of', 'MULTIPLY'],
+      ['each box contains', 'MULTIPLY'], ['each bag contains', 'MULTIPLY'],
+      ['each pack contains', 'MULTIPLY'], ['each row has', 'MULTIPLY'],
+      ['times as many', 'MULTIPLY'], ['times more', 'MULTIPLY'],
+      // SUBTRACT phrases
+      ['how many more', 'SUBTRACT'], ['how many fewer', 'SUBTRACT'],
+      ['how many are left', 'SUBTRACT'], ['how much more', 'SUBTRACT'],
+      ['how much less', 'SUBTRACT'], ['gave away', 'SUBTRACT'],
+      // ADD phrases
+      ['in all', 'ADD'], ['all together', 'ADD'], ['altogether', 'ADD'],
     ];
-    const suggestedOps = new Set();
-    for (const hint of opHints) {
-      if (hint.keywords.some(kw => textLower.includes(kw))) {
-        suggestedOps.add(hint.expected);
-      }
+
+    // SINGLE-WORD patterns (lower confidence — only used if no phrase matched stated op)
+    const words = [
+      ['evenly', 'DIVIDE'], ['equally', 'DIVIDE'], ['divided', 'DIVIDE'],
+      ['divide', 'DIVIDE'], ['shared', 'DIVIDE'], ['split', 'DIVIDE'],
+      ['times', 'MULTIPLY'],
+      ['total', 'ADD'], ['combined', 'ADD'],
+      ['left', 'SUBTRACT'], ['remaining', 'SUBTRACT'], ['spent', 'SUBTRACT'],
+      ['lost', 'SUBTRACT'], ['consumed', 'SUBTRACT'], ['removed', 'SUBTRACT'],
+      ['ate', 'SUBTRACT'], ['used', 'SUBTRACT'],
+    ];
+
+    // Step 1: Collect all operations suggested by PHRASES
+    const phraseSuggested = new Set();
+    for (const [phrase, op] of phrases) {
+      if (textLower.includes(phrase)) phraseSuggested.add(op);
     }
-    if (suggestedOps.size > 0 && problem.operation && !suggestedOps.has(problem.operation)) {
-      const suggestedList = Array.from(suggestedOps).join(' or ');
-      contentFlags.push(`Layer 3 Content: Narrative suggests ${suggestedList} but operation is ${problem.operation} (may be intentional)`);
+
+    // Step 2: If phrase-level found the stated operation, it's confirmed — no warning
+    if (!phraseSuggested.has(problem.operation)) {
+      // Step 3: Collect single-word suggestions
+      const wordSuggested = new Set();
+      for (const [word, op] of words) {
+        if (textLower.includes(word)) wordSuggested.add(op);
+      }
+
+      // Step 4: If word-level found the stated operation, it's confirmed — no warning
+      if (!wordSuggested.has(problem.operation)) {
+        const allSuggested = new Set([...phraseSuggested, ...wordSuggested]);
+        // Step 5: Only flag if keywords suggest OTHER operations and NONE match the stated operation
+        if (allSuggested.size > 0) {
+          const suggestedList = Array.from(allSuggested).join(' or ');
+          contentFlags.push(`Layer 3 Content: Narrative suggests ${suggestedList} but operation is ${problem.operation} (may be intentional)`);
+        }
+      }
     }
   }
   flags.push(...contentFlags);

@@ -658,6 +658,12 @@ const TeacherReview = (() => {
         const feedback = (p.feedback || '').trim();
         const isScience = p.type === 'science';
 
+        // Only inject cross-curricular if this problem already had it,
+        // or if the teacher's feedback explicitly requests science context
+        const feedbackLower = feedback.toLowerCase();
+        const feedbackRequestsScience = feedbackLower.includes('science') || feedbackLower.includes('cross-curricular') || feedbackLower.includes('cross curricular');
+        const hasCross = !!(p.crossCurricular) || feedbackRequestsScience;
+
         const newProblem = await window.cerebrasAPI.regenerateProblem(
           _options.grade,
           p.teks,
@@ -665,7 +671,7 @@ const TeacherReview = (() => {
           feedback,
           {
             format: _options.format || 'mix',
-            crossCurricular: _options.crossCurricular,
+            crossCurricular: hasCross,
             scienceTeks: _options.scienceTeks,
             isScience: isScience
           }

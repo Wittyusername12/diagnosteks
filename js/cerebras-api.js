@@ -446,10 +446,9 @@ ${JSON.stringify(exemplars, null, 2)}`;
     if (crossCurricular && scienceTeksDescriptions) {
       prompt += `
 
-CROSS-CURRICULAR MODE:
-The teacher also selected these science TEKS:
+CROSS-CURRICULAR MODE IS ON. The teacher has selected these science TEKS:
 ${scienceTeksDescriptions}
-Where natural, theme math word problems around these science concepts. The math must remain rigorous and aligned to the math TEKS \u2014 the science context is vocabulary reinforcement, not a separate learning objective. For cross-curricular problems, set "scienceTeksConnection" to the relevant science TEKS code. Example: "Tony Stark's research lab has 456 rainforest plant specimens. If 189 need to be moved to the new biodome, how many remain in the lab?"`;
+You MUST weave science concepts from these TEKS into the word problem narratives for AT LEAST 7 of the ${count} math problems. The math operation and difficulty must match the math TEKS exactly \u2014 only the word problem CONTEXT should reference science concepts. For example, if the science TEKS is about forces and motion, set the word problem in a scenario involving pushing, pulling, or measuring speed \u2014 but the actual math question still tests the math TEKS. Do NOT just add a science word as decoration. The science context should be meaningful enough that a student encounters the science concept while solving the math problem. Problems that include science context MUST set "scienceTeksConnection" to the relevant science TEKS code. Problems without science context should set "scienceTeksConnection" to null.`;
     }
 
     // === BLOCK 4: FORMAT INSTRUCTION ===
@@ -463,8 +462,13 @@ Generate bare arithmetic expressions only — no word problem context. Set each 
 
 PROBLEM FORMAT: WORD PROBLEMS
 Every problem MUST be a rich real-world word problem with full narrative context (2-4 sentences, 30-80 words). No bare arithmetic expressions.`;
+    } else {
+      // 'mix' format — explicit instruction to produce both types
+      prompt += `
+
+PROBLEM FORMAT: MIX
+Generate approximately HALF of the math problems as word problems with narrative context (e.g., "Iron Man has 5 boxes of 3 repulsor units each...") and approximately HALF as bare arithmetic expressions (e.g., set narrative to "Solve: 245 + 318 = ?" with no story context). The split does not need to be exactly 50/50, but there MUST be a clear mix of both formats. Do NOT generate all word problems.`;
     }
-    // 'mix' = no format constraint (default LLM behavior)
 
     // === BLOCK 5: PRE-SELECTED NUMBERS ===
     if (operandAssignments && operandAssignments.length > 0) {

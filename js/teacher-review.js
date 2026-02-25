@@ -77,6 +77,9 @@ const TeacherReview = (() => {
 
     _render();
     _container.style.display = 'block';
+
+    // Auto-regenerate hard gate failures (async, runs in background after initial render)
+    _autoRegenerateFailures();
   }
 
   function hide() {
@@ -85,21 +88,32 @@ const TeacherReview = (() => {
 
   // ── Schema Mapping ────────────────────────────────────────────
 
+  function _detectFormat(text) {
+    if (!text) return 'word';
+    const trimmed = text.trim();
+    if (/^solve\s*:/i.test(trimmed)) return 'bare';
+    if (/^calculate\s*:/i.test(trimmed)) return 'bare';
+    if (trimmed.split(/\s+/).length <= 8 && /[+\-×÷*/=]/.test(trimmed)) return 'bare';
+    return 'word';
+  }
+
   function _mapApiToReview(mathProblems, scienceProblems, gradeLevel) {
     const problems = [];
 
     (mathProblems || []).forEach((p) => {
+      const displayText = p.narrative || p.wordProblem || '';
       problems.push({
         id: p.id,
         type: 'math',
         teks: p.teks || p.teksCode || '',
         operation: p.operation || '',
         expression: p.expression || '',
-        displayText: p.narrative || p.wordProblem || '',
+        displayText: displayText,
         answer: p.correctAnswer !== undefined ? p.correctAnswer : p.expectedAnswer,
         numbers: p.operands || p.numbers || [],
         difficulty: p.difficulty || 'medium',
         answerType: p.answerType || 'integer',
+        format: _detectFormat(displayText),
         crossCurricular: p.scienceTeksConnection
           ? { scienceTeks: p.scienceTeksConnection, label: p.scienceTeksConnection }
           : null,
@@ -289,6 +303,7 @@ const TeacherReview = (() => {
     html += `<span class="im-review-badge-teks ${isScience ? 'science' : 'math'}">${_esc(p.teks)}</span>`;
     if (p.difficulty) html += `<span class="im-review-badge-difficulty">${_esc(p.difficulty)}</span>`;
     if (p.operation) html += `<span class="im-review-badge-operation">${_esc(p.operation)}</span>`;
+    if (p.format) html += `<span class="im-review-badge-format">${p.format === 'bare' ? 'PURE MATH' : 'WORD'}</span>`;
     if (isScience) html += `<span class="im-review-badge-science-type">SCIENCE · FURY INTERRUPTION</span>`;
     if (p.crossCurricular) html += `<span class="im-review-badge-cross">✦ ${_esc(p.crossCurricular.scienceTeks)}: ${_esc(p.crossCurricular.label || '')}</span>`;
     if (p.source === 'uploaded') html += `<span class="im-review-badge-uploaded">UPLOADED</span>`;
@@ -706,6 +721,82 @@ const TeacherReview = (() => {
       p.status = 'pending';
     }
 
+    _render();
+  }
+
+  async function _autoRegenerateFailures() {
+    const MAX_RETRIES = 3;
+    const teksRules = window.TEKS_RULES || {};
+    if (!window.cerebrasAPI || !window.cerebrasAPI.regenerateProblem || !window.ValidationEngine) return;
+
+    for (let i = 0; i < _problems.length; i++) {
+      const p = _problems[i];
+      if (p.type === 'science') continue;
+      if (p.status === 'approved') continue;
+
+      const v = _validation[p.id];
+      if (!v || v.category !== 'red') continue;
+
+      // Hard gate failure detected — auto-regenerate
+      console.log(`[AutoRegen] Problem ${i + 1} failed hard gate — auto-regenerating (TEKS: ${p.teks})`);
+      p.status = 'regenerating';
+      _render();
+
+      let fixed = false;
+      for (let retry = 0; retry < MAX_RETRIES; retry++) {
+        try {
+          const hasCross = !!(p.crossCurricular);
+          const newProblem = await window.cerebrasAPI.regenerateProblem(
+            _options.grade,
+            p.teks,
+            p.operation || '',
+            'Previous problem failed TEKS validation. Generate a new problem that strictly follows TEKS constraints.',
+            {
+              format: _options.format || 'mix',
+              crossCurricular: hasCross,
+              scienceTeks: _options.scienceTeks,
+              isScience: false
+            }
+          );
+
+          if (newProblem) {
+            const mapped = _mapApiToReview([newProblem], [], _options.grade)[0];
+            if (mapped) {
+              Object.assign(p, mapped, { status: 'pending', feedback: '', favorited: false });
+              const newV = window.ValidationEngine.validateProblem(p, teksRules);
+              _validation[p.id] = newV;
+
+              if (newV.category !== 'red') {
+                console.log(`[AutoRegen] Problem ${i + 1} fixed on retry ${retry + 1}`);
+                fixed = true;
+                break;
+              } else {
+                console.log(`[AutoRegen] Problem ${i + 1} retry ${retry + 1} still failed`);
+              }
+            }
+          }
+        } catch (err) {
+          console.error(`[AutoRegen] Problem ${i + 1} retry ${retry + 1} error:`, err);
+        }
+      }
+
+      if (!fixed) {
+        p.status = 'pending';
+        console.warn(`[AutoRegen] Problem ${i + 1} could not be auto-fixed after ${MAX_RETRIES} retries`);
+      }
+
+      _render();
+    }
+
+    // Re-sort after auto-regeneration (fewer reds should be at top now)
+    _problems.sort((a, b) => {
+      const va = _validation[a.id] || { category: 'yellow' };
+      const vb = _validation[b.id] || { category: 'yellow' };
+      if (a.type === 'science' && b.type !== 'science') return 1;
+      if (a.type !== 'science' && b.type === 'science') return -1;
+      return (SORT_PRIORITY[va.category] || 1) - (SORT_PRIORITY[vb.category] || 1);
+    });
+    _selectedIdx = 0;
     _render();
   }
 

@@ -111,8 +111,8 @@ function validateProblem(problem, teksRules) {
     const text = problem.displayText || '';
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
 
-    // Word count check (30-80 words for word problems)
-    if (wordCount > 0 && wordCount < 10 && problem.answerType !== 'multipleChoice') {
+    // Word count check (30-80 words for word problems) — skip for bare math
+    if (problem.format !== 'bare' && wordCount > 0 && wordCount < 10 && problem.answerType !== 'multipleChoice') {
       contentFlags.push('Layer 3 Content: Narrative is very short (fewer than 10 words) — may be bare math, not a word problem');
     }
 
@@ -129,82 +129,38 @@ function validateProblem(problem, teksRules) {
       contentFlags.push('Layer 3 Content: Answer is not a whole number, but problem mentions people/animals');
     }
 
-    // TEKS result range checks (from teks-rules.json)
-    if (teksRules && problem.teks) {
-      const rule = teksRules[problem.teks];
-      if (rule && rule.validatable) {
-        if (rule.maxResult !== null && rule.maxResult !== undefined && typeof problem.answer === 'number' && problem.answer > rule.maxResult) {
-          contentFlags.push(`Layer 3 Content: Answer ${problem.answer} exceeds TEKS ${problem.teks} maximum of ${rule.maxResult}`);
-        }
-        if (rule.minResult !== null && rule.minResult !== undefined && typeof problem.answer === 'number' && problem.answer < rule.minResult) {
-          contentFlags.push(`Layer 3 Content: Answer ${problem.answer} below TEKS ${problem.teks} minimum of ${rule.minResult}`);
-        }
-      }
-    }
+    // NOTE: TEKS range checks (answer exceeds max, below min) are EXCLUSIVELY in Layer 4.
+    // Do NOT add teksRules-based checks here — that causes duplicate violations.
 
     // Keyword-operation consistency (soft warning)
-    // Two-tier matching: PHRASE-level (high confidence) then WORD-level (lower confidence)
-    // Checks ALL operations before flagging, to handle overlapping keywords like "each"
+    // ONLY high-confidence multi-word phrases — no single-word matching (too ambiguous)
+    // Skip entirely for bare math problems (no narrative to check)
+    if (problem.format !== 'bare' && problem.operation) {
+      const highConfidencePhrases = [
+        // DIVIDE — only when sharing/splitting is explicit
+        ['shared equally among', 'DIVIDE'], ['shared equally between', 'DIVIDE'],
+        ['split equally among', 'DIVIDE'], ['split equally between', 'DIVIDE'],
+        ['divided equally among', 'DIVIDE'], ['divided equally between', 'DIVIDE'],
+        ['distribute equally among', 'DIVIDE'],
+        // ADD — only when combining is explicit
+        ['how many altogether', 'ADD'], ['how many in all', 'ADD'],
+        ['how much altogether', 'ADD'], ['how much in all', 'ADD'],
+        // SUBTRACT — only when comparison/removal is explicit
+        ['how many more than', 'SUBTRACT'], ['how many fewer than', 'SUBTRACT'],
+        ['how much more than', 'SUBTRACT'], ['how much less than', 'SUBTRACT'],
+        ['what is the difference', 'SUBTRACT'],
+        // MULTIPLY — only when grouping is unambiguous
+        ['times as many', 'MULTIPLY'], ['times as much', 'MULTIPLY'],
+      ];
 
-    // PHRASE-LEVEL patterns (more specific, higher confidence)
-    const phrases = [
-      // DIVIDE phrases
-      ['divide equally', 'DIVIDE'], ['divide among', 'DIVIDE'], ['divide between', 'DIVIDE'],
-      ['shared equally', 'DIVIDE'], ['split equally', 'DIVIDE'], ['split between', 'DIVIDE'],
-      ['split among', 'DIVIDE'], ['distribute equally', 'DIVIDE'], ['distribute among', 'DIVIDE'],
-      ['fair share', 'DIVIDE'], ['each get', 'DIVIDE'], ['each got', 'DIVIDE'],
-      ['each receive', 'DIVIDE'], ['each team', 'DIVIDE'], ['each group', 'DIVIDE'],
-      ['each person', 'DIVIDE'], ['each student', 'DIVIDE'], ['each friend', 'DIVIDE'],
-      ['per person', 'DIVIDE'], ['per team', 'DIVIDE'], ['per group', 'DIVIDE'],
-      ['how many boxes', 'DIVIDE'], ['how many groups', 'DIVIDE'], ['how many teams', 'DIVIDE'],
-      ['how many bags', 'DIVIDE'],
-      // MULTIPLY phrases
-      ['groups of', 'MULTIPLY'], ['rows of', 'MULTIPLY'], ['sets of', 'MULTIPLY'],
-      ['bags of', 'MULTIPLY'], ['boxes of', 'MULTIPLY'], ['packs of', 'MULTIPLY'],
-      ['each box contains', 'MULTIPLY'], ['each bag contains', 'MULTIPLY'],
-      ['each pack contains', 'MULTIPLY'], ['each row has', 'MULTIPLY'],
-      ['times as many', 'MULTIPLY'], ['times more', 'MULTIPLY'],
-      // SUBTRACT phrases
-      ['how many more', 'SUBTRACT'], ['how many fewer', 'SUBTRACT'],
-      ['how many are left', 'SUBTRACT'], ['how much more', 'SUBTRACT'],
-      ['how much less', 'SUBTRACT'], ['gave away', 'SUBTRACT'],
-      // ADD phrases
-      ['in all', 'ADD'], ['all together', 'ADD'], ['altogether', 'ADD'],
-    ];
-
-    // SINGLE-WORD patterns (lower confidence — only used if no phrase matched stated op)
-    const words = [
-      ['evenly', 'DIVIDE'], ['equally', 'DIVIDE'], ['divided', 'DIVIDE'],
-      ['divide', 'DIVIDE'], ['shared', 'DIVIDE'], ['split', 'DIVIDE'],
-      ['times', 'MULTIPLY'],
-      ['total', 'ADD'], ['combined', 'ADD'],
-      ['left', 'SUBTRACT'], ['remaining', 'SUBTRACT'], ['spent', 'SUBTRACT'],
-      ['lost', 'SUBTRACT'], ['consumed', 'SUBTRACT'], ['removed', 'SUBTRACT'],
-      ['ate', 'SUBTRACT'], ['used', 'SUBTRACT'],
-    ];
-
-    // Step 1: Collect all operations suggested by PHRASES
-    const phraseSuggested = new Set();
-    for (const [phrase, op] of phrases) {
-      if (textLower.includes(phrase)) phraseSuggested.add(op);
-    }
-
-    // Step 2: If phrase-level found the stated operation, it's confirmed — no warning
-    if (!phraseSuggested.has(problem.operation)) {
-      // Step 3: Collect single-word suggestions
-      const wordSuggested = new Set();
-      for (const [word, op] of words) {
-        if (textLower.includes(word)) wordSuggested.add(op);
+      const suggested = new Set();
+      for (const [phrase, op] of highConfidencePhrases) {
+        if (textLower.includes(phrase)) suggested.add(op);
       }
 
-      // Step 4: If word-level found the stated operation, it's confirmed — no warning
-      if (!wordSuggested.has(problem.operation)) {
-        const allSuggested = new Set([...phraseSuggested, ...wordSuggested]);
-        // Step 5: Only flag if keywords suggest OTHER operations and NONE match the stated operation
-        if (allSuggested.size > 0) {
-          const suggestedList = Array.from(allSuggested).join(' or ');
-          contentFlags.push(`Layer 3 Content: Narrative suggests ${suggestedList} but operation is ${problem.operation} (may be intentional)`);
-        }
+      if (suggested.size > 0 && !suggested.has(problem.operation)) {
+        const suggestedList = Array.from(suggested).join(' or ');
+        contentFlags.push(`Layer 3 Content: Narrative suggests ${suggestedList} but operation is ${problem.operation} (may be intentional)`);
       }
     }
   }

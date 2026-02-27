@@ -791,18 +791,27 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
      ========================================= */
 
   _validateOperation(operation) {
+    if (!operation) return 'ADD';
+
+    // Normalize common LLM natural-language variants
+    const OPERATION_ALIASES = {
+      'addition': 'ADD', 'add': 'ADD', 'plus': 'ADD',
+      'subtraction': 'SUBTRACT', 'subtract': 'SUBTRACT', 'minus': 'SUBTRACT',
+      'multiplication': 'MULTIPLY', 'multiply': 'MULTIPLY', 'times': 'MULTIPLY',
+      'division': 'DIVIDE', 'divide': 'DIVIDE', 'divided': 'DIVIDE',
+    };
+    const normalized = OPERATION_ALIASES[operation.toLowerCase()] || operation.toUpperCase();
+
     const valid = [
       'ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE',
       'FRACTION_ADD', 'FRACTION_SUBTRACT', 'FRACTION_MULTIPLY',
       'DECIMAL_ADD', 'DECIMAL_SUBTRACT', 'DECIMAL_MULTIPLY',
       'COMPARE', 'IDENTIFY', 'MEASURE', 'DATA_READ', 'CONCEPTUAL'
     ];
-    const upper = (operation || '').toUpperCase();
-    if (!valid.includes(upper)) {
-      console.warn(`[CerebrasAPI] Invalid operation "${operation}", defaulting to ADD`);
-      return 'ADD';
-    }
-    return upper;
+    if (valid.includes(normalized)) return normalized;
+
+    console.warn(`[CerebrasAPI] Unrecognized operation "${operation}", defaulting to ADD`);
+    return 'ADD';
   }
 
   _validateOperands(operands, operation) {
@@ -1025,12 +1034,18 @@ RULES:
 3. For SUBTRACT: first operand > second. For DIVIDE: must divide evenly.
 4. Narrative must be a complete word problem (2-4 sentences). Do NOT show the operation or equation in the narrative.`;
 
-    // Format instruction
-    const format = opts.format || 'mix';
-    if (format === 'pure') {
-      prompt += '\n\nFORMAT: Generate a bare arithmetic expression only — no word problem context. Set narrative to a minimal description like "Solve: [expression]".';
-    } else if (format === 'word') {
-      prompt += '\n\nFORMAT: Generate a rich real-world word problem with context (2-4 sentences, 30-80 words).';
+    // Format instruction — teacher chip override takes precedence over mission format
+    if (opts.formatOverride === 'bare') {
+      prompt += `\n\nFORMAT REQUIREMENT — BARE ARITHMETIC: You MUST generate a bare arithmetic problem with NO narrative, NO story context, NO character names, NO word problem framing. The output format MUST be exactly: "Solve: [operand1] [operator] [operand2] = ?" Example: "Solve: 478 + 120 = ?" The narrative field must contain ONLY "Solve: X ○ Y = ?" — nothing else. Do NOT include any scenario, context, or story. Just the raw math expression.`;
+    } else if (opts.formatOverride === 'word') {
+      prompt += `\n\nFORMAT REQUIREMENT — WORD PROBLEM: You MUST generate a word problem with narrative context using Avengers/Marvel characters (Iron Man, Black Widow, Thor, Hulk, Captain America, Jarvis, etc.). The problem MUST include a real-world scenario, NOT just a math expression. The narrative field must describe a scenario that requires the student to perform the math operation. Example: "Iron Man has 478 repulsor energy cells and receives 120 more from Stark Industries. How many energy cells does he have in total?"`;
+    } else {
+      const format = opts.format || 'mix';
+      if (format === 'pure') {
+        prompt += '\n\nFORMAT: Generate a bare arithmetic expression only — no word problem context. Set narrative to a minimal description like "Solve: [expression]".';
+      } else if (format === 'word') {
+        prompt += '\n\nFORMAT: Generate a rich real-world word problem with context (2-4 sentences, 30-80 words).';
+      }
     }
 
     // Cross-curricular

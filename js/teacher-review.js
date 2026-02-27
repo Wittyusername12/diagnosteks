@@ -25,8 +25,8 @@ const TeacherReview = (() => {
   const MATH_QUICK_ACTIONS = [
     { label: 'Easier Numbers', icon: '↓', feedback: 'Use smaller, simpler numbers appropriate for this grade level' },
     { label: 'Harder Numbers', icon: '↑', feedback: 'Increase the difficulty with larger or more complex numbers' },
-    { label: 'Word Problem', icon: '📖', feedback: 'Rewrite as a real-world word problem with context' },
-    { label: 'Bare Math', icon: '🔢', feedback: 'Simplify to just the arithmetic expression, no word problem' },
+    { label: 'Word Problem', icon: '📖', feedback: 'Rewrite as a real-world word problem with context', formatOverride: 'word' },
+    { label: 'Bare Math', icon: '🔢', feedback: 'Simplify to just the arithmetic expression, no word problem', formatOverride: 'bare' },
   ];
 
   const SCIENCE_QUICK_ACTIONS = [
@@ -394,7 +394,7 @@ const TeacherReview = (() => {
       <p class="im-review-feedback-title">Refine This ${isScience ? 'Question' : 'Problem'}</p>
       <p class="im-review-feedback-subtitle">Quick adjustments:</p>
       <div class="im-review-quick-actions">
-        ${quickActions.map(qa => `<button class="im-review-quick-btn" data-feedback="${_esc(qa.feedback)}">${qa.icon} ${_esc(qa.label)}</button>`).join('')}
+        ${quickActions.map(qa => `<button class="im-review-quick-btn" data-feedback="${_esc(qa.feedback)}"${qa.formatOverride ? ` data-format-override="${qa.formatOverride}"` : ''}>${qa.icon} ${_esc(qa.label)}</button>`).join('')}
       </div>
       ${!isScience ? `<div class="im-review-teks-override">
         <label class="im-review-override-label">
@@ -593,6 +593,7 @@ const TeacherReview = (() => {
     _container.querySelectorAll('.im-review-quick-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         p.feedback = btn.dataset.feedback;
+        p._formatOverride = btn.dataset.formatOverride || null;
         _render();
       });
     });
@@ -602,6 +603,7 @@ const TeacherReview = (() => {
     if (textarea) {
       textarea.addEventListener('input', (e) => {
         p.feedback = e.target.value;
+        p._formatOverride = null; // Clear chip format override on manual edit
         // Re-render action buttons to show/hide regen-with-feedback
         // But don't full re-render to avoid losing focus
         const inlineBtn = _container.querySelector('#im-review-regen-inline');
@@ -738,6 +740,7 @@ const TeacherReview = (() => {
 
         const regenOpts = {
           format: _options.format || 'mix',
+          formatOverride: p._formatOverride || null,
           crossCurricular: hasCross,
           scienceTeks: _options.scienceTeks,
           isScience: isScience
@@ -784,6 +787,7 @@ const TeacherReview = (() => {
           Object.assign(p, bestMapped, { status: 'pending', feedback: '', favorited: false, whyThisIsGood: null });
           p.id = savedId; // Restore original ID to prevent validation cache collision
           p.teksOverride = savedOverride;
+          p._formatOverride = null; // Clear chip format override after regeneration
           if (bestValidation) {
             // Check if retries were exhausted (TEKS still failing without override)
             const hasTeksFailure = bestValidation.chips && bestValidation.chips.teks === 'fail';

@@ -592,6 +592,31 @@ const TeacherReview = (() => {
     // Quick action chips
     _container.querySelectorAll('.im-review-quick-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        // "Bare Math" chip: local transformation — no LLM call
+        if (btn.dataset.formatOverride === 'bare') {
+          if (p.format === 'bare') return; // Already bare — no-op
+          let bareText = '';
+          if (p.expression) {
+            bareText = 'Solve: ' + p.expression;
+          } else if (p.numbers && p.numbers.length >= 2 && p.operation) {
+            const sym = { ADD: '+', SUBTRACT: '-', MULTIPLY: '×', DIVIDE: '÷' }[p.operation] || '+';
+            bareText = `Solve: ${p.numbers[0]} ${sym} ${p.numbers[1]} = ?`;
+          } else {
+            console.warn('[Review] Cannot convert to bare math — no expression or operands');
+            return;
+          }
+          p.displayText = bareText;
+          p.format = 'bare';
+          p.status = 'pending';
+          p.feedback = '';
+          p._formatOverride = null;
+          // Re-validate (math unchanged, structure may differ)
+          if (window.ValidationEngine) {
+            _validation[p.id] = window.ValidationEngine.validateProblem(p, window.TEKS_RULES || {});
+          }
+          _render();
+          return;
+        }
         p.feedback = btn.dataset.feedback;
         p._formatOverride = btn.dataset.formatOverride || null;
         _render();

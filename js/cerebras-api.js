@@ -377,7 +377,8 @@ REQUIRED JSON STRUCTURE:
     "difficulty": "easy",
     "diagnosticFor": [],
     "answerType": "integer",
-    "scienceTeksConnection": null
+    "scienceTeksConnection": null,
+    "scienceLabel": null
   }
 ]}
 
@@ -448,7 +449,7 @@ ${JSON.stringify(exemplars, null, 2)}`;
 
 CROSS-CURRICULAR MODE IS ON. The teacher has selected these science TEKS:
 ${scienceTeksDescriptions}
-You MUST weave science concepts from these TEKS into the word problem narratives for AT LEAST 7 of the ${count} math problems. The math operation and difficulty must match the math TEKS exactly \u2014 only the word problem CONTEXT should reference science concepts. For example, if the science TEKS is about forces and motion, set the word problem in a scenario involving pushing, pulling, or measuring speed \u2014 but the actual math question still tests the math TEKS. Do NOT just add a science word as decoration. The science context should be meaningful enough that a student encounters the science concept while solving the math problem. Problems that include science context MUST set "scienceTeksConnection" to the relevant science TEKS code. Problems without science context should set "scienceTeksConnection" to null.`;
+You MUST weave science concepts from these TEKS into the word problem narratives for AT LEAST 7 of the ${count} math problems. The math operation and difficulty must match the math TEKS exactly \u2014 only the word problem CONTEXT should reference science concepts. For example, if the science TEKS is about forces and motion, set the word problem in a scenario involving pushing, pulling, or measuring speed \u2014 but the actual math question still tests the math TEKS. Do NOT just add a science word as decoration. The science context should be meaningful enough that a student encounters the science concept while solving the math problem. Problems that include science context MUST set "scienceTeksConnection" to the relevant science TEKS code AND set "scienceLabel" to a SHORT (2-5 word) human-readable description of the science concept (e.g., "Forces & Motion", "Weather & Precipitation", "Weathering & Erosion", "Energy Types", "Food Chains", "Solids, Liquids & Gases"). Do NOT repeat the TEKS code as the label. Problems without science context should set "scienceTeksConnection" to null and "scienceLabel" to null.`;
     }
 
     // === BLOCK 4: FORMAT INSTRUCTION ===
@@ -660,7 +661,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
           difficulty: p.difficulty || 'medium',
           diagnosticFor: p.diagnosticFor || [],
           answerType,
-          scienceTeksConnection: p.scienceTeksConnection || null
+          scienceTeksConnection: p.scienceTeksConnection || null,
+          scienceLabel: p.scienceLabel || null
         };
       }
 
@@ -681,7 +683,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
           difficulty: p.difficulty || 'medium',
           diagnosticFor: p.diagnosticFor || [],
           answerType,
-          scienceTeksConnection: p.scienceTeksConnection || null
+          scienceTeksConnection: p.scienceTeksConnection || null,
+          scienceLabel: p.scienceLabel || null
         };
       }
 
@@ -703,7 +706,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
           difficulty: p.difficulty || 'medium',
           diagnosticFor: p.diagnosticFor || [],
           answerType: 'fraction',
-          scienceTeksConnection: p.scienceTeksConnection || null
+          scienceTeksConnection: p.scienceTeksConnection || null,
+          scienceLabel: p.scienceLabel || null
         };
       }
 
@@ -725,7 +729,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
         difficulty: p.difficulty || 'medium',
         diagnosticFor: p.diagnosticFor || [],
         answerType,
-        scienceTeksConnection: p.scienceTeksConnection || null
+        scienceTeksConnection: p.scienceTeksConnection || null,
+        scienceLabel: p.scienceLabel || null
       };
     });
   }
@@ -1012,7 +1017,7 @@ TARGET TEKS: ${teksDesc}
 GRADE: ${gradeLevel}
 
 REQUIRED JSON FIELDS per problem:
-narrative (string, 30-80 word Iron Man themed word problem), operation (string), operands (array of numbers), teks (string), primaryType (string), difficulty (string), diagnosticFor (array), answerType (string), scienceTeksConnection (string or null)
+narrative (string, 30-80 word Iron Man themed word problem), operation (string), operands (array of numbers), teks (string), primaryType (string), difficulty (string), diagnosticFor (array), answerType (string), scienceTeksConnection (string or null), scienceLabel (string or null — short 2-5 word description of science concept if cross-curricular)
 
 RULES:
 1. Do NOT include correctAnswer — JavaScript computes it.
@@ -1031,7 +1036,7 @@ RULES:
     // Cross-curricular
     if (opts.crossCurricular && opts.scienceTeks && opts.scienceTeks.length > 0) {
       const sciDesc = this._getTeksDescriptions(gradeLevel, 'science', opts.scienceTeks);
-      prompt += `\n\nCROSS-CURRICULAR: Weave in science themes from: ${sciDesc}\nSet scienceTeksConnection to the relevant science TEKS code.`;
+      prompt += `\n\nCROSS-CURRICULAR: Weave in science themes from: ${sciDesc}\nSet scienceTeksConnection to the relevant science TEKS code. Also set "scienceLabel" to a SHORT (2-5 word) description of the science concept used (e.g., "Forces & Motion", "Weather & Precipitation"). Do NOT repeat the TEKS code as the label.`;
     }
 
     // Pre-selected numbers

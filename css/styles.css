@@ -2055,6 +2055,56 @@ body {
 .im-review-chips-label-yellow { color: rgba(255,200,0,0.6); }
 .im-review-chips-label-red { color: rgba(255,60,60,0.6); }
 
+/* ── Favorite Annotation ────────────────── */
+
+.im-review-fav-annotation {
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.im-review-fav-textarea {
+  width: 100%;
+  background: rgba(255, 170, 50, 0.05);
+  border: 1px solid rgba(255, 170, 50, 0.2);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--font-body);
+  font-size: 12px;
+  padding: 8px;
+  resize: vertical;
+  min-height: 40px;
+  max-height: 100px;
+  box-sizing: border-box;
+}
+
+.im-review-fav-textarea::placeholder {
+  color: rgba(255, 170, 50, 0.4);
+}
+
+.im-review-fav-textarea:focus {
+  border-color: rgba(255, 170, 50, 0.5);
+  outline: none;
+}
+
+.im-review-fav-hint {
+  display: block;
+  font-size: 10px;
+  color: rgba(255, 170, 50, 0.4);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.im-review-retry-message {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #ffaa32;
+  background: rgba(255,170,50,0.08);
+  border: 1px solid rgba(255,170,50,0.2);
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin: 6px 0 12px 0;
+}
+
 /* ── View Issues ────────────────────────── */
 
 .im-review-issues-section {

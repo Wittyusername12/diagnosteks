@@ -319,6 +319,15 @@ const TeacherReview = (() => {
     html += `<button class="im-review-fav-btn${p.favorited ? ' active' : ''}" id="im-review-fav-btn">${p.favorited ? '★ Favorited' : '☆ Favorite'}</button>`;
     html += `</div>`;
 
+    // Favorite annotation (expandable when favorited)
+    if (p.favorited) {
+      html += `<div class="im-review-fav-annotation">
+        <textarea class="im-review-fav-textarea" id="im-review-fav-annotation" rows="2" maxlength="500"
+          placeholder="What makes this problem great? (optional)">${_esc(p.whyThisIsGood || '')}</textarea>
+        <span class="im-review-fav-hint">This note helps the AI learn your preferences for future missions</span>
+      </div>`;
+    }
+
     // Validation chips row
     html += `<div class="im-review-chips-row">`;
     html += _renderValidationChip('Structure', chips.structure);
@@ -332,6 +341,11 @@ const TeacherReview = (() => {
     const catLabel = v.category === 'green' ? 'High Confidence' : v.category === 'yellow' ? 'Needs Review' : 'TEKS/Math Violation';
     html += `<div class="im-review-chips-confidence">${_renderConfidenceBadge(v.category, false)}<span class="im-review-chips-label im-review-chips-label-${v.category}">${catLabel}</span></div>`;
     html += `</div>`;
+
+    // Retry-exhausted message (shown when TEKS retries failed)
+    if (v.retryExhausted && v.retryMessage) {
+      html += `<p class="im-review-retry-message">${_esc(v.retryMessage)}</p>`;
+    }
 
     // View issues
     if (v.flags && v.flags.length > 0) {
@@ -367,7 +381,7 @@ const TeacherReview = (() => {
     // ── APPROVED STATE ──
     if (p.status === 'approved') {
       html += `<div class="im-review-approved-box">
-        <p class="im-review-approved-text">✓ This ${isScience ? 'question' : 'problem'} has been approved.${p.favorited ? `<span class="im-review-approved-fav">★ Will inform future generations for ${_esc(p.teks)}</span>` : ''}</p>
+        <p class="im-review-approved-text">✓ This ${isScience ? 'question' : 'problem'} has been approved.${p.favorited ? `<span class="im-review-approved-fav">★ Will inform future generations for ${_esc(p.teks)}${p.whyThisIsGood ? ' — "' + _esc(p.whyThisIsGood) + '"' : ''}</span>` : ''}</p>
         <button class="im-review-undo-btn" id="im-review-undo-btn">↩ Undo Approval</button>
       </div>`;
       return html;
@@ -540,7 +554,18 @@ const TeacherReview = (() => {
     if (favBtn) {
       favBtn.addEventListener('click', () => {
         p.favorited = !p.favorited;
+        if (!p.favorited) {
+          p.whyThisIsGood = null; // Clear annotation on un-favorite
+        }
         _render();
+      });
+    }
+
+    // Favorite annotation textarea
+    const favAnnotation = _container.querySelector('#im-review-fav-annotation');
+    if (favAnnotation) {
+      favAnnotation.addEventListener('input', (e) => {
+        p.whyThisIsGood = e.target.value.trim() || null;
       });
     }
 
@@ -559,6 +584,7 @@ const TeacherReview = (() => {
       undoBtn.addEventListener('click', () => {
         p.status = 'pending';
         p.favorited = false;
+        p.whyThisIsGood = null;
         _render();
       });
     }
@@ -686,7 +712,8 @@ const TeacherReview = (() => {
       difficulty: p.difficulty || '',
       teks: p.teks,
       type: p.type,
-      source: p.source
+      source: p.source,
+      whyThisIsGood: p.whyThisIsGood || null
     };
   }
 
@@ -753,9 +780,18 @@ const TeacherReview = (() => {
         }
 
         if (bestMapped) {
-          Object.assign(p, bestMapped, { status: 'pending', feedback: '', favorited: false });
+          Object.assign(p, bestMapped, { status: 'pending', feedback: '', favorited: false, whyThisIsGood: null });
           p.teksOverride = savedOverride;
-          if (bestValidation) _validation[p.id] = bestValidation;
+          if (bestValidation) {
+            // Check if retries were exhausted (TEKS still failing without override)
+            const hasTeksFailure = bestValidation.chips && bestValidation.chips.teks === 'fail';
+            if (hasTeksFailure && !savedOverride) {
+              bestValidation.retryExhausted = true;
+              bestValidation.retryMessage = 'Could not generate within TEKS constraints. Enable TEKS Override to go beyond limits.';
+              console.log(`[Review] Problem ${idx + 1}: All retries exhausted, showing best attempt`);
+            }
+            _validation[p.id] = bestValidation;
+          }
         } else {
           p.status = 'pending';
         }

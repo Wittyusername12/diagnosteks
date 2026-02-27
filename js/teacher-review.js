@@ -324,7 +324,7 @@ const TeacherReview = (() => {
       html += `<div class="im-review-fav-annotation">
         <textarea class="im-review-fav-textarea" id="im-review-fav-annotation" rows="2" maxlength="500"
           placeholder="What makes this problem great? (optional)">${_esc(p.whyThisIsGood || '')}</textarea>
-        <span class="im-review-fav-hint">This note helps the AI learn your preferences for future missions</span>
+        <span class="im-review-fav-hint">e.g., 'Good difficulty for this TEKS' · 'Realistic word problem context' · 'Distractors target common errors' — helps AI generate similar quality</span>
       </div>`;
     }
 
@@ -780,7 +780,9 @@ const TeacherReview = (() => {
         }
 
         if (bestMapped) {
+          const savedId = p.id; // Preserve original ID — regenerated problems always get 'fw-1'
           Object.assign(p, bestMapped, { status: 'pending', feedback: '', favorited: false, whyThisIsGood: null });
+          p.id = savedId; // Restore original ID to prevent validation cache collision
           p.teksOverride = savedOverride;
           if (bestValidation) {
             // Check if retries were exhausted (TEKS still failing without override)
@@ -846,7 +848,9 @@ const TeacherReview = (() => {
           if (newProblem) {
             const mapped = _mapApiToReview([newProblem], [], _options.grade)[0];
             if (mapped) {
+              const savedId = p.id; // Preserve original ID — regenerated problems always get 'fw-1'
               Object.assign(p, mapped, { status: 'pending', feedback: '', favorited: false });
+              p.id = savedId; // Restore original ID to prevent validation cache collision
               const newV = window.ValidationEngine.validateProblem(p, teksRules);
               _validation[p.id] = newV;
 

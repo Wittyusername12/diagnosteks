@@ -117,6 +117,7 @@ const TeacherReview = (() => {
         crossCurricular: p.scienceTeksConnection
           ? { scienceTeks: p.scienceTeksConnection, label: p.scienceLabel || '' }
           : null,
+        crossCurricularOverride: !!p.scienceTeksConnection,
         source: 'ai',
         gradeLevel: gradeLevel,
         flagged: p.flagged || false,
@@ -403,6 +404,13 @@ const TeacherReview = (() => {
         </label>
         <span class="im-review-override-hint">Allow numbers beyond TEKS limits for this problem</span>
       </div>` : ''}
+      ${!isScience && p.format === 'word' ? `<div class="im-review-crosscurr-override">
+        <label class="im-review-crosscurr-label">
+          <input type="checkbox" class="im-review-crosscurr-checkbox" id="im-review-crosscurr-cb" ${p.crossCurricularOverride ? 'checked' : ''}>
+          <span class="im-review-crosscurr-text">🔬 Cross-Curricular</span>
+        </label>
+        <span class="im-review-crosscurr-hint">Include science context in word problems</span>
+      </div>` : ''}
       <p class="im-review-feedback-subtitle">Or describe what you want changed:</p>
       <textarea class="im-review-feedback-textarea" id="im-review-feedback" rows="3"
         placeholder="${isScience
@@ -549,6 +557,15 @@ const TeacherReview = (() => {
       });
     }
 
+    // Cross-curricular toggle
+    const crossCurrCb = _container.querySelector('#im-review-crosscurr-cb');
+    if (crossCurrCb) {
+      crossCurrCb.addEventListener('change', () => {
+        p.crossCurricularOverride = crossCurrCb.checked;
+        _render();
+      });
+    }
+
     // Favorite button
     const favBtn = _container.querySelector('#im-review-fav-btn');
     if (favBtn) {
@@ -592,8 +609,10 @@ const TeacherReview = (() => {
     // Quick action chips
     _container.querySelectorAll('.im-review-quick-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        // "Bare Math" chip: local transformation — no LLM call
-        if (btn.dataset.formatOverride === 'bare') {
+        const chipFormat = btn.getAttribute('data-format-override');
+
+        // "Bare Math" chip: LOCAL transformation — no LLM call
+        if (chipFormat === 'bare') {
           if (p.format === 'bare') return; // Already bare — no-op
           let bareText = '';
           if (p.expression) {
@@ -602,23 +621,35 @@ const TeacherReview = (() => {
             const sym = { ADD: '+', SUBTRACT: '-', MULTIPLY: '×', DIVIDE: '÷' }[p.operation] || '+';
             bareText = `Solve: ${p.numbers[0]} ${sym} ${p.numbers[1]} = ?`;
           } else {
-            console.warn('[Review] Cannot convert to bare math — no expression or operands');
-            return;
+            return; // No expression data available
           }
           p.displayText = bareText;
           p.format = 'bare';
           p.status = 'pending';
           p.feedback = '';
           p._formatOverride = null;
-          // Re-validate (math unchanged, structure may differ)
+          p._mathConstraints = null;
           if (window.ValidationEngine) {
             _validation[p.id] = window.ValidationEngine.validateProblem(p, window.TEKS_RULES || {});
           }
           _render();
           return;
         }
-        p.feedback = btn.dataset.feedback;
-        p._formatOverride = btn.dataset.formatOverride || null;
+
+        // "Word Problem" chip: preserve existing math via constraints
+        if (chipFormat === 'word') {
+          p._mathConstraints = {
+            operands: p.numbers || [],
+            operation: p.operation || '',
+            answer: p.answer,
+            expression: p.expression || ''
+          };
+        } else {
+          p._mathConstraints = null;
+        }
+
+        p.feedback = btn.getAttribute('data-feedback') || '';
+        p._formatOverride = chipFormat || null;
         _render();
       });
     });
@@ -629,6 +660,7 @@ const TeacherReview = (() => {
       textarea.addEventListener('input', (e) => {
         p.feedback = e.target.value;
         p._formatOverride = null; // Clear chip format override on manual edit
+        p._mathConstraints = null;
         // Re-render action buttons to show/hide regen-with-feedback
         // But don't full re-render to avoid losing focus
         const inlineBtn = _container.querySelector('#im-review-regen-inline');
@@ -749,6 +781,7 @@ const TeacherReview = (() => {
     if (!p || p.status === 'regenerating') return;
 
     const savedOverride = p.teksOverride || false;
+    const savedCrossCurr = p.crossCurricularOverride;
     p.status = 'regenerating';
     _render();
 
@@ -757,15 +790,17 @@ const TeacherReview = (() => {
         const feedback = (p.feedback || '').trim();
         const isScience = p.type === 'science';
 
-        // Only inject cross-curricular if this problem already had it,
-        // or if the teacher's feedback explicitly requests science context
+        // Cross-curricular: use toggle if set, else existing logic
         const feedbackLower = feedback.toLowerCase();
         const feedbackRequestsScience = feedbackLower.includes('science') || feedbackLower.includes('cross-curricular') || feedbackLower.includes('cross curricular');
-        const hasCross = !!(p.crossCurricular) || feedbackRequestsScience;
+        const hasCross = p.crossCurricularOverride != null
+          ? p.crossCurricularOverride
+          : (!!(p.crossCurricular) || feedbackRequestsScience);
 
         const regenOpts = {
           format: _options.format || 'mix',
           formatOverride: p._formatOverride || null,
+          mathConstraints: p._mathConstraints || null,
           crossCurricular: hasCross,
           scienceTeks: _options.scienceTeks,
           isScience: isScience
@@ -812,7 +847,9 @@ const TeacherReview = (() => {
           Object.assign(p, bestMapped, { status: 'pending', feedback: '', favorited: false, whyThisIsGood: null });
           p.id = savedId; // Restore original ID to prevent validation cache collision
           p.teksOverride = savedOverride;
+          p.crossCurricularOverride = savedCrossCurr; // Preserve teacher's toggle choice
           p._formatOverride = null; // Clear chip format override after regeneration
+          p._mathConstraints = null;
           if (bestValidation) {
             // Check if retries were exhausted (TEKS still failing without override)
             const hasTeksFailure = bestValidation.chips && bestValidation.chips.teks === 'fail';

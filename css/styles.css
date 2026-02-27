@@ -2038,6 +2038,48 @@ body {
   color: rgba(255, 170, 50, 0.7);
 }
 
+/* Cross-curricular toggle — same pattern as TEKS Override */
+.im-review-crosscurr-override {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 4px 0;
+  transition: opacity 0.2s;
+}
+.im-review-crosscurr-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.im-review-crosscurr-checkbox {
+  accent-color: rgba(180, 130, 255, 0.9);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+.im-review-crosscurr-text {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(0, 229, 255, 0.6);
+  letter-spacing: 0.03em;
+  transition: color 0.2s;
+}
+.im-review-crosscurr-override:has(.im-review-crosscurr-checkbox:checked) .im-review-crosscurr-text {
+  color: rgba(180, 130, 255, 0.95);
+}
+.im-review-crosscurr-hint {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: rgba(0, 229, 255, 0.4);
+  font-style: italic;
+  transition: color 0.2s;
+}
+.im-review-crosscurr-override:has(.im-review-crosscurr-checkbox:checked) .im-review-crosscurr-hint {
+  color: rgba(180, 130, 255, 0.7);
+}
+
 .im-review-chip-skip {
   background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.06);

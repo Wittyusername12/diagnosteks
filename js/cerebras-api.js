@@ -1048,10 +1048,20 @@ RULES:
       }
     }
 
+    // Math constraints — preserve existing numbers when converting formats
+    if (opts.mathConstraints && opts.mathConstraints.operands && opts.mathConstraints.operands.length >= 2) {
+      const mc = opts.mathConstraints;
+      const opSymbols = { 'ADD': '+', 'SUBTRACT': '-', 'MULTIPLY': '×', 'DIVIDE': '÷' };
+      const sym = opSymbols[mc.operation] || '+';
+      prompt += `\n\nMATH CONSTRAINT — PRESERVE EXISTING NUMBERS:\nYou MUST use EXACTLY these values in your word problem:\n- First number: ${mc.operands[0]}\n- Second number: ${mc.operands[1]}\n- Operation: ${mc.operation} (${sym})\n- Correct answer: ${mc.answer}\nDo NOT change any numbers or the operation. Build a narrative scenario around these exact values.`;
+    }
+
     // Cross-curricular
     if (opts.crossCurricular && opts.scienceTeks && opts.scienceTeks.length > 0) {
       const sciDesc = this._getTeksDescriptions(gradeLevel, 'science', opts.scienceTeks);
       prompt += `\n\nCROSS-CURRICULAR: Weave in science themes from: ${sciDesc}\nSet scienceTeksConnection to the relevant science TEKS code. Also set "scienceLabel" to a SHORT (2-5 word) description of the science concept used (e.g., "Forces & Motion", "Weather & Precipitation"). Do NOT repeat the TEKS code as the label.`;
+    } else if (opts.crossCurricular === false) {
+      prompt += `\n\nPURE MATH — NO SCIENCE CONTEXT: Generate a pure math word problem using Avengers/Marvel characters. Do NOT include any science vocabulary, science scenarios, or science connections. Set scienceTeksConnection to null and scienceLabel to null.`;
     }
 
     // Pre-selected numbers

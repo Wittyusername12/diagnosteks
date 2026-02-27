@@ -798,6 +798,22 @@ const App = {
           self.updateMissionLog('[REVIEW] Teacher approved all problems. Launching mission.');
           window.TeacherReview.hide();
           self.beginMission();
+        },
+        onBack: function() {
+          window.TeacherReview.hide();
+          // Re-enable the Generate button
+          const generateBtn = document.getElementById('btn-generate-mission');
+          if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'GENERATE MISSION';
+          }
+          // Clear progress message
+          if (self.elements.teksValidationMessage) {
+            self.elements.teksValidationMessage.textContent = '';
+            self.elements.teksValidationMessage.style.cssText = '';
+          }
+          self.updateMissionLog('[REVIEW] Teacher returned to setup screen.');
+          self.showScreen('teks-select');
         }
       });
       this.showScreen('review');

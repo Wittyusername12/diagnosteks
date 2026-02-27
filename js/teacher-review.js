@@ -404,13 +404,28 @@ const TeacherReview = (() => {
         </label>
         <span class="im-review-override-hint">Allow numbers beyond TEKS limits for this problem</span>
       </div>` : ''}
-      ${!isScience && p.format === 'word' ? `<div class="im-review-crosscurr-override">
-        <label class="im-review-crosscurr-label">
-          <input type="checkbox" class="im-review-crosscurr-checkbox" id="im-review-crosscurr-cb" ${p.crossCurricularOverride ? 'checked' : ''}>
-          <span class="im-review-crosscurr-text">🔬 Cross-Curricular</span>
-        </label>
-        <span class="im-review-crosscurr-hint">Include science context in word problems</span>
-      </div>` : ''}
+      ${!isScience && p.format === 'word' && (_options.scienceTeks || []).length > 0 ? (() => {
+        const sciCodes = _options.scienceTeks;
+        const hasSci = !!(p.crossCurricular && p.crossCurricular.scienceTeks);
+        const activeCode = hasSci ? p.crossCurricular.scienceTeks : '';
+        const activeLabel = hasSci ? (p.crossCurricular.label || activeCode) : '';
+        return `<div class="im-review-science-chip-wrap">
+          <button class="im-review-science-chip${hasSci ? ' active' : ''}" id="im-review-science-chip">
+            ${hasSci ? `🔬 ${_esc(activeLabel || activeCode)}` : '✦ Add Science'}
+          </button>
+          <div class="im-review-science-dropdown" id="im-review-science-dropdown">
+            ${sciCodes.map(code => {
+              const desc = _getTeksDescription(code);
+              const short = desc ? (desc.length > 50 ? desc.slice(0, 47) + '...' : desc) : code;
+              return `<button class="im-review-science-option${code === activeCode ? ' selected' : ''}" data-sci-teks="${_esc(code)}">
+                <span class="im-review-science-option-code">${_esc(code)}</span>
+                <span class="im-review-science-option-desc">${_esc(short)}</span>
+              </button>`;
+            }).join('')}
+            ${hasSci ? `<button class="im-review-science-option remove" data-sci-teks="">✕ Remove Science</button>` : ''}
+          </div>
+        </div>`;
+      })() : ''}
       <p class="im-review-feedback-subtitle">Or describe what you want changed:</p>
       <textarea class="im-review-feedback-textarea" id="im-review-feedback" rows="3"
         placeholder="${isScience
@@ -557,12 +572,55 @@ const TeacherReview = (() => {
       });
     }
 
-    // Cross-curricular toggle
-    const crossCurrCb = _container.querySelector('#im-review-crosscurr-cb');
-    if (crossCurrCb) {
-      crossCurrCb.addEventListener('change', () => {
-        p.crossCurricularOverride = crossCurrCb.checked;
-        _render();
+    // Cross-curricular science chip dropdown
+    const sciChip = _container.querySelector('#im-review-science-chip');
+    const sciDropdown = _container.querySelector('#im-review-science-dropdown');
+    if (sciChip && sciDropdown) {
+      sciChip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sciDropdown.classList.toggle('open');
+      });
+      // Close dropdown on outside click
+      const closeDropdown = (e) => {
+        if (!sciDropdown.contains(e.target) && e.target !== sciChip) {
+          sciDropdown.classList.remove('open');
+          document.removeEventListener('click', closeDropdown);
+        }
+      };
+      sciChip.addEventListener('click', () => {
+        setTimeout(() => document.addEventListener('click', closeDropdown), 0);
+      });
+      // Option selection
+      sciDropdown.querySelectorAll('.im-review-science-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const code = opt.getAttribute('data-sci-teks');
+          if (code) {
+            // Add / change science TEKS
+            p.crossCurricularOverride = true;
+            p._scienceTeksOverride = code;
+            p._mathConstraints = {
+              operands: p.numbers || [],
+              operation: p.operation || '',
+              answer: p.answer,
+              expression: p.expression || ''
+            };
+            p._formatOverride = 'word';
+            p.feedback = '';
+          } else {
+            // Remove science
+            p.crossCurricularOverride = false;
+            p._scienceTeksOverride = null;
+            p._mathConstraints = {
+              operands: p.numbers || [],
+              operation: p.operation || '',
+              answer: p.answer,
+              expression: p.expression || ''
+            };
+            p._formatOverride = 'word';
+            p.feedback = '';
+          }
+          _regenerateProblem(_selectedIdx);
+        });
       });
     }
 
@@ -661,6 +719,7 @@ const TeacherReview = (() => {
         p.feedback = e.target.value;
         p._formatOverride = null; // Clear chip format override on manual edit
         p._mathConstraints = null;
+        p._scienceTeksOverride = null;
         // Re-render action buttons to show/hide regen-with-feedback
         // But don't full re-render to avoid losing focus
         const inlineBtn = _container.querySelector('#im-review-regen-inline');
@@ -797,12 +856,17 @@ const TeacherReview = (() => {
           ? p.crossCurricularOverride
           : (!!(p.crossCurricular) || feedbackRequestsScience);
 
+        // Use specific science TEKS if teacher selected one from dropdown
+        const sciTeksForRegen = p._scienceTeksOverride
+          ? [p._scienceTeksOverride]
+          : _options.scienceTeks;
+
         const regenOpts = {
           format: _options.format || 'mix',
           formatOverride: p._formatOverride || null,
           mathConstraints: p._mathConstraints || null,
           crossCurricular: hasCross,
-          scienceTeks: _options.scienceTeks,
+          scienceTeks: sciTeksForRegen,
           isScience: isScience
         };
 
@@ -850,6 +914,7 @@ const TeacherReview = (() => {
           p.crossCurricularOverride = savedCrossCurr; // Preserve teacher's toggle choice
           p._formatOverride = null; // Clear chip format override after regeneration
           p._mathConstraints = null;
+          p._scienceTeksOverride = null;
           if (bestValidation) {
             // Check if retries were exhausted (TEKS still failing without override)
             const hasTeksFailure = bestValidation.chips && bestValidation.chips.teks === 'fail';

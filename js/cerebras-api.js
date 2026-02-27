@@ -793,12 +793,16 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
   _validateOperation(operation) {
     if (!operation) return 'ADD';
 
-    // Normalize common LLM natural-language variants
+    // Normalize common LLM natural-language variants AND operator symbols
     const OPERATION_ALIASES = {
       'addition': 'ADD', 'add': 'ADD', 'plus': 'ADD',
+      '+': 'ADD',
       'subtraction': 'SUBTRACT', 'subtract': 'SUBTRACT', 'minus': 'SUBTRACT',
+      '-': 'SUBTRACT', '−': 'SUBTRACT',
       'multiplication': 'MULTIPLY', 'multiply': 'MULTIPLY', 'times': 'MULTIPLY',
+      '×': 'MULTIPLY', '*': 'MULTIPLY', 'x': 'MULTIPLY',
       'division': 'DIVIDE', 'divide': 'DIVIDE', 'divided': 'DIVIDE',
+      '÷': 'DIVIDE', '/': 'DIVIDE',
     };
     const normalized = OPERATION_ALIASES[operation.toLowerCase()] || operation.toUpperCase();
 
@@ -1089,6 +1093,17 @@ RULES:
     const problems = this._parseMathResponse(raw, operandResult ? [operandResult] : []);
 
     if (problems && problems.length > 0) {
+      // Force-override math fields when mathConstraints provided —
+      // LLM correctly uses constraints in narrative but hallucinates JSON fields
+      if (opts.mathConstraints && opts.mathConstraints.operands && opts.mathConstraints.operands.length >= 2) {
+        const mc = opts.mathConstraints;
+        const p = problems[0];
+        p.operands = mc.operands;
+        p.operation = mc.operation;
+        p.correctAnswer = mc.answer;
+        const opSym = { ADD: '+', SUBTRACT: '-', MULTIPLY: '×', DIVIDE: '÷' }[mc.operation] || '+';
+        p.expression = `${mc.operands[0]} ${opSym} ${mc.operands[1]}`;
+      }
       return problems[0];
     }
     throw new Error('Regeneration returned no problems');

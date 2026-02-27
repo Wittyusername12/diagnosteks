@@ -2038,46 +2038,104 @@ body {
   color: rgba(255, 170, 50, 0.7);
 }
 
-/* Cross-curricular toggle — same pattern as TEKS Override */
-.im-review-crosscurr-override {
-  display: flex;
+/* Cross-curricular science chip dropdown */
+.im-review-science-chip-wrap {
+  position: relative;
+  display: inline-block;
+  margin: 6px 0 4px 0;
+}
+.im-review-science-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin: 4px 0 4px 0;
-  transition: opacity 0.2s;
-}
-.im-review-crosscurr-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  user-select: none;
-}
-.im-review-crosscurr-checkbox {
-  accent-color: rgba(180, 130, 255, 0.9);
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
-}
-.im-review-crosscurr-text {
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  background: rgba(0, 229, 255, 0.06);
+  color: rgba(0, 229, 255, 0.7);
   font-family: var(--font-body);
   font-size: 12px;
-  color: rgba(0, 229, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s;
   letter-spacing: 0.03em;
-  transition: color 0.2s;
 }
-.im-review-crosscurr-override:has(.im-review-crosscurr-checkbox:checked) .im-review-crosscurr-text {
+.im-review-science-chip:hover {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: rgba(0, 229, 255, 0.4);
+  color: rgba(0, 229, 255, 0.95);
+}
+.im-review-science-chip.active {
+  border-color: rgba(180, 130, 255, 0.5);
+  background: rgba(180, 130, 255, 0.1);
   color: rgba(180, 130, 255, 0.95);
 }
-.im-review-crosscurr-hint {
-  font-family: var(--font-body);
-  font-size: 11px;
-  color: rgba(0, 229, 255, 0.4);
-  font-style: italic;
-  transition: color 0.2s;
+.im-review-science-chip.active:hover {
+  background: rgba(180, 130, 255, 0.18);
+  border-color: rgba(180, 130, 255, 0.7);
 }
-.im-review-crosscurr-override:has(.im-review-crosscurr-checkbox:checked) .im-review-crosscurr-hint {
-  color: rgba(180, 130, 255, 0.7);
+.im-review-science-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  margin-top: 4px;
+  min-width: 260px;
+  max-width: 340px;
+  background: rgba(20, 25, 40, 0.97);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  padding: 4px 0;
+  backdrop-filter: blur(8px);
+}
+.im-review-science-dropdown.open {
+  display: block;
+}
+.im-review-science-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-body);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.im-review-science-option:hover {
+  background: rgba(0, 229, 255, 0.1);
+}
+.im-review-science-option.selected {
+  background: rgba(180, 130, 255, 0.12);
+  color: rgba(180, 130, 255, 0.95);
+}
+.im-review-science-option.remove {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 100, 100, 0.7);
+  margin-top: 2px;
+  padding-top: 10px;
+}
+.im-review-science-option.remove:hover {
+  background: rgba(255, 100, 100, 0.1);
+}
+.im-review-science-option-code {
+  font-weight: 600;
+  font-size: 11px;
+  color: rgba(0, 229, 255, 0.6);
+  letter-spacing: 0.04em;
+}
+.im-review-science-option.selected .im-review-science-option-code {
+  color: rgba(180, 130, 255, 0.8);
+}
+.im-review-science-option-desc {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.3;
 }
 
 .im-review-chip-skip {

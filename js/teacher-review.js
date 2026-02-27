@@ -219,7 +219,7 @@ const TeacherReview = (() => {
         <!-- FOOTER -->
         <div class="im-review-footer">
           <span class="im-review-footer-left">TEACHER REVIEW SCREEN · IRON MAN STEM MISSION</span>
-          <span class="im-review-footer-right">● High Confidence &nbsp;&nbsp; ▲ Needs Review &nbsp;&nbsp; ◆ TEKS/Math Violation &nbsp;&nbsp; 🛡️ Safety Flag (Llama Guard)</span>
+          <span class="im-review-footer-right"><span class="im-review-legend-green">● High Confidence</span> &nbsp;&nbsp; <span class="im-review-legend-yellow">▲ Needs Review</span> &nbsp;&nbsp; <span class="im-review-legend-red">◆ TEKS/Math Violation</span> &nbsp;&nbsp; <span class="im-review-legend-purple">🛡️ Safety Flag (Llama Guard)</span></span>
         </div>
       </div>
     `;
@@ -405,7 +405,7 @@ const TeacherReview = (() => {
         </label>
         <span class="im-review-override-hint">Allow numbers beyond TEKS limits for this problem</span>
       </div>` : ''}
-      ${!isScience && p.format === 'word' && (() => {
+      ${(!isScience && p.format === 'word') ? (() => {
         const missionSciCodes = _options.scienceTeks || [];
         const allGradeSci = (typeof TEKS_DATA !== 'undefined' && TEKS_DATA[_options.grade] && TEKS_DATA[_options.grade].science) ? TEKS_DATA[_options.grade].science : [];
         if (missionSciCodes.length === 0 && allGradeSci.length === 0) return '';
@@ -445,7 +445,7 @@ const TeacherReview = (() => {
             </div>
           </div>
         </div>`;
-      })()}
+      })() : ''}
       <p class="im-review-feedback-subtitle">Or describe what you want changed:</p>
       <textarea class="im-review-feedback-textarea" id="im-review-feedback" rows="3"
         placeholder="${isScience
@@ -492,7 +492,11 @@ const TeacherReview = (() => {
           <div class="im-review-custom-col">
             <label class="im-review-custom-label">TEKS Code *</label>
             <select class="im-review-custom-input" id="im-custom-teks">
-              ${mathTeksOptions.map(t => `<option value="${t}"${t === _customTeks ? ' selected' : ''}>${t}</option>`).join('')}
+              ${mathTeksOptions.map(t => {
+                const desc = _getTeksDescription(t);
+                const short = desc ? (desc.length > 40 ? desc.slice(0, 40) + '\u2026' : desc) : '';
+                return `<option value="${t}"${t === _customTeks ? ' selected' : ''}>${t}${short ? ': ' + _esc(short) : ''}</option>`;
+              }).join('')}
             </select>
           </div>
         </div>
@@ -521,7 +525,11 @@ const TeacherReview = (() => {
           <label class="im-review-custom-label">Science TEKS Connection (optional)</label>
           <select class="im-review-custom-input im-review-custom-sci-select" id="im-custom-sci">
             <option value="">None</option>
-            ${sciTeksOptions.map(t => `<option value="${t}"${t === _customSci ? ' selected' : ''}>${t}</option>`).join('')}
+            ${sciTeksOptions.map(t => {
+              const desc = _getTeksDescription(t);
+              const short = desc ? (desc.length > 40 ? desc.slice(0, 40) + '\u2026' : desc) : '';
+              return `<option value="${t}"${t === _customSci ? ' selected' : ''}>${t}${short ? ': ' + _esc(short) : ''}</option>`;
+            }).join('')}
           </select>
         </div>
 
@@ -1090,10 +1098,12 @@ const TeacherReview = (() => {
       teks: _customTeks || p.teks,
       difficulty: _customDiff,
       operation: _customOp,
+      format: _detectFormat(_customQ),
       source: 'uploaded',
       status: 'approved',
       favorited: _customFav,
       crossCurricular: _customSci ? { scienceTeks: _customSci, label: 'Teacher-assigned' } : null,
+      crossCurricularOverride: !!_customSci,
       flagged: false,
       flagReason: null,
       feedback: '',

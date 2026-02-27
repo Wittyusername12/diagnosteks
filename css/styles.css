@@ -2189,17 +2189,17 @@ body {
 .im-review-back-btn {
   background: none;
   border: none;
-  color: rgba(0, 229, 255, 0.55);
+  color: rgba(0, 229, 255, 0.7);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 15px;
   cursor: pointer;
-  padding: 0;
+  padding: 6px 12px 6px 0;
   margin-bottom: 2px;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.5px;
   transition: color 0.2s;
 }
 .im-review-back-btn:hover {
-  color: rgba(0, 229, 255, 0.95);
+  color: rgba(0, 229, 255, 1.0);
 }
 
 .im-review-chip-skip {
@@ -2707,6 +2707,19 @@ body {
   color: rgba(255,255,255,0.7);
   font-size: 13px;
   padding: 4px 0;
+}
+.im-review-legend-green {
+  color: #4caf50;
+  font-size: 14px;
+}
+.im-review-legend-yellow {
+  color: #ffab00;
+}
+.im-review-legend-red {
+  color: #f44336;
+}
+.im-review-legend-purple {
+  color: #ce93d8;
 }
 
 /* ── Format Selector (setup screen addition) ── */

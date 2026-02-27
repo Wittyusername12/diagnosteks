@@ -1001,7 +1001,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
    * @returns {Promise<object>} Single problem in API schema
    */
   async regenerateProblem(gradeLevel, teksCode, operation, feedback, opts = {}) {
-    console.log(`[CerebrasAPI] Regenerating: grade=${gradeLevel} teks=${teksCode} feedback="${(feedback || '').substring(0, 40)}"`);
+    const _fb = feedback || '';
+    console.log(`[CerebrasAPI] Regenerating: grade=${gradeLevel} teks=${teksCode} feedback="${_fb.length > 60 ? _fb.slice(0, 60) + '...' : _fb}"`);
 
     if (opts.isScience) {
       return this._regenerateScienceProblem(gradeLevel, teksCode, feedback);

@@ -1154,28 +1154,25 @@ RULES:
 
   /**
    * Solve a math problem from its text alone (for self-consistency voting).
-   * Returns just the numeric answer and reasoning.
-   *
    * @param {string} questionText - The problem text as a student would see it
    * @param {number} grade - Grade level (1-5)
    * @returns {Promise<{answer: number|null, reasoning: string|null, raw: string}>}
    */
   async solveProblem(questionText, grade) {
-    console.log(`[CerebrasAPI] Solve attempt for: "${(questionText || '').slice(0, 40)}..."`);
-
+    console.log(`[CerebrasAPI] Solve attempt for: "${(questionText || '').slice(0, 50)}..."`);
     try {
       const messages = [
         {
           role: 'system',
-          content: `You are a Grade ${grade} math student. Read the following problem carefully and solve it step by step.\nAfter solving, respond with ONLY a JSON object: {"answer": <number>, "reasoning": "<brief explanation>"}\nDo NOT include any other text before or after the JSON.`
+          content: `You are a Grade ${grade} math student. Solve this problem step by step. Respond with ONLY valid JSON: {"answer": <number>, "reasoning": "<brief>"}\nNo other text.`
         },
         { role: 'user', content: questionText }
       ];
-
       const raw = await this._callWorker(messages, 0.7);
-
+      // Strip markdown code fences if present
+      const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
       try {
-        const parsed = JSON.parse(raw);
+        const parsed = JSON.parse(cleaned);
         return {
           answer: typeof parsed.answer === 'number' ? parsed.answer : null,
           reasoning: parsed.reasoning || null,
@@ -1187,7 +1184,7 @@ RULES:
       }
     } catch (err) {
       console.warn(`[CerebrasAPI] Solve attempt failed:`, err.message);
-      return { answer: null, reasoning: null, raw: '' };
+      return { answer: null, reasoning: null, raw: err.message };
     }
   }
 

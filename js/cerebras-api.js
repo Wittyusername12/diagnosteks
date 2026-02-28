@@ -1147,6 +1147,106 @@ RULES:
     }
     throw new Error('Science regeneration returned no questions');
   }
+
+  /* =========================================
+     LAYER 5 — SOLVE & REVIEW (Confidence Engine)
+     ========================================= */
+
+  /**
+   * Solve a math problem from its text alone (for self-consistency voting).
+   * Returns just the numeric answer and reasoning.
+   *
+   * @param {string} questionText - The problem text as a student would see it
+   * @param {number} grade - Grade level (1-5)
+   * @returns {Promise<{answer: number|null, reasoning: string|null, raw: string}>}
+   */
+  async solveProblem(questionText, grade) {
+    console.log(`[CerebrasAPI] Solve attempt for: "${(questionText || '').slice(0, 40)}..."`);
+
+    try {
+      const messages = [
+        {
+          role: 'system',
+          content: `You are a Grade ${grade} math student. Read the following problem carefully and solve it step by step.\nAfter solving, respond with ONLY a JSON object: {"answer": <number>, "reasoning": "<brief explanation>"}\nDo NOT include any other text before or after the JSON.`
+        },
+        { role: 'user', content: questionText }
+      ];
+
+      const raw = await this._callWorker(messages, 0.7);
+
+      try {
+        const parsed = JSON.parse(raw);
+        return {
+          answer: typeof parsed.answer === 'number' ? parsed.answer : null,
+          reasoning: parsed.reasoning || null,
+          raw
+        };
+      } catch (parseErr) {
+        console.warn(`[CerebrasAPI] Solve response parse failed:`, parseErr.message);
+        return { answer: null, reasoning: null, raw };
+      }
+    } catch (err) {
+      console.warn(`[CerebrasAPI] Solve attempt failed:`, err.message);
+      return { answer: null, reasoning: null, raw: '' };
+    }
+  }
+
+  /**
+   * Review a problem's quality against a rubric (Chain-of-Verification blind review).
+   * Evaluator does NOT see the generation prompt — evaluates as if teacher-written.
+   *
+   * @param {object} problem - Problem with questionStem, expression, answer, difficulty
+   * @param {string} teksCode - TEKS standard code (e.g. "3.4A")
+   * @param {number} grade - Grade level (1-5)
+   * @returns {Promise<{clarity:number, solvability:number, gradeAppropriateness:number, teksAlignment:number, engagement:number, overallScore:number, concerns:string}|null>}
+   */
+  async reviewProblem(problem, teksCode, grade) {
+    console.log(`[CerebrasAPI] Review for problem: ${teksCode}`);
+
+    try {
+      const teksDesc = this._getTeksDescriptions(grade, 'math', [teksCode]);
+      const questionStem = problem.questionStem || problem.questionText || problem.narrative || '';
+      const expression = problem.expression || '';
+      const answer = problem.answer ?? problem.correctAnswer ?? '';
+      const difficulty = problem.difficulty || 'medium';
+
+      const messages = [
+        {
+          role: 'system',
+          content: `You are an expert Texas elementary math curriculum reviewer. Evaluate the following Grade ${grade} math problem against these criteria. The problem should align with TEKS standard ${teksCode}: "${teksDesc}".\n\nRate each criterion from 0.0 to 1.0:\n1. CLARITY: Is the problem clearly worded? Would a Grade ${grade} student understand what's being asked?\n2. SOLVABILITY: Can the problem be solved with the information given? Is there exactly one correct answer?\n3. GRADE_APPROPRIATENESS: Are the numbers, concepts, and vocabulary appropriate for Grade ${grade}?\n4. TEKS_ALIGNMENT: Does this problem genuinely assess the skill described in the TEKS standard?\n5. ENGAGEMENT: Is the context interesting and age-appropriate? (Marvel/superhero themes are expected and good)\n\nRespond with ONLY a JSON object:\n{\n  "clarity": <0.0-1.0>,\n  "solvability": <0.0-1.0>,\n  "gradeAppropriateness": <0.0-1.0>,\n  "teksAlignment": <0.0-1.0>,\n  "engagement": <0.0-1.0>,\n  "overallScore": <0.0-1.0>,\n  "concerns": "<brief note if any score is below 0.7, otherwise empty string>"\n}`
+        },
+        {
+          role: 'user',
+          content: `Problem: ${questionStem}\nExpression: ${expression}\nExpected Answer: ${answer}\nTEKS: ${teksCode}\nDifficulty: ${difficulty}`
+        }
+      ];
+
+      const raw = await this._callWorker(messages, 0.0);
+
+      try {
+        const parsed = JSON.parse(raw);
+        return {
+          clarity: typeof parsed.clarity === 'number' ? parsed.clarity : 0.5,
+          solvability: typeof parsed.solvability === 'number' ? parsed.solvability : 0.5,
+          gradeAppropriateness: typeof parsed.gradeAppropriateness === 'number' ? parsed.gradeAppropriateness : 0.5,
+          teksAlignment: typeof parsed.teksAlignment === 'number' ? parsed.teksAlignment : 0.5,
+          engagement: typeof parsed.engagement === 'number' ? parsed.engagement : 0.5,
+          overallScore: typeof parsed.overallScore === 'number' ? parsed.overallScore : 0.5,
+          concerns: parsed.concerns || ''
+        };
+      } catch (parseErr) {
+        console.warn(`[CerebrasAPI] Review response parse failed:`, parseErr.message);
+        return {
+          clarity: 0.5, solvability: 0.5, gradeAppropriateness: 0.5,
+          teksAlignment: 0.5, engagement: 0.5, overallScore: 0.5,
+          concerns: 'Review response parse failed'
+        };
+      }
+    } catch (err) {
+      console.warn(`[CerebrasAPI] Review failed:`, err.message);
+      return null;
+    }
+  }
 }
 
 // Global instance + class exposure for console testing

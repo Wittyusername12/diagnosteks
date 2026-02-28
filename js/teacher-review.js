@@ -430,8 +430,8 @@ const TeacherReview = (() => {
       <p class="im-review-feedback-subtitle">Quick adjustments:</p>
       <div class="im-review-quick-actions">
         ${quickActions.map(qa => `<button class="im-review-quick-btn" data-feedback="${_esc(qa.feedback)}"${qa.formatOverride ? ` data-format-override="${qa.formatOverride}"` : ''}>${qa.icon} ${_esc(qa.label)}</button>`).join('')}${!isScience ? (p.answerType === 'multipleChoice'
-          ? `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="integer" data-feedback="Convert this problem to Open Response format. Remove multiple choice options. Keep the same math content and operation. Set answerType to &quot;integer&quot;.">✎ Open Response</button>`
-          : `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="multipleChoice" data-feedback="Convert this problem to Multiple Choice format. Keep the same math content and operation. Generate 4 answer options (A/B/C/D) with 3 plausible distractors targeting different common student errors for this TEKS. Include distractorRationales for each wrong answer following STAAR three-part format.">⊞ Multiple Choice</button>`
+          ? `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="integer" data-feedback="Convert this problem to Open Response format. Keep the same math content, operation, and difficulty. Remove all multiple choice options — the answer should be a single numeric value. Set answerType to &quot;integer&quot;.">✎ Open Response</button>`
+          : `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="multipleChoice" data-feedback="Convert this problem to Multiple Choice format. Keep the same math content, operation, and difficulty level. Generate 3 plausible distractors targeting different common student errors for this TEKS. Include distractorRationales for each wrong answer following the STAAR three-part format.">⊞ Multiple Choice</button>`
         ) : ''}
       </div>
       ${!isScience ? `<div class="im-review-teks-override">

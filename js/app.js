@@ -419,20 +419,6 @@ const App = {
   init() {
     this.cacheElements();
     this.loadSettings();
-    this.bindEvents();
-    this.startClock();
-    this.showScreen('grade-select');
-    this.checkResumeMission();
-
-    // Load TEKS rules from pre-loaded script (file:// compatible — no fetch/CORS)
-    window.TEKS_RULES = window.TEKS_RULES_DATA || {};
-    console.log('[App] TEKS rules loaded:', Object.keys(window.TEKS_RULES).length, 'entries');
-
-    // Initialize Teacher Review Screen
-    const reviewContainer = document.getElementById('im-review-container');
-    if (reviewContainer && window.TeacherReview) {
-      window.TeacherReview.init(reviewContainer);
-    }
 
     // Format selector state (default: 'mix')
     this.state.problemFormat = 'mix';
@@ -441,6 +427,7 @@ const App = {
     this.state.answerFormat = 'open';
 
     // Inject Answer Format selector after Problem Format selector
+    // NOTE: Must happen BEFORE bindEvents() so event listeners can find the buttons
     const formatSelectorEl = document.getElementById('format-selector');
     if (formatSelectorEl && !document.getElementById('answer-format-selector')) {
       const wrapper = document.createElement('div');
@@ -459,6 +446,21 @@ const App = {
         </div>
       `;
       formatSelectorEl.parentElement.after(wrapper);
+    }
+
+    this.bindEvents();
+    this.startClock();
+    this.showScreen('grade-select');
+    this.checkResumeMission();
+
+    // Load TEKS rules from pre-loaded script (file:// compatible — no fetch/CORS)
+    window.TEKS_RULES = window.TEKS_RULES_DATA || {};
+    console.log('[App] TEKS rules loaded:', Object.keys(window.TEKS_RULES).length, 'entries');
+
+    // Initialize Teacher Review Screen
+    const reviewContainer = document.getElementById('im-review-container');
+    if (reviewContainer && window.TeacherReview) {
+      window.TeacherReview.init(reviewContainer);
     }
 
     // Initial mission log entries
@@ -1993,6 +1995,7 @@ const App = {
         document.querySelectorAll('#answer-format-selector .im-review-format-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.state.answerFormat = btn.dataset.answerFormat;
+        console.log('[Setup] Answer format:', btn.dataset.answerFormat);
       });
     });
 

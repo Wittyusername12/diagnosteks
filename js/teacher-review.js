@@ -957,11 +957,19 @@ const TeacherReview = (() => {
           ? [p._scienceTeksOverride]
           : _options.scienceTeks;
 
-        // Preserve operation: if no explicit mathConstraints, tell the LLM via feedback
+        // Enhance feedback with operation + format constraints for the LLM
         let effectiveFeedback = feedback;
-        if (!isScience && p.operation && !p._mathConstraints) {
-          effectiveFeedback += ` Maintain the same math operation: ${p.operation}.`;
+        if (!isScience && p.operation) {
+          const opName = { ADD: 'addition', SUBTRACT: 'subtraction', MULTIPLY: 'multiplication', DIVIDE: 'division' }[p.operation] || p.operation;
+          effectiveFeedback += ` IMPORTANT: Keep the same operation (${opName}). Do not change to a different operation.`;
         }
+        if (!isScience) {
+          const isBare = p.format === 'bare' || (p.displayText && p.displayText.startsWith('Solve:'));
+          effectiveFeedback += isBare
+            ? ' Keep this as a bare math expression, not a word problem.'
+            : ' Keep this as a word problem with context.';
+        }
+        console.log('[Review] Enhanced feedback:', effectiveFeedback);
 
         const regenOpts = {
           format: _options.format || 'mix',

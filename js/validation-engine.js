@@ -189,51 +189,93 @@ function validateProblem(problem, teksRules) {
 
       // CHECK 2 — Operand Constraints
       if (rule.operandConstraints && !isScience && problem.numbers) {
-        const operandKeys = ['operand1', 'operand2'];
-        for (let oi = 0; oi < operandKeys.length; oi++) {
-          const constraint = rule.operandConstraints[operandKeys[oi]];
-          if (!constraint) continue;
-          const value = problem.numbers[oi];
-          if (value === undefined || value === null) continue;
-          const absVal = Math.abs(typeof value === 'number' ? value : Number(value));
-          const digitCount = String(Math.floor(absVal) || 0).length;
+        const op1Constraints = rule.operandConstraints.operand1;
+        const op2Constraints = rule.operandConstraints.operand2;
+        const operations = rule.operations || [];
 
-          // 2a — Digit count bounds
-          if (constraint.minDigits && digitCount < constraint.minDigits) {
-            teksAligned = false;
-            teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} has ${digitCount} digit(s), ${problem.teks} requires minimum ${constraint.minDigits}`);
-          }
-          if (constraint.maxDigits && digitCount > constraint.maxDigits) {
-            teksAligned = false;
-            teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} has ${digitCount} digit(s), ${problem.teks} allows maximum ${constraint.maxDigits}`);
-          }
+        // Division under a MULTIPLY+DIVIDE TEKS: constraints describe factor ranges.
+        // For "corresponding division facts," the divisor and quotient are the factors.
+        const hasBothMultDiv = operations.includes('MULTIPLY') && operations.includes('DIVIDE');
+        const isDivision = problem.operation === 'DIVIDE';
 
-          // 2b — Value range bounds
-          if (constraint.minValue !== undefined && constraint.minValue !== null && absVal < constraint.minValue) {
-            teksAligned = false;
-            teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, ${problem.teks} requires minimum ${constraint.minValue}`);
+        if (isDivision && hasBothMultDiv) {
+          // Divisor (operand2) checked against operand2 constraints — same as normal
+          if (op2Constraints && problem.numbers[1] !== undefined && problem.numbers[1] !== null) {
+            const divisor = Math.abs(typeof problem.numbers[1] === 'number' ? problem.numbers[1] : Number(problem.numbers[1]));
+            if (op2Constraints.minValue !== undefined && op2Constraints.minValue !== null && divisor < op2Constraints.minValue) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Divisor ${problem.numbers[1]}, ${problem.teks} requires minimum ${op2Constraints.minValue}`);
+            }
+            if (op2Constraints.maxValue !== undefined && op2Constraints.maxValue !== null && divisor > op2Constraints.maxValue) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Divisor ${problem.numbers[1]}, ${problem.teks} allows maximum ${op2Constraints.maxValue}`);
+            }
           }
-          if (constraint.maxValue !== undefined && constraint.maxValue !== null && absVal > constraint.maxValue) {
-            teksAligned = false;
-            teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, ${problem.teks} allows maximum ${constraint.maxValue}`);
+          // Quotient (answer) checked against operand1 constraints — it's the other factor
+          if (op1Constraints && typeof problem.answer === 'number') {
+            const quotient = Math.abs(problem.answer);
+            if (op1Constraints.minValue !== undefined && op1Constraints.minValue !== null && quotient < op1Constraints.minValue) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Quotient ${problem.answer}, ${problem.teks} requires factor minimum ${op1Constraints.minValue}`);
+            }
+            if (op1Constraints.maxValue !== undefined && op1Constraints.maxValue !== null && quotient > op1Constraints.maxValue) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Quotient ${problem.answer}, ${problem.teks} allows factor maximum ${op1Constraints.maxValue}`);
+            }
           }
+          // Verify exact division (no remainder) for corresponding division facts
+          if (problem.numbers[1] !== 0 && problem.numbers[0] % problem.numbers[1] !== 0) {
+            teksAligned = false;
+            teksFlags.push(`Layer 4 TEKS VIOLATION: ${problem.numbers[0]} ÷ ${problem.numbers[1]} is not an exact division`);
+          }
+        } else {
+          // Normal operand constraint checking (non-division, or DIVIDE-only TEKS)
+          const operandKeys = ['operand1', 'operand2'];
+          for (let oi = 0; oi < operandKeys.length; oi++) {
+            const constraint = rule.operandConstraints[operandKeys[oi]];
+            if (!constraint) continue;
+            const value = problem.numbers[oi];
+            if (value === undefined || value === null) continue;
+            const absVal = Math.abs(typeof value === 'number' ? value : Number(value));
+            const digitCount = String(Math.floor(absVal) || 0).length;
 
-          // 2c — Must be multiple of
-          if (constraint.mustBeMultipleOf && absVal % constraint.mustBeMultipleOf !== 0) {
-            teksAligned = false;
-            teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, must be multiple of ${constraint.mustBeMultipleOf}`);
-          }
+            // 2a — Digit count bounds
+            if (constraint.minDigits && digitCount < constraint.minDigits) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} has ${digitCount} digit(s), ${problem.teks} requires minimum ${constraint.minDigits}`);
+            }
+            if (constraint.maxDigits && digitCount > constraint.maxDigits) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} has ${digitCount} digit(s), ${problem.teks} allows maximum ${constraint.maxDigits}`);
+            }
 
-          // 2d — Allowed values
-          if (constraint.allowedValues && !constraint.allowedValues.includes(absVal)) {
-            teksAligned = false;
-            teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, must be one of: ${constraint.allowedValues.join(', ')}`);
-          }
+            // 2b — Value range bounds
+            if (constraint.minValue !== undefined && constraint.minValue !== null && absVal < constraint.minValue) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, ${problem.teks} requires minimum ${constraint.minValue}`);
+            }
+            if (constraint.maxValue !== undefined && constraint.maxValue !== null && absVal > constraint.maxValue) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, ${problem.teks} allows maximum ${constraint.maxValue}`);
+            }
 
-          // 2e — Exact value
-          if (constraint.exactValue !== undefined && constraint.exactValue !== null && absVal !== constraint.exactValue) {
-            teksAligned = false;
-            teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, must be exactly ${constraint.exactValue}`);
+            // 2c — Must be multiple of
+            if (constraint.mustBeMultipleOf && absVal % constraint.mustBeMultipleOf !== 0) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, must be multiple of ${constraint.mustBeMultipleOf}`);
+            }
+
+            // 2d — Allowed values
+            if (constraint.allowedValues && !constraint.allowedValues.includes(absVal)) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, must be one of: ${constraint.allowedValues.join(', ')}`);
+            }
+
+            // 2e — Exact value
+            if (constraint.exactValue !== undefined && constraint.exactValue !== null && absVal !== constraint.exactValue) {
+              teksAligned = false;
+              teksFlags.push(`Layer 4 TEKS VIOLATION: Operand ${oi + 1} is ${value}, must be exactly ${constraint.exactValue}`);
+            }
           }
         }
       }

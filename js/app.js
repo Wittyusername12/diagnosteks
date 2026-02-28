@@ -1050,10 +1050,11 @@ const App = {
     const savedShowExpression = this.missionState.showExpression;
 
     // Reset mission state
+    const actualMathCount = (window.TEST_PROBLEMS && window.TEST_PROBLEMS.math) ? window.TEST_PROBLEMS.math.length : 10;
     this.missionState = {
       currentFirewall: 1,
       mathCorrect: 0,
-      mathTotal: 10,
+      mathTotal: actualMathCount,
       scienceCorrect: 0,
       scienceTotal: 3,
       wrongAttempts: 0,
@@ -1317,10 +1318,21 @@ const App = {
     // All firewalls (1-10) are math problems
     // Science questions appear AFTER completing firewalls 3, 6, 9
 
-    // Get the math problem for this firewall
-    const problem = getMathProblem(firewallNumber);
+    // Get the math problem for this firewall — skip missing slots
+    let problem = getMathProblem(firewallNumber);
     if (!problem) {
-      console.error(`No problem found for firewall ${firewallNumber}`);
+      console.warn(`[Firewall] Problem missing for firewall ${firewallNumber}, advancing to next`);
+      // Try to find the next available firewall
+      for (let next = firewallNumber + 1; next <= 10; next++) {
+        const nextProblem = getMathProblem(next);
+        if (nextProblem) {
+          this.loadFirewall(next);
+          return;
+        }
+      }
+      // No more firewalls available — go to victory
+      console.log('[Firewall] No more problems available, advancing to victory');
+      this.showVictoryScreen();
       return;
     }
 
@@ -1460,8 +1472,8 @@ const App = {
 
     // Play GSAP animation sequence, then advance
     animator.playCorrectSequence(() => {
-      // Check if mission complete (after firewall 10)
-      if (currentFW >= 10) {
+      // Check if mission complete (after last firewall)
+      if (currentFW >= (this.missionState.mathTotal || 10)) {
         this.showVictoryScreen();
         return;
       }

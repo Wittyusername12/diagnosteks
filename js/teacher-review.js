@@ -571,8 +571,32 @@ const TeacherReview = (() => {
       launchBtn.addEventListener('click', () => {
         const allApproved = _problems.every(p => p.status === 'approved');
         if (allApproved && _options.onLaunch) {
-          // Convert review problems back to API format for gameplay
+          // Check for unresolved violations among approved problems
+          const violationProblems = _problems.filter(p => {
+            if (p.type === 'science') return false;
+            const v = _validation[p.id];
+            return v && v.category === 'red' && !p.teksOverride;
+          });
+
+          if (violationProblems.length > 0) {
+            const validCount = _problems.filter(p => p.type === 'math').length - violationProblems.length;
+            if (validCount < 1) {
+              alert('All math problems have unresolved TEKS violations. Please fix at least one problem before launching.');
+              return;
+            }
+            if (!confirm(`${violationProblems.length} math problem${violationProblems.length > 1 ? 's have' : ' has'} unresolved TEKS violations and will be skipped during the mission. Continue with ${validCount} math problems?`)) {
+              return;
+            }
+          }
+
+          // Convert and filter out violation problems
           const result = _convertBackToApi();
+          if (violationProblems.length > 0) {
+            const violationIds = new Set(violationProblems.map(p => p.id));
+            result.math = result.math.filter(p => !violationIds.has(p.id));
+            // Renumber firewall slots sequentially
+            result.math.forEach((p, i) => { p.firewallNumber = i + 1; });
+          }
           _options.onLaunch(result);
         }
       });
@@ -1071,6 +1095,11 @@ const TeacherReview = (() => {
 
       if (!fixed) {
         p.status = 'pending';
+        const v = _validation[p.id];
+        if (v) {
+          v.retryExhausted = true;
+          v.retryMessage = 'Auto-fix failed after 3 attempts. Regenerate manually, replace with a custom problem, or enable TEKS Override.';
+        }
         console.warn(`[AutoRegen] Problem ${i + 1} could not be auto-fixed after ${MAX_RETRIES} retries`);
       }
 

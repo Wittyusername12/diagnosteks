@@ -12,6 +12,7 @@ const TeacherReview = (() => {
   let _container = null;
   let _problems = [];
   let _validation = {};
+  let _layer5Results = {};  // Per-problem Layer 5 results keyed by problem id
   let _selectedIdx = 0;
   let _showIssues = false;
   let _showCustomForm = false;
@@ -80,6 +81,9 @@ const TeacherReview = (() => {
 
     // Auto-regenerate hard gate failures (async, runs in background after initial render)
     _autoRegenerateFailures();
+
+    // Kick off Layer 5 async validation (does NOT block the review screen)
+    _kickOffLayer5();
   }
 
   function hide() {
@@ -1033,6 +1037,9 @@ const TeacherReview = (() => {
     }
 
     _render();
+
+    // Re-run Layer 5 for the regenerated problem (async, non-blocking)
+    _runLayer5ForSingleProblem(idx);
   }
 
   async function _autoRegenerateFailures() {
@@ -1116,6 +1123,186 @@ const TeacherReview = (() => {
     });
     _selectedIdx = 0;
     _render();
+  }
+
+  // ── Layer 5 Async Validation ───────────────────────────────────
+
+  function _adaptProblemForLayer5(p) {
+    // Map review-schema fields to what confidence.js expects
+    return {
+      questionStem: p.displayText || p.question || '',
+      questionText: p.displayText || p.question || '',
+      narrative: p.displayText || '',
+      expression: p.expression || '',
+      answer: p.answer,
+      correctAnswer: p.answer,
+      difficulty: p.difficulty || 'medium',
+      type: p.type,
+      teksCode: p.teks,
+      tpiCode: p.teks
+    };
+  }
+
+  function _kickOffLayer5() {
+    if (!window.confidenceEngine || !window.cerebrasAPI) {
+      console.warn('[Layer5] confidenceEngine or cerebrasAPI not available, skipping Layer 5');
+      return;
+    }
+    _layer5Results = {};
+    const grade = _options.grade || 3;
+    const adapted = _problems.map(p => _adaptProblemForLayer5(p));
+
+    window.confidenceEngine.runLayer5ForMission(adapted, grade, (index, layer5Result) => {
+      _onLayer5ProblemComplete(index, layer5Result);
+    }).catch(err => {
+      console.warn('[Layer5] Mission-level Layer 5 failed:', err);
+    });
+  }
+
+  function _onLayer5ProblemComplete(index, layer5Result) {
+    const p = _problems[index];
+    if (!p) return;
+
+    // Store Layer 5 result
+    _layer5Results[p.id] = layer5Result;
+
+    // Update validation chips.llm
+    const v = _validation[p.id];
+    if (v && v.chips) {
+      v.chips.llm = layer5Result.status; // 'pass', 'warn', or 'fail'
+    }
+
+    // Add Layer 5 flags
+    if (v && v.flags) {
+      // Remove any previous Layer 5 flags (in case of re-run)
+      v.flags = v.flags.filter(f => !f.startsWith('LLM '));
+
+      const sc = layer5Result.selfConsistency || {};
+      const rev = layer5Result.review || {};
+
+      // Self-consistency flag (skip for science)
+      if (p.type !== 'science' && sc.agreement) {
+        if (sc.matchesExpected) {
+          v.flags.push(`LLM Self-Consistency: ${sc.agreement} agree on answer ${sc.consensusAnswer} ✅`);
+        } else if (sc.agreement === 'N/A') {
+          // skipped
+        } else {
+          v.flags.push(`LLM Self-Consistency: ${sc.agreement} agree — answer may be ambiguous ⚠️`);
+        }
+      }
+
+      // Blind review rubric flag
+      if (rev.rubric) {
+        const r = rev.rubric;
+        v.flags.push(`LLM Blind Review: Clarity ${(r.clarity || 0).toFixed(1)}, Solvability ${(r.solvability || 0).toFixed(1)}, Grade Fit ${(r.gradeAppropriateness || 0).toFixed(1)}, TEKS Align ${(r.teksAlignment || 0).toFixed(1)}, Engagement ${(r.engagement || 0).toFixed(1)}`);
+      }
+      if (rev.concerns && rev.concerns.trim()) {
+        v.flags.push(`LLM Review concern: ${rev.concerns}`);
+      }
+    }
+
+    // Recompute composite score with Layer 5 data
+    if (v && v.scores && window.confidenceEngine) {
+      const signals = {
+        structuralValid: v.chips.structure !== 'fail',
+        mathCorrect: v.chips.math !== 'fail' && v.chips.science !== 'fail',
+        mathScore: v.scores.math ?? 1.0,
+        structuralScore: v.scores.structural ?? 1.0,
+        contentScore: v.scores.content ?? 1.0,
+        teksScore: v.scores.teks ?? 1.0,
+        llmReviewScore: (layer5Result.review && typeof layer5Result.review.score === 'number')
+          ? layer5Result.review.score : 0.5
+      };
+      const composite = window.confidenceEngine.computeCompositeScore(signals);
+      v.compositeScore = composite.score;
+      // Only upgrade category if Layer 5 doesn't downgrade below hard-gate level
+      if (v.category !== 'red' || composite.category === 'red') {
+        v.category = composite.category;
+      }
+    }
+
+    // Log progress
+    console.log(`[Layer5] Problem ${index + 1}: ${layer5Result.status} (SC: ${(layer5Result.selfConsistency && layer5Result.selfConsistency.score) || 'N/A'}, Review: ${layer5Result.review && typeof layer5Result.review.score === 'number' ? layer5Result.review.score.toFixed(2) : 'N/A'})`);
+
+    // Surgical DOM update — avoid full re-render to preserve user interaction
+    _updateLayer5UI(index);
+  }
+
+  function _updateLayer5UI(index) {
+    if (!_container) return;
+    const p = _problems[index];
+    if (!p) return;
+    const v = _validation[p.id] || {};
+
+    // Update left panel row badge for this problem
+    const row = _container.querySelector(`.im-review-row[data-idx="${index}"]`);
+    if (row) {
+      // Find and replace the confidence badge in the row
+      const oldBadge = row.querySelector('.im-review-badge-green, .im-review-badge-yellow, .im-review-badge-red');
+      if (oldBadge) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = _renderConfidenceBadge(v.category || 'yellow', true);
+        oldBadge.replaceWith(tmp.firstElementChild);
+      }
+    }
+
+    // If this is the currently selected problem, update the right panel chips/badge/flags
+    if (index === _selectedIdx) {
+      // Update LLM chip
+      const chipsRow = _container.querySelector('.im-review-chips-row');
+      if (chipsRow) {
+        const chips = chipsRow.querySelectorAll('.im-review-chip');
+        chips.forEach(chip => {
+          if (chip.textContent.includes('LLM Review')) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = _renderValidationChip('LLM Review', (v.chips && v.chips.llm) || 'pending');
+            chip.replaceWith(tmp.firstElementChild);
+          }
+        });
+
+        // Update inline confidence badge + label
+        const confDiv = chipsRow.querySelector('.im-review-chips-confidence');
+        if (confDiv) {
+          const catLabel = v.category === 'green' ? 'High Confidence' : v.category === 'yellow' ? 'Needs Review' : 'TEKS/Math Violation';
+          const tmp = document.createElement('div');
+          tmp.innerHTML = `<div class="im-review-chips-confidence">${_renderConfidenceBadge(v.category || 'yellow', false)}<span class="im-review-chips-label im-review-chips-label-${v.category || 'yellow'}">${catLabel}</span></div>`;
+          confDiv.replaceWith(tmp.firstElementChild);
+        }
+      }
+
+      // Update issues section if expanded
+      if (_showIssues && v.flags && v.flags.length > 0) {
+        const issuesList = _container.querySelector('.im-review-issues-list');
+        if (issuesList) {
+          issuesList.innerHTML = v.flags.map(f => `<p class="im-review-issue${f.includes('VIOLATION') ? ' violation' : ''}">&bull; ${_esc(f)}</p>`).join('');
+        }
+      }
+    }
+  }
+
+  function _runLayer5ForSingleProblem(index) {
+    if (!window.confidenceEngine || !window.cerebrasAPI) return;
+    const p = _problems[index];
+    if (!p) return;
+    const grade = _options.grade || 3;
+    const adapted = _adaptProblemForLayer5(p);
+    const teksCode = p.teks;
+    const teksRule = (window.TEKS_RULES || {})[teksCode] || {};
+
+    // Reset LLM chip to pending
+    const v = _validation[p.id];
+    if (v && v.chips) {
+      v.chips.llm = 'pending';
+    }
+    delete _layer5Results[p.id];
+
+    window.confidenceEngine.runLayer5Validation(adapted, teksCode, teksRule, grade)
+      .then(result => {
+        _onLayer5ProblemComplete(index, result);
+      })
+      .catch(err => {
+        console.warn(`[Layer5] Single problem ${index + 1} Layer 5 failed:`, err);
+      });
   }
 
   function _saveCustomProblem() {

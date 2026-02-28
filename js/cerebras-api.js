@@ -489,22 +489,58 @@ ANSWER FORMAT: MULTIPLE CHOICE
 ALL ${count} problems must use answerType "multipleChoice". For EACH problem, include these additional JSON fields:
 - "options": array of 4 objects [{"letter": "A", "text": "..."}, {"letter": "B", "text": "..."}, {"letter": "C", "text": "..."}, {"letter": "D", "text": "..."}]
 - "correctAnswer": the letter (A, B, C, or D) of the correct option
-- "distractorRationales": object with 3 keys (one per wrong answer letter) explaining the student misconception each targets. Example: {"A": "Added instead of subtracted", "C": "Forgot to regroup in tens place", "D": "Used wrong operation"}
+- "distractorRationales": object with 3 keys (one per wrong answer letter), each a 2-3 sentence STAAR-quality rationale
 
 MULTIPLE CHOICE RULES:
 5. Each problem must have exactly 4 options (A, B, C, D). One is correct, three are distractors.
 6. The correct answer's position (A, B, C, or D) must be RANDOMIZED — vary across problems.
 7. Each distractor must target a DIFFERENT common student error for this TEKS — not random wrong numbers.
 8. Distractors must be plausible: within grade-appropriate number ranges, positive whole numbers (for grades 1-3), and distinct from each other and the correct answer.
-9. Do NOT include correctAnswer as a separate numeric field — JavaScript computes the answer independently. The correctAnswer field is ONLY the letter.`;
+9. Do NOT include correctAnswer as a separate numeric field — JavaScript computes the answer independently. The correctAnswer field is ONLY the letter.
+
+DISTRACTOR RATIONALE QUALITY STANDARD:
+Each distractor rationale MUST follow a three-part structure modeled after official STAAR rationales from the Texas Education Agency. Study these 5 real STAAR rationale examples carefully and match this quality exactly:
+
+STAAR RATIONALE EXAMPLE 1 — Wrong operation (multiply instead of divide):
+"The student likely determined this to be a multiplication problem instead of a division problem, and multiplied the numbers in the problem, resulting in 5 × 45 = 225. The student needs to focus on understanding how multiplication can be used to find the quotient in a division problem or scenario."
+
+STAAR RATIONALE EXAMPLE 2 — Correct first step, wrong second step (multi-step problem):
+"The student likely did the first step, dividing 12 by 2, correctly, but multiplied instead of dividing for the second step, resulting in the equation 6 × 3 = 18. The student needs to focus on understanding which operations to use in a multi-step word problem."
+
+STAAR RATIONALE EXAMPLE 3 — Forgot a step / incomplete solution:
+"The student likely found the sum of only the numbers of yards of fabric used in the three plays, neglecting to include the 27 yards of fabric that was left over, and used the equation 69 + 48 + 53 = 170. The student needs to focus on determining the correct steps to take when solving a word problem."
+
+STAAR RATIONALE EXAMPLE 4 — Wrong operation direction (subtracted instead of added):
+"The student likely found the sum of the numbers of yards of fabric used in the three plays but subtracted the 27 yards of fabric left over instead of adding, resulting in the equation (69 + 48 + 53) – 27 = 143. The student needs to focus on understanding the difference between the result of adding and the result of subtracting."
+
+STAAR RATIONALE EXAMPLE 5 — Regrouping error:
+"The student likely recognized that the total would be equal to the sum of the yards of fabric used in the three plays plus the yards left over, represented by (69 + 48 + 53) + 27, but made an error when regrouping to the tens place, resulting in a total of 177. The student needs to focus on regrouping when adding."
+
+EVERY distractor rationale you write MUST follow this three-part pattern:
+Part 1 — "The student likely [SPECIFIC error — what they did wrong and why]..."
+Part 2 — "...resulting in [SHOW THE ACTUAL WRONG MATH with numbers, e.g., '7 + 8 = 15 instead of 7 × 8 = 56']."
+Part 3 — "The student needs to focus on [SPECIFIC skill the student needs to develop]."
+
+CRITICAL: Each distractor's numeric value MUST be the actual result of the error computation described in its rationale. If the rationale says "added instead of multiplied, resulting in 7 + 8 = 15", the distractor value MUST be exactly 15. The wrong answer IS the computation described in the rationale.
+
+BAD rationale (do NOT generate): "student may be using incorrect multiplication facts" — too vague, no computation shown, not actionable.`;
     } else if (answerFormat === 'mix') {
-      mcIndices = [];
-      for (let i = 0; i < count; i++) {
-        if (Math.random() < 0.5) mcIndices.push(i);
+      // Same ratio logic as Problem Format mix: randomly pick 40/60, 50/50, or 60/40
+      const mcMixOptions = [
+        { mc: Math.ceil(count * 0.4), open: Math.floor(count * 0.6) },
+        { mc: Math.ceil(count * 0.5), open: Math.floor(count * 0.5) },
+        { mc: Math.ceil(count * 0.6), open: Math.floor(count * 0.4) },
+      ];
+      const mcRatio = mcMixOptions[Math.floor(Math.random() * mcMixOptions.length)];
+      console.log(`[CerebrasAPI] MC mix ratio: ${mcRatio.mc} mc / ${mcRatio.open} open`);
+
+      // Randomly select which problem indices get MC
+      const allIndices = Array.from({ length: count }, (_, i) => i);
+      for (let i = allIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]];
       }
-      // Ensure at least 2 and at most count-2 to get a real mix
-      if (mcIndices.length < 2) mcIndices = [0, Math.floor(count / 2)];
-      if (mcIndices.length > count - 2) mcIndices = mcIndices.slice(0, count - 2);
+      mcIndices = allIndices.slice(0, mcRatio.mc).sort((a, b) => a - b);
       const mcNums = mcIndices.map(i => i + 1).join(', ');
       const orNums = [];
       for (let i = 0; i < count; i++) { if (!mcIndices.includes(i)) orNums.push(i + 1); }
@@ -520,7 +556,16 @@ MULTIPLE CHOICE RULES (for MC problems only):
 6. The correct answer's position must be RANDOMIZED — vary across problems.
 7. Each distractor must target a DIFFERENT common student error for this TEKS.
 8. Distractors must be plausible: grade-appropriate, positive whole numbers (grades 1-3), distinct.
-9. Do NOT include correctAnswer as a separate numeric field — the correctAnswer field is ONLY the letter.`;
+9. Do NOT include correctAnswer as a separate numeric field — the correctAnswer field is ONLY the letter.
+
+DISTRACTOR RATIONALE QUALITY STANDARD (STAAR-style, required for each MC problem):
+Each distractor rationale MUST be 2-3 sentences following this three-part pattern from real TEA STAAR rationales:
+Part 1: "The student likely [SPECIFIC error — what they did wrong and why]..."
+Part 2: "...resulting in [SHOW THE ACTUAL WRONG MATH with numbers]."
+Part 3: "The student needs to focus on [SPECIFIC skill]."
+STAAR EXAMPLE: "The student likely determined this to be a multiplication problem instead of a division problem, and multiplied the numbers in the problem, resulting in 5 × 45 = 225. The student needs to focus on understanding how multiplication can be used to find the quotient in a division problem or scenario."
+CRITICAL: Each distractor's numeric value MUST be the actual result of the error computation described. If the rationale says "added instead of multiplied, resulting in 7 + 8 = 15", the option MUST be 15.
+BAD (do NOT generate): "student may be using incorrect multiplication facts" — too vague.`;
     }
     // answerFormat === 'open': no MC instructions, prompt stays as-is (zero regression)
 
@@ -1170,7 +1215,7 @@ RULES:
 
     // MC instructions for regeneration (preserve answer format)
     if (opts.answerType === 'multipleChoice') {
-      prompt += `\n\nANSWER FORMAT: MULTIPLE CHOICE\nThis problem uses Multiple Choice. You MUST include:\n- "options": array of 4 objects [{"letter": "A", "text": "..."}, ...]\n- "correctAnswer": the letter (A, B, C, or D) of the correct option\n- "distractorRationales": object with 3 keys for wrong answers explaining the student misconception each targets\nSet answerType to "multipleChoice". Randomize correct answer position. Each distractor must target a different common student error.`;
+      prompt += `\n\nANSWER FORMAT: MULTIPLE CHOICE\nThis problem uses Multiple Choice. You MUST include:\n- "options": array of 4 objects [{"letter": "A", "text": "..."}, ...]\n- "correctAnswer": the letter (A, B, C, or D) of the correct option\n- "distractorRationales": object with 3 keys for wrong answers, each a 2-3 sentence STAAR-quality rationale\nSet answerType to "multipleChoice". Randomize correct answer position. Each distractor must target a different common student error.\n\nDISTRACTOR RATIONALE QUALITY (STAAR three-part format required):\nPart 1: "The student likely [SPECIFIC error]..."\nPart 2: "...resulting in [SHOW THE ACTUAL WRONG MATH with numbers]."\nPart 3: "The student needs to focus on [SPECIFIC skill]."\nSTAAR EXAMPLE: "The student likely determined this to be a multiplication problem instead of a division problem, and multiplied the numbers, resulting in 5 × 45 = 225. The student needs to focus on understanding how multiplication can be used to find the quotient in a division problem."\nCRITICAL: Each distractor value MUST equal the computation described in its rationale. BAD: "student may be using incorrect facts" — too vague, no math shown.`;
     }
 
     // Difficulty-shift path: tell the LLM the original problem and what direction to move

@@ -429,7 +429,10 @@ const TeacherReview = (() => {
       <p class="im-review-feedback-title">Refine This ${isScience ? 'Question' : 'Problem'}</p>
       <p class="im-review-feedback-subtitle">Quick adjustments:</p>
       <div class="im-review-quick-actions">
-        ${quickActions.map(qa => `<button class="im-review-quick-btn" data-feedback="${_esc(qa.feedback)}"${qa.formatOverride ? ` data-format-override="${qa.formatOverride}"` : ''}>${qa.icon} ${_esc(qa.label)}</button>`).join('')}
+        ${quickActions.map(qa => `<button class="im-review-quick-btn" data-feedback="${_esc(qa.feedback)}"${qa.formatOverride ? ` data-format-override="${qa.formatOverride}"` : ''}>${qa.icon} ${_esc(qa.label)}</button>`).join('')}${!isScience ? (p.answerType === 'multipleChoice'
+          ? `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="integer" data-feedback="Convert this problem to Open Response format. Keep the same math content, operation, and difficulty. Remove all multiple choice options — the answer should be a single numeric value. Set answerType to &quot;integer&quot;.">✎ Open Response</button>`
+          : `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="multipleChoice" data-feedback="Convert this problem to Multiple Choice format. Keep the same math content, operation, and difficulty level. Generate 3 plausible distractors targeting different common student errors for this TEKS. Include distractorRationales for each wrong answer following the STAAR three-part format.">⊞ Multiple Choice</button>`
+        ) : ''}
       </div>
       ${!isScience ? `<div class="im-review-teks-override">
         <label class="im-review-override-label">
@@ -788,6 +791,22 @@ const TeacherReview = (() => {
     _container.querySelectorAll('.im-review-quick-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const chipFormat = btn.getAttribute('data-format-override');
+        const answerTypeOverride = btn.getAttribute('data-answer-type-override');
+
+        // "Multiple Choice" / "Open Response" answer format chip: preserve math, override answer type
+        if (answerTypeOverride) {
+          p._answerTypeOverride = answerTypeOverride;
+          p._mathConstraints = {
+            operands: p.numbers || [],
+            operation: p.operation || '',
+            answer: p.answer,
+            expression: p.expression || ''
+          };
+          p.feedback = btn.getAttribute('data-feedback') || '';
+          p._formatOverride = null;
+          _regenerateProblem(_selectedIdx);
+          return;
+        }
 
         // "Bare Math" chip: LOCAL transformation — no LLM call
         if (chipFormat === 'bare') {
@@ -988,12 +1007,15 @@ const TeacherReview = (() => {
           ? [p._scienceTeksOverride]
           : _options.scienceTeks;
 
+        // Answer type: use override if teacher clicked MC/OR chip, else preserve current
+        const effectiveAnswerType = p._answerTypeOverride || ((!isScience && p.answerType) ? p.answerType : null);
+
         const regenOpts = {
           format: _options.format || 'mix',
           formatOverride: p._formatOverride || null,
           mathConstraints: p._mathConstraints || null,
           originalOperands: (!isScience && p.numbers && p.numbers.length >= 2) ? p.numbers : null,
-          answerType: (!isScience && p.answerType) ? p.answerType : null,
+          answerType: effectiveAnswerType,
           crossCurricular: hasCross,
           scienceTeks: sciTeksForRegen,
           isScience: isScience
@@ -1044,6 +1066,7 @@ const TeacherReview = (() => {
           p._formatOverride = null; // Clear chip format override after regeneration
           p._mathConstraints = null;
           p._scienceTeksOverride = null;
+          p._answerTypeOverride = null;
           if (bestValidation) {
             // Check if retries were exhausted (TEKS still failing without override)
             const hasTeksFailure = bestValidation.chips && bestValidation.chips.teks === 'fail';

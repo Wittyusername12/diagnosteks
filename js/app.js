@@ -438,8 +438,8 @@ const App = {
         </label>
         <div class="im-review-format-selector" id="answer-format-selector" style="justify-content: center;">
           <button class="im-review-format-btn active" data-answer-format="open">Open Response</button>
-          <button class="im-review-format-btn" data-answer-format="mc">Multiple Choice</button>
           <button class="im-review-format-btn" data-answer-format="mix">Mix</button>
+          <button class="im-review-format-btn" data-answer-format="mc">Multiple Choice</button>
         </div>
         <div style="color: rgba(0,229,255,0.5); font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; margin-top: 0.25rem; letter-spacing: 0.03em;">
           Choose how students answer math problems

@@ -211,6 +211,25 @@ function validateProblem(problem, teksRules) {
         contentFlags.push(`Layer 3 Content: Narrative suggests ${suggestedList} but operation is ${problem.operation} (may be intentional)`);
       }
     }
+
+    // Weapon / violence term check — inappropriate for elementary classrooms
+    const blockedTerms = [
+      'bullet', 'bullets', 'ammunition', 'ammo',
+      'gun', 'guns', 'rifle', 'pistol', 'weapon', 'weapons',
+      'sword', 'knife', 'bomb', 'explosive', 'grenade', 'missile',
+      'shoot', 'shooting', 'kill', 'killing', 'murder',
+      'dead', 'death', 'die', 'dies',
+      'blood', 'wound', 'stab',
+      'attack', 'fight', 'fighting', 'war', 'battle',
+      'destroy', 'destruction',
+      'punch', 'hit', 'slap', 'kick'
+    ];
+    // Build word-boundary regex so "hit" doesn't match "white" etc.
+    const blockedRegex = new RegExp('\\b(' + blockedTerms.join('|') + ')\\b', 'i');
+    const narrativeMatch = textLower.match(blockedRegex);
+    if (narrativeMatch) {
+      contentFlags.push(`Layer 3 Content: Narrative contains inappropriate term "${narrativeMatch[0]}" — not suitable for elementary classrooms`);
+    }
   }
   flags.push(...contentFlags);
 

@@ -2598,6 +2598,16 @@ body {
   background: rgba(255,200,0,0.15);
 }
 
+.im-review-answer-format-chip {
+  background: rgba(0,229,255,0.08);
+  border-color: rgba(0,229,255,0.25);
+  color: #00e5ff;
+}
+
+.im-review-answer-format-chip:hover {
+  background: rgba(0,229,255,0.18);
+}
+
 .im-review-feedback-textarea {
   width: 100%;
   background: rgba(0,0,0,0.3);

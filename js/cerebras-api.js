@@ -1087,6 +1087,10 @@ RULES:
       prompt += `\n\nTEACHER FEEDBACK — address this: "${feedback}"`;
     }
 
+    console.log('[DIAG] Full regen prompt:', prompt);
+    console.log('[DIAG] Regen operands:', operandResult);
+    console.log('[DIAG] Original problem operands:', { operation, mathConstraints: opts.mathConstraints || null });
+
     const messages = [
       { role: 'system', content: prompt },
       { role: 'user', content: `Generate 1 math problem for grade ${gradeLevel}, TEKS ${teksCode}.` }

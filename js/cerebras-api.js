@@ -1013,8 +1013,30 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
   async _regenerateMathProblem(gradeLevel, teksCode, operation, feedback, opts) {
     const teksDesc = this._getTeksDescriptions(gradeLevel, 'math', [teksCode]);
 
-    // Pre-generate operands for this TEKS
-    const operandResult = generateOperandsForTeks(teksCode, Math.floor(Math.random() * 10));
+    // Detect if teacher requested easier or harder numbers
+    const fbLower = (feedback || '').toLowerCase();
+    const difficultyShift = (fbLower.includes('smaller') || fbLower.includes('simpler')) ? 'easier'
+      : (fbLower.includes('larger') || fbLower.includes('more complex') || fbLower.includes('difficulty')) ? 'harder'
+      : null;
+
+    // Pre-generate operands ONLY when NOT doing a difficulty shift
+    let operandResult = null;
+    if (!difficultyShift) {
+      operandResult = generateOperandsForTeks(teksCode, Math.floor(Math.random() * 10));
+      // Constrain to the original operation when available, to avoid random op swaps
+      if (operation && operandResult && operandResult.operation !== operation) {
+        // Retry up to 5 times to get matching operation
+        for (let i = 0; i < 5; i++) {
+          operandResult = generateOperandsForTeks(teksCode, Math.floor(Math.random() * 10));
+          if (operandResult.operation === operation) break;
+        }
+        // If still mismatched, force the operation (swap operands if needed for SUBTRACT)
+        if (operandResult.operation !== operation) {
+          operandResult.operation = operation;
+        }
+      }
+    }
+    console.log(`[CerebrasAPI] Regen mode: ${difficultyShift ? difficultyShift + ' (LLM-directed)' : 'standard (pre-generated operands)'}, operation: ${operation}`);
 
     // Pull exemplars from ExemplarBank if available
     let exemplars = [];
@@ -1071,8 +1093,19 @@ RULES:
       prompt += `\n\nPURE MATH — NO SCIENCE CONTEXT: Generate a pure math word problem using Avengers/Marvel characters. Do NOT include any science vocabulary, science scenarios, or science connections. Set scienceTeksConnection to null and scienceLabel to null.`;
     }
 
-    // Pre-selected numbers
-    if (operandResult && operandResult.operation) {
+    // Difficulty-shift path: tell the LLM the original problem and what direction to move
+    if (difficultyShift && operation && opts.originalOperands && opts.originalOperands.length >= 2) {
+      const opSymbols = { 'ADD': '+', 'SUBTRACT': '−', 'MULTIPLY': '×', 'DIVIDE': '÷' };
+      const sym = opSymbols[operation] || '?';
+      const dir = difficultyShift === 'easier' ? 'EASIER (smaller)' : 'HARDER (larger)';
+      prompt += `\n\nORIGINAL PROBLEM: ${operation} ${opts.originalOperands[0]} ${sym} ${opts.originalOperands[1]}
+TEACHER REQUEST: Generate a problem with ${dir} numbers than the original.
+- Keep the SAME operation (${operation}).
+- For EASIER: use significantly smaller numbers than ${opts.originalOperands[0]} and ${opts.originalOperands[1]}.
+- For HARDER: use significantly larger numbers than ${opts.originalOperands[0]} and ${opts.originalOperands[1]}.
+- Numbers must still be valid for TEKS ${teksCode} and produce a positive whole number result.`;
+    } else if (operandResult && operandResult.operation) {
+      // Standard path: use pre-generated operands
       const opSymbols = { 'ADD': '+', 'SUBTRACT': '−', 'MULTIPLY': '×', 'DIVIDE': '÷' };
       prompt += `\n\nPRE-SELECTED NUMBERS: ${operandResult.operation} ${operandResult.operands[0]} ${opSymbols[operandResult.operation] || '?'} ${operandResult.operands[1]}, TEKS ${teksCode}. Use these EXACT numbers in your problem.`;
     }
@@ -1086,10 +1119,6 @@ RULES:
     if (feedback && feedback.trim()) {
       prompt += `\n\nTEACHER FEEDBACK — address this: "${feedback}"`;
     }
-
-    console.log('[DIAG] Full regen prompt:', prompt);
-    console.log('[DIAG] Regen operands:', operandResult);
-    console.log('[DIAG] Original problem operands:', { operation, mathConstraints: opts.mathConstraints || null });
 
     const messages = [
       { role: 'system', content: prompt },

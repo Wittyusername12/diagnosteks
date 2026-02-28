@@ -959,6 +959,7 @@ const TeacherReview = (() => {
           format: _options.format || 'mix',
           formatOverride: p._formatOverride || null,
           mathConstraints: p._mathConstraints || null,
+          originalOperands: (!isScience && p.numbers && p.numbers.length >= 2) ? p.numbers : null,
           crossCurricular: hasCross,
           scienceTeks: sciTeksForRegen,
           isScience: isScience

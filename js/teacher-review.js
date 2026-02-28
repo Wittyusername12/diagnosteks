@@ -783,18 +783,25 @@ const TeacherReview = (() => {
         p._formatOverride = null; // Clear chip format override on manual edit
         p._mathConstraints = null;
         p._scienceTeksOverride = null;
-        // Re-render action buttons to show/hide regen-with-feedback
-        // But don't full re-render to avoid losing focus
-        const inlineBtn = _container.querySelector('#im-review-regen-inline');
+        // Update action buttons WITHOUT full re-render to preserve focus
+        let inlineBtn = _container.querySelector('#im-review-regen-inline');
         const regenBtn = _container.querySelector('#im-review-regen-btn');
         if (p.feedback.trim()) {
-          if (!inlineBtn) _render(); // Need to show inline button
+          if (!inlineBtn) {
+            // Surgically insert inline button after textarea (no re-render)
+            const btn = document.createElement('button');
+            btn.className = 'im-review-regen-inline-btn';
+            btn.id = 'im-review-regen-inline';
+            btn.textContent = '↻ Regenerate with Changes';
+            btn.addEventListener('click', () => _regenerateProblem(_selectedIdx));
+            textarea.insertAdjacentElement('afterend', btn);
+          }
           if (regenBtn) {
             regenBtn.textContent = 'Regenerate with Feedback';
             regenBtn.classList.add('with-feedback');
           }
         } else {
-          if (inlineBtn) _render(); // Need to hide inline button
+          if (inlineBtn) inlineBtn.remove();
           if (regenBtn) {
             regenBtn.textContent = 'Regenerate (Random)';
             regenBtn.classList.remove('with-feedback');

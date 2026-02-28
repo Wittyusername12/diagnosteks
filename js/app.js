@@ -437,6 +437,30 @@ const App = {
     // Format selector state (default: 'mix')
     this.state.problemFormat = 'mix';
 
+    // Answer format selector state (default: 'open')
+    this.state.answerFormat = 'open';
+
+    // Inject Answer Format selector after Problem Format selector
+    const formatSelectorEl = document.getElementById('format-selector');
+    if (formatSelectorEl && !document.getElementById('answer-format-selector')) {
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'text-align: center; padding: 0.35rem 0; margin-top: 0.5rem;';
+      wrapper.innerHTML = `
+        <label style="color: #00e5ff; font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 0.08em; font-weight: 700; display: block; margin-bottom: 0.35rem;">
+          ANSWER FORMAT
+        </label>
+        <div class="im-review-format-selector" id="answer-format-selector" style="justify-content: center;">
+          <button class="im-review-format-btn active" data-answer-format="open">Open Response</button>
+          <button class="im-review-format-btn" data-answer-format="mc">Multiple Choice</button>
+          <button class="im-review-format-btn" data-answer-format="mix">Mix</button>
+        </div>
+        <div style="color: rgba(0,229,255,0.5); font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; margin-top: 0.25rem; letter-spacing: 0.03em;">
+          Choose how students answer math problems
+        </div>
+      `;
+      formatSelectorEl.parentElement.after(wrapper);
+    }
+
     // Initial mission log entries
     this.updateMissionLog('[INIT] Protocol: AVENGERS-1');
     this.updateMissionLog('[SYS] Breach sequence loaded');
@@ -687,6 +711,10 @@ const App = {
     const activeFormat = document.querySelector('#format-selector .im-review-format-btn.active');
     this.state.problemFormat = activeFormat ? activeFormat.dataset.format : 'mix';
 
+    // Get answer format selection
+    const activeAnswerFormat = document.querySelector('#answer-format-selector .im-review-format-btn.active');
+    this.state.answerFormat = activeAnswerFormat ? activeAnswerFormat.dataset.answerFormat : 'open';
+
     // Disable button to prevent double-clicks
     const generateBtn = document.getElementById('btn-generate-mission');
     if (generateBtn) {
@@ -708,6 +736,7 @@ const App = {
         {
           crossCurricular,
           format: this.state.problemFormat,
+          answerFormat: this.state.answerFormat,
           onMathComplete: (math) => {
             msg.textContent = `${math.length} MATH PROBLEMS LOADED... GENERATING 3 SCIENCE QUESTIONS...`;
             this.updateMissionLog(`[GEN] ${math.length} math problems received`);
@@ -788,6 +817,7 @@ const App = {
         mathTeks: this.state.selectedMathTeks,
         scienceTeks: this.state.selectedScienceTeks,
         format: this.state.problemFormat,
+        answerFormat: this.state.answerFormat,
         crossCurricular: crossCurricular,
         onLaunch: function(approvedResult) {
           // Replace problems with teacher-approved versions
@@ -1954,6 +1984,15 @@ const App = {
         document.querySelectorAll('#format-selector .im-review-format-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.state.problemFormat = btn.dataset.format;
+      });
+    });
+
+    // Answer format selector buttons (mutually exclusive)
+    document.querySelectorAll('#answer-format-selector .im-review-format-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#answer-format-selector .im-review-format-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.state.answerFormat = btn.dataset.answerFormat;
       });
     });
 

@@ -230,7 +230,7 @@ class CerebrasAPI {
 
     // Generate math first (sequential for progress reporting)
     const math = await this.generateMathProblems(
-      gradeLevel, mathTeksCodes, scienceTeksCodes, options.crossCurricular, options.format
+      gradeLevel, mathTeksCodes, scienceTeksCodes, options.crossCurricular, options.format, options.answerFormat
     );
 
     if (options.onMathComplete) {
@@ -254,7 +254,7 @@ class CerebrasAPI {
    * @param {boolean} [crossCurricular] - Enable cross-curricular theming
    * @returns {Promise<Array>}
    */
-  async generateMathProblems(gradeLevel, teksCodes, scienceTeksCodes, crossCurricular, format) {
+  async generateMathProblems(gradeLevel, teksCodes, scienceTeksCodes, crossCurricular, format, answerFormat) {
     const teksDescriptions = this._getTeksDescriptions(gradeLevel, 'math', teksCodes);
     let scienceTeksDescriptions = null;
     if (crossCurricular && scienceTeksCodes && scienceTeksCodes.length > 0) {
@@ -273,7 +273,7 @@ class CerebrasAPI {
     const operandAssignments = generateMissionOperands(teksCodes, count);
 
     const messages = [
-      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments, format) },
+      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments, format, answerFormat) },
       { role: 'user', content: `Generate ${count} math problems for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}. For pre-selected problems, use the EXACT numbers provided. Output operation and operands so JavaScript can independently calculate each answer.` }
     ];
 
@@ -347,7 +347,7 @@ class CerebrasAPI {
      PROMPT BUILDERS
      ========================================= */
 
-  _buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments = [], format = 'mix') {
+  _buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments = [], format = 'mix', answerFormat = 'open') {
     const count = this.config.mathProblemsPerMission || 10;
 
     // Grade-specific number ranges
@@ -479,6 +479,50 @@ Every problem MUST be a rich real-world word problem with full narrative context
 PROBLEM FORMAT: MIX
 Generate exactly ${ratio.word} of the ${count} math problems as word problems with narrative context (characters, scenarios, Avengers themes, 2-4 sentences, 30-80 words). Generate exactly ${ratio.bare} of the ${count} math problems as bare arithmetic expressions — set their narrative to "Solve: [expression]" with no story context (under 10 words). This split is MANDATORY — do not generate all word problems. You MUST produce exactly ${ratio.bare} bare arithmetic problems.`;
     }
+
+    // === BLOCK 4B: ANSWER FORMAT (MC / Mix) ===
+    let mcIndices = null;
+    if (answerFormat === 'mc') {
+      prompt += `
+
+ANSWER FORMAT: MULTIPLE CHOICE
+ALL ${count} problems must use answerType "multipleChoice". For EACH problem, include these additional JSON fields:
+- "options": array of 4 objects [{"letter": "A", "text": "..."}, {"letter": "B", "text": "..."}, {"letter": "C", "text": "..."}, {"letter": "D", "text": "..."}]
+- "correctAnswer": the letter (A, B, C, or D) of the correct option
+- "distractorRationales": object with 3 keys (one per wrong answer letter) explaining the student misconception each targets. Example: {"A": "Added instead of subtracted", "C": "Forgot to regroup in tens place", "D": "Used wrong operation"}
+
+MULTIPLE CHOICE RULES:
+5. Each problem must have exactly 4 options (A, B, C, D). One is correct, three are distractors.
+6. The correct answer's position (A, B, C, or D) must be RANDOMIZED — vary across problems.
+7. Each distractor must target a DIFFERENT common student error for this TEKS — not random wrong numbers.
+8. Distractors must be plausible: within grade-appropriate number ranges, positive whole numbers (for grades 1-3), and distinct from each other and the correct answer.
+9. Do NOT include correctAnswer as a separate numeric field — JavaScript computes the answer independently. The correctAnswer field is ONLY the letter.`;
+    } else if (answerFormat === 'mix') {
+      mcIndices = [];
+      for (let i = 0; i < count; i++) {
+        if (Math.random() < 0.5) mcIndices.push(i);
+      }
+      // Ensure at least 2 and at most count-2 to get a real mix
+      if (mcIndices.length < 2) mcIndices = [0, Math.floor(count / 2)];
+      if (mcIndices.length > count - 2) mcIndices = mcIndices.slice(0, count - 2);
+      const mcNums = mcIndices.map(i => i + 1).join(', ');
+      const orNums = [];
+      for (let i = 0; i < count; i++) { if (!mcIndices.includes(i)) orNums.push(i + 1); }
+
+      prompt += `
+
+ANSWER FORMAT ASSIGNMENT:
+Problems ${mcNums}: Multiple Choice (answerType "multipleChoice"). Include "options" (4 choices A-D), "correctAnswer" (letter), and "distractorRationales" (object with 3 keys explaining each distractor).
+Problems ${orNums.join(', ')}: Open Response (answerType "integer", no options needed).
+
+MULTIPLE CHOICE RULES (for MC problems only):
+5. Each MC problem must have exactly 4 options (A, B, C, D). One is correct, three are distractors.
+6. The correct answer's position must be RANDOMIZED — vary across problems.
+7. Each distractor must target a DIFFERENT common student error for this TEKS.
+8. Distractors must be plausible: grade-appropriate, positive whole numbers (grades 1-3), distinct.
+9. Do NOT include correctAnswer as a separate numeric field — the correctAnswer field is ONLY the letter.`;
+    }
+    // answerFormat === 'open': no MC instructions, prompt stays as-is (zero regression)
 
     // === BLOCK 5: PRE-SELECTED NUMBERS ===
     if (operandAssignments && operandAssignments.length > 0) {
@@ -626,7 +670,7 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
         // Do NOT override operation — LLM's narrative determines the operation
         // (e.g., TEKS 3.4A covers both ADD and SUBTRACT, so either is valid)
         p.operands = preSelected.operands;
-        p.answerType = 'integer';
+        if (p.answerType !== 'multipleChoice') p.answerType = 'integer';
 
         // Guard: ensure LLM's operation is compatible with pre-generated operands
         const llmOp = (p.operation || '').toUpperCase();
@@ -645,19 +689,50 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
       const operation = this._validateOperation(p.operation);
       const answerType = p.answerType || 'integer';
 
-      // For multipleChoice: trust the LLM's correctAnswer letter
+      // For multipleChoice with computation operations: JS computes the answer,
+      // but we also keep the LLM's options/correctAnswer letter for MC display
       if (answerType === 'multipleChoice') {
-        const options = this._validateScienceOptions(p.options);
-        const correctAnswer = this._validateScienceAnswer(p.correctAnswer, options);
+        const mcOptions = this._validateScienceOptions(p.options);
+        const mcCorrectLetter = this._validateScienceAnswer(p.correctAnswer, mcOptions);
+        const isComputation = ['ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE',
+          'DECIMAL_ADD', 'DECIMAL_SUBTRACT', 'DECIMAL_MULTIPLY'].includes(operation);
+
+        if (isComputation && p.operands && p.operands.length >= 2) {
+          // MC math problem: compute answer from operands, keep options
+          const operands = this._validateOperands(p.operands, operation);
+          const computedAnswer = this._computeAnswer(operation, operands);
+          const expression = this._formatExpression(operation, operands);
+          return {
+            id: `fw-${firewallNumber}`,
+            firewallNumber,
+            narrative: p.narrative || `Firewall ${firewallNumber} detected.`,
+            expression,
+            correctAnswer: computedAnswer,
+            mcCorrectLetter,
+            operation,
+            operands,
+            options: mcOptions,
+            distractorRationales: p.distractorRationales || null,
+            teks: p.teksCode || p.teks || '',
+            primaryType: p.primaryType || 'computation',
+            difficulty: p.difficulty || 'medium',
+            diagnosticFor: p.diagnosticFor || [],
+            answerType,
+            scienceTeksConnection: p.scienceTeksConnection || null,
+            scienceLabel: p.scienceLabel || null
+          };
+        }
+        // Non-computation MC (IDENTIFY, CONCEPTUAL): trust LLM's answer
         return {
           id: `fw-${firewallNumber}`,
           firewallNumber,
           narrative: p.narrative || `Firewall ${firewallNumber} detected.`,
           expression: p.narrative || '',
-          correctAnswer,
+          correctAnswer: mcCorrectLetter,
           operation,
           operands: p.operands || [],
-          options,
+          options: mcOptions,
+          distractorRationales: p.distractorRationales || null,
           teks: p.teksCode || p.teks || '',
           primaryType: p.primaryType || 'conceptual',
           difficulty: p.difficulty || 'medium',
@@ -1091,6 +1166,11 @@ RULES:
       prompt += `\n\nCROSS-CURRICULAR: Weave in science themes from: ${sciDesc}\nSet scienceTeksConnection to the relevant science TEKS code. Also set "scienceLabel" to a SHORT (2-5 word) description of the science concept used (e.g., "Forces & Motion", "Weather & Precipitation"). Do NOT repeat the TEKS code as the label.\nIMPORTANT: The science context must be NATURALLY woven into the scenario through vocabulary and setting. Do NOT add any sentence that explicitly explains the science connection. Do NOT write phrases like "This situation involves..." or "This demonstrates..." or "This is related to..." or "This is an example of..." — the science should be IMPLICIT, not stated directly. The student is solving a MATH problem.`;
     } else if (opts.crossCurricular === false) {
       prompt += `\n\nPURE MATH — NO SCIENCE CONTEXT: Generate a pure math word problem using Avengers/Marvel characters. Do NOT include any science vocabulary, science scenarios, or science connections. Set scienceTeksConnection to null and scienceLabel to null.`;
+    }
+
+    // MC instructions for regeneration (preserve answer format)
+    if (opts.answerType === 'multipleChoice') {
+      prompt += `\n\nANSWER FORMAT: MULTIPLE CHOICE\nThis problem uses Multiple Choice. You MUST include:\n- "options": array of 4 objects [{"letter": "A", "text": "..."}, ...]\n- "correctAnswer": the letter (A, B, C, or D) of the correct option\n- "distractorRationales": object with 3 keys for wrong answers explaining the student misconception each targets\nSet answerType to "multipleChoice". Randomize correct answer position. Each distractor must target a different common student error.`;
     }
 
     // Difficulty-shift path: tell the LLM the original problem and what direction to move

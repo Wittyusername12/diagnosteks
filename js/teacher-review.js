@@ -113,6 +113,9 @@ const TeacherReview = (() => {
         numbers: p.operands || p.numbers || [],
         difficulty: p.difficulty || 'medium',
         answerType: p.answerType || 'integer',
+        mcOptions: p.options || null,
+        mcCorrectLetter: p.mcCorrectLetter || p.correctAnswerLetter || null,
+        distractorRationales: p.distractorRationales || null,
         format: _detectFormat(displayText),
         crossCurricular: p.scienceTeksConnection
           ? { scienceTeks: p.scienceTeksConnection, label: p.scienceLabel || '' }
@@ -248,6 +251,7 @@ const TeacherReview = (() => {
             <div class="im-review-row-meta">
               <span class="im-review-row-teks" title="${_esc(prob.teks + ': ' + _getTeksDescription(prob.teks, prob.gradeLevel))}">${_esc(prob.teks)}${prob.difficulty ? ' · ' + prob.difficulty : ''}</span>
               ${prob.crossCurricular ? '<span class="im-review-row-cross">✦ cross</span>' : ''}
+              ${!isSci && prob.answerType === 'multipleChoice' ? '<span class="im-review-row-mc">MC</span>' : ''}
               ${isUp ? '<span class="im-review-row-uploaded">UPLOADED</span>' : ''}
             </div>
           </div>
@@ -308,6 +312,7 @@ const TeacherReview = (() => {
     if (p.difficulty) html += `<span class="im-review-badge-difficulty">${_esc(p.difficulty)}</span>`;
     if (p.operation) html += `<span class="im-review-badge-operation">${_esc(p.operation)}</span>`;
     if (p.format) html += `<span class="im-review-badge-format">${p.format === 'bare' ? 'PURE MATH' : 'WORD'}</span>`;
+    if (!isScience && p.answerType === 'multipleChoice') html += `<span class="im-review-badge-mc">MULTIPLE CHOICE</span>`;
     if (isScience) html += `<span class="im-review-badge-science-type">SCIENCE · FURY INTERRUPTION</span>`;
     if (p.crossCurricular) {
       const sciCode = p.crossCurricular.scienceTeks || '';
@@ -367,7 +372,7 @@ const TeacherReview = (() => {
     if (p.expression) {
       html += `<p class="im-review-content-expr">Expression: <span class="im-review-content-mono">${_esc(p.expression)}</span></p>`;
     }
-    if (p.answer !== undefined && !p.options) {
+    if (p.answer !== undefined && !p.options && !p.mcOptions) {
       html += `<p class="im-review-content-answer">Answer: <strong class="im-review-content-mono">${typeof p.answer === 'number' ? p.answer.toLocaleString() : p.answer}</strong></p>`;
     }
     if (p.options && Array.isArray(p.options)) {
@@ -377,6 +382,34 @@ const TeacherReview = (() => {
         html += `<div class="im-review-option${isCorrect ? ' correct' : ''}"><strong>${String.fromCharCode(65 + oi)})</strong> ${_esc(opt)}${isCorrect ? ' ✓ Correct' : ''}</div>`;
       });
       html += `</div>`;
+    }
+    // MC math options display
+    if (p.mcOptions && Array.isArray(p.mcOptions) && p.mcOptions.length === 4) {
+      if (p.answer !== undefined) {
+        html += `<p class="im-review-content-answer">Computed Answer: <strong class="im-review-content-mono">${typeof p.answer === 'number' ? p.answer.toLocaleString() : p.answer}</strong></p>`;
+      }
+      html += `<div class="im-review-mc-options">`;
+      p.mcOptions.forEach(opt => {
+        const isCorrect = opt.letter === p.mcCorrectLetter;
+        html += `<div class="im-review-mc-option${isCorrect ? ' correct' : ''}">
+          <span class="im-review-mc-letter${isCorrect ? ' correct' : ''}">${_esc(opt.letter)}</span>
+          <span class="im-review-mc-text">${_esc(String(opt.text))}</span>
+          ${isCorrect ? '<span class="im-review-mc-check">✓</span>' : ''}
+        </div>`;
+      });
+      html += `</div>`;
+      // Distractor rationales (collapsible)
+      if (p.distractorRationales && typeof p.distractorRationales === 'object') {
+        const entries = Object.entries(p.distractorRationales).filter(([letter]) => letter !== p.mcCorrectLetter);
+        if (entries.length > 0) {
+          html += `<details class="im-review-mc-rationales">
+            <summary>Distractor Rationales</summary>
+            <div class="im-review-mc-rationales-body">
+              ${entries.map(([letter, reason]) => `<p><strong>${_esc(letter)}:</strong> ${_esc(reason)}</p>`).join('')}
+            </div>
+          </details>`;
+        }
+      }
     }
     html += `</div>`;
 
@@ -960,6 +993,7 @@ const TeacherReview = (() => {
           formatOverride: p._formatOverride || null,
           mathConstraints: p._mathConstraints || null,
           originalOperands: (!isScience && p.numbers && p.numbers.length >= 2) ? p.numbers : null,
+          answerType: (!isScience && p.answerType) ? p.answerType : null,
           crossCurricular: hasCross,
           scienceTeks: sciTeksForRegen,
           isScience: isScience

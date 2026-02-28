@@ -103,6 +103,54 @@ function validateProblem(problem, teksRules) {
       mathCorrect = false;
       flags.push('Layer 2 Math VIOLATION: Division by zero');
     }
+
+    // MC-specific validation (only for multipleChoice math problems)
+    if (problem.answerType === 'multipleChoice' && problem.mcOptions) {
+      const opts = problem.mcOptions;
+
+      // Check 1: exactly 4 distinct options with letter and text
+      if (!Array.isArray(opts) || opts.length !== 4) {
+        mathCorrect = false;
+        flags.push(`Layer 2 MC VIOLATION: Expected 4 options, got ${Array.isArray(opts) ? opts.length : 0}`);
+      } else {
+        const hasFields = opts.every(o => o && typeof o.letter === 'string' && o.text !== undefined);
+        if (!hasFields) {
+          mathCorrect = false;
+          flags.push('Layer 2 MC VIOLATION: Each option must have "letter" and "text" fields');
+        }
+
+        // Check duplicate option texts
+        const texts = opts.map(o => String(o.text).trim());
+        if (new Set(texts).size !== texts.length) {
+          flags.push('Layer 2 MC Warning: Duplicate option texts detected');
+        }
+
+        // Check 2: correctAnswer letter is valid
+        const correctLetter = problem.mcCorrectLetter;
+        if (!correctLetter || !['A', 'B', 'C', 'D'].includes(correctLetter)) {
+          mathCorrect = false;
+          flags.push(`Layer 2 MC VIOLATION: correctAnswer letter "${correctLetter}" is not A, B, C, or D`);
+        }
+
+        // Check 3: correct option matches JS-computed answer
+        if (correctLetter && typeof problem.answer === 'number') {
+          const correctOpt = opts.find(o => o.letter === correctLetter);
+          if (correctOpt) {
+            const optNum = parseFloat(String(correctOpt.text).replace(/,/g, '').trim());
+            if (!isNaN(optNum) && Math.abs(optNum - problem.answer) > 0.001) {
+              mathCorrect = false;
+              flags.push(`Layer 2 MC VIOLATION: Option ${correctLetter} is "${correctOpt.text}" (${optNum}), but computed answer is ${problem.answer}`);
+            }
+          }
+        }
+
+        // Check 4: no duplicate numeric values across options
+        const numericVals = opts.map(o => parseFloat(String(o.text).replace(/,/g, '').trim())).filter(n => !isNaN(n));
+        if (numericVals.length === 4 && new Set(numericVals).size !== 4) {
+          flags.push('Layer 2 MC Warning: Duplicate numeric values among options');
+        }
+      }
+    }
   }
 
   // ── Layer 3 — Content Policy & Sensibility (SOFT warnings) ───

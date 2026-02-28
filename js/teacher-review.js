@@ -80,10 +80,8 @@ const TeacherReview = (() => {
     _container.style.display = 'block';
 
     // Auto-regenerate hard gate failures (async, runs in background after initial render)
-    _autoRegenerateFailures();
-
-    // Kick off Layer 5 async validation (does NOT block the review screen)
-    _kickOffLayer5();
+    // Layer 5 starts AFTER auto-regen finishes to avoid stale/concurrent results
+    _autoRegenerateFailures().then(() => _kickOffLayer5());
   }
 
   function hide() {
@@ -959,9 +957,15 @@ const TeacherReview = (() => {
           ? [p._scienceTeksOverride]
           : _options.scienceTeks;
 
+        // Preserve operation: if no explicit mathConstraints, tell the LLM via feedback
+        let effectiveFeedback = feedback;
+        if (!isScience && p.operation && !p._mathConstraints) {
+          effectiveFeedback += ` Maintain the same math operation: ${p.operation}.`;
+        }
+
         const regenOpts = {
           format: _options.format || 'mix',
-          formatOverride: p._formatOverride || null,
+          formatOverride: p._formatOverride || p.format || null,
           mathConstraints: p._mathConstraints || null,
           crossCurricular: hasCross,
           scienceTeks: sciTeksForRegen,
@@ -974,7 +978,7 @@ const TeacherReview = (() => {
 
         for (let attempt = 0; attempt <= (savedOverride || isScience ? 0 : MAX_REGEN_RETRIES); attempt++) {
           const newProblem = await window.cerebrasAPI.regenerateProblem(
-            _options.grade, p.teks, p.operation || '', feedback, regenOpts
+            _options.grade, p.teks, p.operation || '', effectiveFeedback, regenOpts
           );
 
           if (!newProblem) continue;
@@ -1162,6 +1166,12 @@ const TeacherReview = (() => {
   function _onLayer5ProblemComplete(index, layer5Result) {
     const p = _problems[index];
     if (!p) return;
+
+    // Guard: skip if problem is currently being regenerated — stale callback
+    if (p.status === 'regenerating') {
+      console.log(`[Layer5] Skipping stale Layer 5 result for problem ${index + 1} (regenerating)`);
+      return;
+    }
 
     // Store Layer 5 result
     _layer5Results[p.id] = layer5Result;

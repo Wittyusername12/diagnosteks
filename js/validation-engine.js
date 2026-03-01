@@ -122,7 +122,8 @@ function validateProblem(problem, teksRules) {
         // Check duplicate option texts
         const texts = opts.map(o => String(o.text).trim());
         if (new Set(texts).size !== texts.length) {
-          flags.push('Layer 2 MC Warning: Duplicate option texts detected');
+          mathCorrect = false;
+          flags.push('Layer 2 MC VIOLATION: Duplicate option texts detected — all 4 options must have distinct values');
         }
 
         // Check 2: correctAnswer letter is valid
@@ -147,7 +148,8 @@ function validateProblem(problem, teksRules) {
         // Check 4: no duplicate numeric values across options
         const numericVals = opts.map(o => parseFloat(String(o.text).replace(/,/g, '').trim())).filter(n => !isNaN(n));
         if (numericVals.length === 4 && new Set(numericVals).size !== 4) {
-          flags.push('Layer 2 MC Warning: Duplicate numeric values among options');
+          mathCorrect = false;
+          flags.push('Layer 2 MC VIOLATION: Duplicate numeric values among options — all 4 values must be distinct');
         }
       }
     }

@@ -498,32 +498,50 @@ MULTIPLE CHOICE RULES:
 8. Distractors must be plausible: within grade-appropriate number ranges, positive whole numbers (for grades 1-3), and distinct from each other and the correct answer.
 9. Do NOT include correctAnswer as a separate numeric field — JavaScript computes the answer independently. The correctAnswer field is ONLY the letter.
 
-DISTRACTOR RATIONALE QUALITY STANDARD:
-Each distractor rationale MUST follow a three-part structure modeled after official STAAR rationales from the Texas Education Agency. Study these 5 real STAAR rationale examples carefully and match this quality exactly:
+DISTRACTOR GENERATION ALGORITHM — follow this EXACTLY:
+Step 1: Identify the operation and operands (a, b) and correct answer (c).
+Step 2: Generate 3 distractors using the SPECIFIC rules below for each operation type.
+Step 3: Compute each distractor value FIRST from the error, THEN write the rationale explaining that single-step error.
+Step 4: All 4 option values (1 correct + 3 distractors) must be DISTINCT and WIDELY SPREAD — never consecutive integers.
 
-STAAR RATIONALE EXAMPLE 1 — Wrong operation (multiply instead of divide):
-"The student likely determined this to be a multiplication problem instead of a division problem, and multiplied the numbers in the problem, resulting in 5 × 45 = 225. The student needs to focus on understanding how multiplication can be used to find the quotient in a division problem or scenario."
+DISTRACTOR RECIPES BY OPERATION:
 
-STAAR RATIONALE EXAMPLE 2 — Correct first step, wrong second step (multi-step problem):
-"The student likely did the first step, dividing 12 by 2, correctly, but multiplied instead of dividing for the second step, resulting in the equation 6 × 3 = 18. The student needs to focus on understanding which operations to use in a multi-step word problem."
+For ADD problems (a + b = c):
+- Distractor 1 — Wrong operation: a − b (subtracted instead of adding)
+- Distractor 2 — Regrouping error: c ± 10 (forgot to carry or carried extra to tens place)
+- Distractor 3 — Partial computation: a + (tens digit of b only) or (tens digit of a) + b, or a wrong-operation variant like a × b if the numbers are small
 
-STAAR RATIONALE EXAMPLE 3 — Forgot a step / incomplete solution:
-"The student likely found the sum of only the numbers of yards of fabric used in the three plays, neglecting to include the 27 yards of fabric that was left over, and used the equation 69 + 48 + 53 = 170. The student needs to focus on determining the correct steps to take when solving a word problem."
+For SUBTRACT problems (a − b = c):
+- Distractor 1 — Wrong operation: a + b (added instead of subtracting)
+- Distractor 2 — Reversed operands: b − a (if b < a, use |b − a|) or regrouping error: c ± 10
+- Distractor 3 — Wrong operation: a × b (multiplied instead of subtracting) or partial computation error
 
-STAAR RATIONALE EXAMPLE 4 — Wrong operation direction (subtracted instead of added):
-"The student likely found the sum of the numbers of yards of fabric used in the three plays but subtracted the 27 yards of fabric left over instead of adding, resulting in the equation (69 + 48 + 53) – 27 = 143. The student needs to focus on understanding the difference between the result of adding and the result of subtracting."
+For MULTIPLY problems (a × b = c):
+- Distractor 1 — Wrong operation: a + b (added instead of multiplying)
+- Distractor 2 — Neighbor fact: (a−1) × b or a × (b−1) (confused with adjacent multiplication fact)
+- Distractor 3 — Other neighbor fact: (a+1) × b or a × (b+1), or a − b if distinct from other distractors
 
-STAAR RATIONALE EXAMPLE 5 — Regrouping error:
-"The student likely recognized that the total would be equal to the sum of the yards of fabric used in the three plays plus the yards left over, represented by (69 + 48 + 53) + 27, but made an error when regrouping to the tens place, resulting in a total of 177. The student needs to focus on regrouping when adding."
+For DIVIDE problems (a ÷ b = c):
+- Distractor 1 — Wrong operation: a × b (multiplied instead of dividing)
+- Distractor 2 — Wrong operation: a − b (subtracted instead of dividing) or a + b (added instead)
+- Distractor 3 — Operand confusion: b itself (confused divisor with quotient)
 
-EVERY distractor rationale you write MUST follow this three-part pattern:
-Part 1 — "The student likely [SPECIFIC error — what they did wrong and why]..."
-Part 2 — "...resulting in [SHOW THE ACTUAL WRONG MATH with numbers, e.g., '7 + 8 = 15 instead of 7 × 8 = 56']."
-Part 3 — "The student needs to focus on [SPECIFIC skill the student needs to develop]."
+COLLISION RULES: If any distractor equals the correct answer or another distractor, replace it with the next recipe in the list. If a − b = a + b (e.g., a=0), skip that recipe.
 
-CRITICAL: Each distractor's numeric value MUST be the actual result of the error computation described in its rationale. If the rationale says "added instead of multiplied, resulting in 7 + 8 = 15", the distractor value MUST be exactly 15. The wrong answer IS the computation described in the rationale.
+REAL STAAR EXAMPLES showing this algorithm in action:
+• 7 × 8 = 56: distractors 15 (7+8, wrong op), 42 (6×7, neighbor fact), 48 (6×8, neighbor fact). Values: 15, 42, 48, 56 — widely spread.
+• 27 ÷ 9 = 3: distractors 18 (27−9, wrong op), 36 (27+9, wrong op), 9 (operand confusion). Values: 3, 9, 18, 36 — widely spread.
+• 4 × 6 = 24: distractors 10 (4+6, wrong op), 20 (4×5, neighbor fact), 28 (4×7, neighbor fact). Values: 10, 20, 24, 28 — widely spread.
 
-BAD rationale (do NOT generate): "student may be using incorrect multiplication facts" — too vague, no computation shown, not actionable.`;
+RATIONALE FORMAT: Each rationale MUST be one clear sentence:
+"The student likely [SINGLE error], resulting in [wrong computation with numbers]. The student needs to focus on [specific skill]."
+
+CRITICAL RULES:
+- Every distractor MUST be reachable in exactly ONE step from the given operands.
+- NEVER use consecutive integers near the correct answer (e.g., 48, 49, 50, 51). This has ZERO diagnostic value.
+- NEVER fabricate multi-step error chains (e.g., "added then divided then subtracted").
+- Compute the distractor value FIRST from a single misconception, THEN write the rationale.
+- All 4 option values must be DISTINCT. No two options may have the same numeric value.`;
     } else if (answerFormat === 'mix') {
       // Same ratio logic as Problem Format mix: randomly pick 40/60, 50/50, or 60/40
       const mcMixOptions = [
@@ -558,14 +576,15 @@ MULTIPLE CHOICE RULES (for MC problems only):
 8. Distractors must be plausible: grade-appropriate, positive whole numbers (grades 1-3), distinct.
 9. Do NOT include correctAnswer as a separate numeric field — the correctAnswer field is ONLY the letter.
 
-DISTRACTOR RATIONALE QUALITY STANDARD (STAAR-style, required for each MC problem):
-Each distractor rationale MUST be 2-3 sentences following this three-part pattern from real TEA STAAR rationales:
-Part 1: "The student likely [SPECIFIC error — what they did wrong and why]..."
-Part 2: "...resulting in [SHOW THE ACTUAL WRONG MATH with numbers]."
-Part 3: "The student needs to focus on [SPECIFIC skill]."
-STAAR EXAMPLE: "The student likely determined this to be a multiplication problem instead of a division problem, and multiplied the numbers in the problem, resulting in 5 × 45 = 225. The student needs to focus on understanding how multiplication can be used to find the quotient in a division problem or scenario."
-CRITICAL: Each distractor's numeric value MUST be the actual result of the error computation described. If the rationale says "added instead of multiplied, resulting in 7 + 8 = 15", the option MUST be 15.
-BAD (do NOT generate): "student may be using incorrect multiplication facts" — too vague.`;
+DISTRACTOR ALGORITHM (required for each MC problem):
+Generate distractors using SINGLE-STEP errors from the given operands:
+- ADD/SUBTRACT: wrong operation (a−b or a+b), regrouping error (answer ± 10), partial computation
+- MULTIPLY: wrong operation (a+b), neighbor fact ((a±1)×b or a×(b±1))
+- DIVIDE: wrong operation (a×b, a−b, or a+b), operand confusion (b itself)
+Compute distractor value FIRST, then write rationale. All 4 values must be DISTINCT and WIDELY SPREAD — never consecutive integers.
+STAAR EXAMPLE: 7×8=56 → distractors: 15 (added 7+8), 42 (neighbor 6×7), 48 (neighbor 6×8). Spread: 15,42,48,56.
+Each rationale: "The student likely [ONE error], resulting in [computation]. The student needs to focus on [skill]."
+NEVER fabricate multi-step error chains. NEVER use consecutive integers near the correct answer.`;
     }
     // answerFormat === 'open': no MC instructions, prompt stays as-is (zero regression)
 
@@ -1215,7 +1234,7 @@ RULES:
 
     // MC instructions for regeneration (preserve answer format)
     if (opts.answerType === 'multipleChoice') {
-      prompt += `\n\nANSWER FORMAT: MULTIPLE CHOICE\nThis problem uses Multiple Choice. You MUST include:\n- "options": array of 4 objects [{"letter": "A", "text": "..."}, ...]\n- "correctAnswer": the letter (A, B, C, or D) of the correct option\n- "distractorRationales": object with 3 keys for wrong answers, each a 2-3 sentence STAAR-quality rationale\nSet answerType to "multipleChoice". Randomize correct answer position. Each distractor must target a different common student error.\n\nDISTRACTOR RATIONALE QUALITY (STAAR three-part format required):\nPart 1: "The student likely [SPECIFIC error]..."\nPart 2: "...resulting in [SHOW THE ACTUAL WRONG MATH with numbers]."\nPart 3: "The student needs to focus on [SPECIFIC skill]."\nSTAAR EXAMPLE: "The student likely determined this to be a multiplication problem instead of a division problem, and multiplied the numbers, resulting in 5 × 45 = 225. The student needs to focus on understanding how multiplication can be used to find the quotient in a division problem."\nCRITICAL: Each distractor value MUST equal the computation described in its rationale. BAD: "student may be using incorrect facts" — too vague, no math shown.`;
+      prompt += `\n\nANSWER FORMAT: MULTIPLE CHOICE\nThis problem uses Multiple Choice. You MUST include:\n- "options": array of 4 objects [{"letter": "A", "text": "..."}, ...]\n- "correctAnswer": the letter (A, B, C, or D) of the correct option\n- "distractorRationales": object with 3 keys for wrong answers\nSet answerType to "multipleChoice". Randomize correct answer position.\n\nDISTRACTOR ALGORITHM: Generate distractors using SINGLE-STEP errors from the given operands:\n- ADD/SUBTRACT: wrong operation (a−b or a+b), regrouping error (answer ± 10)\n- MULTIPLY: wrong operation (a+b), neighbor fact ((a±1)×b or a×(b±1))\n- DIVIDE: wrong operation (a×b, a−b, a+b), operand confusion (b)\nCompute distractor value FIRST, then write rationale. All 4 values MUST be DISTINCT and WIDELY SPREAD.\nExample: 7×8=56 → distractors 15 (7+8), 42 (6×7), 48 (6×8). Spread: 15,42,48,56.\nEach rationale: "The student likely [ONE error], resulting in [computation]. The student needs to focus on [skill]."\nNEVER use consecutive integers. NEVER fabricate multi-step error chains.`;
     }
 
     // Difficulty-shift path: tell the LLM the original problem and what direction to move

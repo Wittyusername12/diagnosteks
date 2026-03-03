@@ -492,7 +492,7 @@ Generate exactly ${ratio.word} of the ${count} math problems as word problems wi
 
 ANSWER FORMAT: MULTIPLE CHOICE
 ALL ${count} problems must use answerType "multipleChoice". For EACH problem, include these additional JSON fields:
-- "distractorReasoning": array of 3 strings — for each distractor, describe the single student error and compute the resulting value. Write this BEFORE generating options. For single-digit operations, show the one-step calculation (e.g., '42 × 6 = 252'). For multi-digit addition/subtraction (operands >= 100), show column-by-column work: 'Ones: 8+5=13→3 carry 1. Tens: 3+7=10→0 (DROPPED carry). Hundreds: 4+3=7. → 703'. The resultingValue MUST equal the final number from your computation — if they disagree, fix resultingValue to match.
+- "distractorReasoning": array of 3 strings — for each distractor, describe the single student error and compute the resulting value. Write this BEFORE generating options. For single-digit operations, show the one-step calculation (e.g., '42 × 6 = 252'). For multi-digit addition/subtraction (operands >= 100), show column-by-column work: 'Ones: 8+5=13→3 carry 1. Tens: 3+7=10→0 (DROPPED carry). Hundreds: 4+3=7. → 703'. The resultingValue MUST equal the final number from your computation — if they disagree, fix resultingValue to match. ALL values must be positive integers.
 - "options": array of 4 objects [{"letter": "A", "text": "..."}, {"letter": "B", "text": "..."}, {"letter": "C", "text": "..."}, {"letter": "D", "text": "..."}]
 - "correctAnswer": the letter (A, B, C, or D) of the correct option
 - "distractorRationales": object with 3 keys (one per wrong answer letter), each a 1-sentence rationale
@@ -528,7 +528,7 @@ MULTIPLE CHOICE RULES:
       prompt += `
 
 ANSWER FORMAT ASSIGNMENT:
-Problems ${mcNums}: Multiple Choice (answerType "multipleChoice"). Include "distractorReasoning" (array of 3 strings — for single-digit ops show one-step calc; for multi-digit add/subtract with operands >= 100 show column-by-column work and use the final value your column work produces), "options" (4 choices A-D), "correctAnswer" (letter), and "distractorRationales" (object with 3 keys explaining each distractor).
+Problems ${mcNums}: Multiple Choice (answerType "multipleChoice"). Include "distractorReasoning" (array of 3 strings — for single-digit ops show one-step calc; for multi-digit add/subtract with operands >= 100 show column-by-column work and use the final value your column work produces; ALL values must be positive integers), "options" (4 choices A-D), "correctAnswer" (letter), and "distractorRationales" (object with 3 keys explaining each distractor).
 Problems ${orNums.join(', ')}: Open Response (answerType "integer", no options needed).
 
 MULTIPLE CHOICE RULES (for MC problems only):
@@ -1220,7 +1220,7 @@ RULES:
       if (typeof UNIVERSAL_DISTRACTOR_RULES !== 'undefined') {
         prompt += '\n\n' + UNIVERSAL_DISTRACTOR_RULES;
       }
-      prompt += `\n\nANSWER FORMAT: MULTIPLE CHOICE\nThis problem uses Multiple Choice. You MUST include:\n- "distractorReasoning": array of 3 strings — for each distractor, describe the single student error and compute the resulting value. Write this BEFORE generating options. For single-digit operations, show the one-step calculation (e.g., '42 × 6 = 252'). For multi-digit addition/subtraction (operands >= 100), show column-by-column work: 'Ones: 8+5=13→3 carry 1. Tens: 3+7=10→0 (DROPPED carry). Hundreds: 4+3=7. → 703'. The resultingValue MUST equal the final number from your computation — if they disagree, fix resultingValue to match.\n- "options": array of 4 objects [{"letter": "A", "text": "..."}, ...]\n- "correctAnswer": the letter (A, B, C, or D) of the correct option\n- "distractorRationales": object with 3 keys for wrong answers\nSet answerType to "multipleChoice". Randomize correct answer position.\nFollow the DISTRACTOR CONSTRUCTION RULES above. Compute each distractor value FROM a single student error FIRST, then write the rationale.`;
+      prompt += `\n\nANSWER FORMAT: MULTIPLE CHOICE\nThis problem uses Multiple Choice. You MUST include:\n- "distractorReasoning": array of 3 strings — for each distractor, describe the single student error and compute the resulting value. Write this BEFORE generating options. For single-digit operations, show the one-step calculation (e.g., '42 × 6 = 252'). For multi-digit addition/subtraction (operands >= 100), show column-by-column work: 'Ones: 8+5=13→3 carry 1. Tens: 3+7=10→0 (DROPPED carry). Hundreds: 4+3=7. → 703'. The resultingValue MUST equal the final number from your computation — if they disagree, fix resultingValue to match. ALL values must be positive integers.\n- "options": array of 4 objects [{"letter": "A", "text": "..."}, ...]\n- "correctAnswer": the letter (A, B, C, or D) of the correct option\n- "distractorRationales": object with 3 keys for wrong answers\nSet answerType to "multipleChoice". Randomize correct answer position.\nFollow the DISTRACTOR CONSTRUCTION RULES above. Compute each distractor value FROM a single student error FIRST, then write the rationale.`;
       // Inject per-TEKS distractor patterns (near-recency)
       if (typeof selectDistractorPatterns === 'function') {
         const regenDistrGuides = selectDistractorPatterns([teksCode]);

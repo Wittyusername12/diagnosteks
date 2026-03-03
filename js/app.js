@@ -936,6 +936,13 @@ const App = {
     const answerSection = this.elements.answerInput.parentElement;
     const decryptBtn = document.getElementById('btn-decrypt');
 
+    console.log('[MC Debug] _setupAdaptiveInput called, problem:', {
+      answerType: problem.answerType,
+      options: problem.options,
+      mcCorrectLetter: problem.mcCorrectLetter,
+      hasOptions: !!(problem.options && problem.options.length > 0)
+    });
+
     // Remove any existing adaptive buttons from a previous problem
     const existing = document.getElementById('adaptive-answer-area');
     if (existing) existing.remove();
@@ -985,6 +992,7 @@ const App = {
       if (decryptBtn) decryptBtn.style.display = 'none';
 
       const options = problem.options || [];
+      console.log('[MC Debug] MC branch entered, creating buttons for', options.length, 'options:', options);
 
       const container = document.createElement('div');
       container.id = 'adaptive-answer-area';
@@ -1027,6 +1035,7 @@ const App = {
 
     } else {
       // Default: show text input + DECRYPT button (integer, decimal, fraction)
+      console.log('[MC Debug] Open-response branch entered, answerType:', answerType);
       this.elements.answerInput.style.display = '';
       if (decryptBtn) decryptBtn.style.display = '';
 

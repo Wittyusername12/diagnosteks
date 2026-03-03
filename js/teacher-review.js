@@ -1247,7 +1247,7 @@ const TeacherReview = (() => {
         });
       } else {
         // Convert back to API math format
-        mathProblems.push({
+        const mathObj = {
           id: p.id,
           firewallNumber: p._original ? p._original.firewallNumber : 0,
           narrative: p.displayText,
@@ -1261,7 +1261,17 @@ const TeacherReview = (() => {
           diagnosticFor: p._original ? p._original.diagnosticFor : [],
           answerType: p.answerType || 'integer',
           scienceTeksConnection: p.crossCurricular ? p.crossCurricular.scienceTeks : null
-        });
+        };
+
+        // MC-specific fields — required for gameplay A/B/C/D buttons + answer checking
+        if (p.answerType === 'multipleChoice' && p.mcOptions) {
+          mathObj.options = p.mcOptions;
+          mathObj.mcCorrectLetter = p.mcCorrectLetter || null;
+          mathObj.correctAnswer = p.mcCorrectLetter || p.answer;
+          mathObj.distractorRationales = p.distractorRationales || null;
+        }
+
+        mathProblems.push(mathObj);
       }
     });
 

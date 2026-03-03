@@ -200,9 +200,10 @@ function validateProblem(problem, teksRules) {
           }
         }
 
-        // Check 8: Rationale-value cross-validation (WARN)
+        // Check 8: Rationale-value cross-validation (HARD GATE)
         // Parses each distractor rationale for "resulting in [number]" and compares
         // the claimed value to the actual displayed option value for that letter.
+        // A mismatch means the rationale describes the wrong option — critical pedagogical error.
         {
           const mismatches = [];
           if (correctLetter && problem.distractorRationales) {
@@ -226,12 +227,13 @@ function validateProblem(problem, teksRules) {
               if (isNaN(actualValue)) continue;
 
               if (Math.abs(claimedValue - actualValue) > 0.001) {
-                flags.push(`Layer 2 MC WARNING: Distractor ${letter} rationale claims value ${claimedValue} but actual option value is ${actualValue}. Rationale may be inconsistent with displayed answer.`);
-                mismatches.push(`${letter}: claimed ${claimedValue}, actual ${actualValue}`);
+                mathCorrect = false;
+                flags.push(`Layer 2 MC VIOLATION: Distractor ${letter} rationale claims value ${claimedValue} but actual option value is ${actualValue}. Rationale-value mismatch — problem must be regenerated.`);
+                mismatches.push(`${letter}: claims ${claimedValue}, actual ${actualValue}`);
               }
             }
           }
-          console.log('[Validation] MC rationale-value cross-check:', mismatches.length > 0 ? 'WARN — ' + mismatches.join('; ') : 'pass');
+          console.log('[Validation] MC rationale-value cross-check:', mismatches.length > 0 ? 'FAIL — ' + mismatches.join('; ') : 'pass');
         }
       }
     }

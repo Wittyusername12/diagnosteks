@@ -1126,12 +1126,13 @@ const TeacherReview = (() => {
             _options.grade,
             p.teks,
             p.operation || '',
-            'Previous problem failed TEKS validation. Generate a new problem that strictly follows TEKS constraints.',
+            'Previous problem failed validation. Generate a new problem that strictly follows TEKS constraints.',
             {
               format: _options.format || 'mix',
               crossCurricular: hasCross,
               scienceTeks: _options.scienceTeks,
-              isScience: false
+              isScience: false,
+              answerType: p.answerType || null
             }
           );
 

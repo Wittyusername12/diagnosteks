@@ -151,6 +151,35 @@ function validateProblem(problem, teksRules) {
           mathCorrect = false;
           flags.push('Layer 2 MC VIOLATION: Duplicate numeric values among options — all 4 values must be distinct');
         }
+
+        // Check 5: consecutive integers (WARN) — no diagnostic value
+        if (numericVals.length === 4 && numericVals.every(v => Number.isInteger(v))) {
+          const sorted = [...numericVals].sort((a, b) => a - b);
+          const isConsecutive = sorted.every((v, i) => i === 0 || v === sorted[i - 1] + 1);
+          if (isConsecutive) {
+            flags.push(`Layer 2 MC WARNING: Options are consecutive integers (${sorted.join(', ')}) — no diagnostic value, distractors should target specific student errors`);
+          }
+        }
+
+        // Check 6: narrow spread for division (WARN) — distractors too close to answer
+        if (numericVals.length === 4 && problem.operation === 'DIVIDE' && typeof problem.answer === 'number') {
+          const sorted = [...numericVals].sort((a, b) => a - b);
+          const spread = sorted[3] - sorted[0];
+          // For division, spread should be at least 3× the correct answer or at least 10
+          const minSpread = Math.max(10, problem.answer * 3);
+          if (spread < minSpread && problem.answer > 2) {
+            flags.push(`Layer 2 MC WARNING: Narrow value spread for division (range: ${sorted[0]}-${sorted[3]}, spread: ${spread}) — STAAR distractors use wrong-operation values with wide spread`);
+          }
+        }
+
+        // Check 7: distractorRationales completeness (WARN)
+        if (correctLetter && problem.distractorRationales) {
+          const wrongLetters = ['A', 'B', 'C', 'D'].filter(l => l !== correctLetter);
+          const missingRationales = wrongLetters.filter(l => !problem.distractorRationales[l] || String(problem.distractorRationales[l]).trim().length < 10);
+          if (missingRationales.length > 0) {
+            flags.push(`Layer 2 MC WARNING: Missing or inadequate rationales for distractor(s) ${missingRationales.join(', ')} — each distractor should have a rationale explaining the student error`);
+          }
+        }
       }
     }
   }
@@ -222,7 +251,7 @@ function validateProblem(problem, teksRules) {
       'shoot', 'shooting', 'kill', 'killing', 'murder',
       'dead', 'death', 'die', 'dies',
       'blood', 'wound', 'stab',
-      'attack', 'fight', 'fighting', 'war', 'battle',
+      'attack', 'fight', 'fighting', 'war',
       'destroy', 'destruction',
       'punch', 'hit', 'slap', 'kick'
     ];
@@ -231,6 +260,14 @@ function validateProblem(problem, teksRules) {
     const narrativeMatch = textLower.match(blockedRegex);
     if (narrativeMatch) {
       contentFlags.push(`Layer 3 Content: Narrative contains inappropriate term "${narrativeMatch[0]}" — not suitable for elementary classrooms`);
+    }
+
+    // YELLOW-tier terms — acceptable in Avengers/STAAR context but worth noting
+    const yellowTerms = ['battle'];
+    const yellowRegex = new RegExp('\\b(' + yellowTerms.join('|') + ')\\b', 'i');
+    const yellowMatch = textLower.match(yellowRegex);
+    if (yellowMatch) {
+      contentFlags.push(`Layer 3 Content (YELLOW): Narrative uses "${yellowMatch[0]}" — acceptable in Avengers context but review for appropriateness`);
     }
   }
   flags.push(...contentFlags);

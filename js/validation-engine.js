@@ -119,6 +119,25 @@ function validateProblem(problem, teksRules) {
           flags.push('Layer 2 MC VIOLATION: Each option must have "letter" and "text" fields');
         }
 
+        // Check 4a: Duplicate MC option values — identify specific pairs (FAIL)
+        {
+          const dupPairs = [];
+          for (let i = 0; i < opts.length; i++) {
+            const valI = parseFloat(String(opts[i].text).replace(/,/g, '').trim());
+            if (isNaN(valI)) continue;
+            for (let j = i + 1; j < opts.length; j++) {
+              const valJ = parseFloat(String(opts[j].text).replace(/,/g, '').trim());
+              if (isNaN(valJ)) continue;
+              if (Math.abs(valI - valJ) < 0.001) {
+                mathCorrect = false;
+                flags.push(`Layer 2 MC VIOLATION: Duplicate MC option value: ${valI} appears in both option ${opts[i].letter} and option ${opts[j].letter}. Problem must be regenerated.`);
+                dupPairs.push(`${opts[i].letter}=${valI}, ${opts[j].letter}=${valJ}`);
+              }
+            }
+          }
+          console.log('[Validation] MC duplicate check:', dupPairs.length > 0 ? 'FAIL — ' + dupPairs.join('; ') : 'pass');
+        }
+
         // Check duplicate option texts
         const texts = opts.map(o => String(o.text).trim());
         if (new Set(texts).size !== texts.length) {
@@ -179,6 +198,40 @@ function validateProblem(problem, teksRules) {
           if (missingRationales.length > 0) {
             flags.push(`Layer 2 MC WARNING: Missing or inadequate rationales for distractor(s) ${missingRationales.join(', ')} — each distractor should have a rationale explaining the student error`);
           }
+        }
+
+        // Check 8: Rationale-value cross-validation (WARN)
+        // Parses each distractor rationale for "resulting in [number]" and compares
+        // the claimed value to the actual displayed option value for that letter.
+        {
+          const mismatches = [];
+          if (correctLetter && problem.distractorRationales) {
+            const distractorLetters = ['A', 'B', 'C', 'D'].filter(l => l !== correctLetter);
+            for (const letter of distractorLetters) {
+              const rationale = problem.distractorRationales[letter];
+              if (!rationale || typeof rationale !== 'string') continue;
+
+              // Extract claimed value from "resulting in [number]" pattern
+              // Handles integers (312), decimals (3.5), comma-formatted (1,000)
+              const match = rationale.match(/resulting in (\d[\d,]*\.?\d*)/i);
+              if (!match) continue; // Pattern not found — skip, don't flag
+
+              const claimedValue = parseFloat(match[1].replace(/,/g, ''));
+              if (isNaN(claimedValue)) continue;
+
+              const opt = opts.find(o => o.letter === letter);
+              if (!opt) continue;
+
+              const actualValue = parseFloat(String(opt.text).replace(/,/g, '').trim());
+              if (isNaN(actualValue)) continue;
+
+              if (Math.abs(claimedValue - actualValue) > 0.001) {
+                flags.push(`Layer 2 MC WARNING: Distractor ${letter} rationale claims value ${claimedValue} but actual option value is ${actualValue}. Rationale may be inconsistent with displayed answer.`);
+                mismatches.push(`${letter}: claimed ${claimedValue}, actual ${actualValue}`);
+              }
+            }
+          }
+          console.log('[Validation] MC rationale-value cross-check:', mismatches.length > 0 ? 'WARN — ' + mismatches.join('; ') : 'pass');
         }
       }
     }

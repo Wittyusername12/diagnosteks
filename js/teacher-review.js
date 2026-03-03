@@ -430,8 +430,8 @@ const TeacherReview = (() => {
       <p class="im-review-feedback-subtitle">Quick adjustments:</p>
       <div class="im-review-quick-actions">
         ${quickActions.map(qa => `<button class="im-review-quick-btn" data-feedback="${_esc(qa.feedback)}"${qa.formatOverride ? ` data-format-override="${qa.formatOverride}"` : ''}>${qa.icon} ${_esc(qa.label)}</button>`).join('')}${!isScience ? (p.answerType === 'multipleChoice'
-          ? `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="integer" data-feedback="Convert this problem to Open Response format. Keep the same math content, operation, and difficulty. Remove all multiple choice options — the answer should be a single numeric value. Set answerType to &quot;integer&quot;.">✎ Open Response</button>`
-          : `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="multipleChoice" data-feedback="Convert this problem to Multiple Choice format. Keep the same math content, operation, and difficulty level. Follow the DISTRACTOR CONSTRUCTION RULES to generate diagnostic distractors based on real STAAR error patterns. Include distractorReasoning array (reasoning BEFORE options) and distractorRationales.">⊞ Multiple Choice</button>`
+          ? `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="integer" data-feedback="Convert this problem to Open Response format. Keep the same math content, operation, and number values. Remove all multiple choice options — the answer should be a single numeric value. Set answerType to &quot;integer&quot;.">✎ Open Response</button>`
+          : `<button class="im-review-quick-btn im-review-answer-format-chip" data-answer-type-override="multipleChoice" data-feedback="Convert this problem to Multiple Choice format. Keep the same math content, operation, and number values. Follow the DISTRACTOR CONSTRUCTION RULES to generate diagnostic distractors based on real STAAR error patterns. Include distractorReasoning array (reasoning BEFORE options) and distractorRationales.">⊞ Multiple Choice</button>`
         ) : ''}
       </div>
       ${!isScience ? `<div class="im-review-teks-override">
@@ -1059,8 +1059,15 @@ const TeacherReview = (() => {
 
         if (bestMapped) {
           const savedId = p.id; // Preserve original ID — regenerated problems always get 'fw-1'
+          const savedOriginal = p._original; // Preserve original for afterFirewall/firewallNumber
           Object.assign(p, bestMapped, { status: 'pending', feedback: '', favorited: false, whyThisIsGood: null });
           p.id = savedId; // Restore original ID to prevent validation cache collision
+          // Preserve afterFirewall (science) and firewallNumber (math) from original —
+          // regenerated problems get afterFirewall:3 / firewallNumber:1 by default
+          if (p._original && savedOriginal) {
+            if (savedOriginal.afterFirewall !== undefined) p._original.afterFirewall = savedOriginal.afterFirewall;
+            if (savedOriginal.firewallNumber !== undefined) p._original.firewallNumber = savedOriginal.firewallNumber;
+          }
           p.teksOverride = savedOverride;
           p.crossCurricularOverride = savedCrossCurr; // Preserve teacher's toggle choice
           p._formatOverride = null; // Clear chip format override after regeneration
@@ -1132,8 +1139,13 @@ const TeacherReview = (() => {
             const mapped = _mapApiToReview([newProblem], [], _options.grade)[0];
             if (mapped) {
               const savedId = p.id; // Preserve original ID — regenerated problems always get 'fw-1'
+              const savedOriginal = p._original; // Preserve for firewallNumber
               Object.assign(p, mapped, { status: 'pending', feedback: '', favorited: false });
               p.id = savedId; // Restore original ID to prevent validation cache collision
+              // Preserve firewallNumber from original — regenerated problems get firewallNumber:1
+              if (p._original && savedOriginal && savedOriginal.firewallNumber !== undefined) {
+                p._original.firewallNumber = savedOriginal.firewallNumber;
+              }
               const newV = window.ValidationEngine.validateProblem(p, teksRules);
               _validation[p.id] = newV;
 
@@ -1278,6 +1290,14 @@ const TeacherReview = (() => {
     // Sort math by firewallNumber, science by afterFirewall
     mathProblems.sort((a, b) => a.firewallNumber - b.firewallNumber);
     scienceProblems.sort((a, b) => a.afterFirewall - b.afterFirewall);
+
+    // Always renumber math firewalls sequentially (1, 2, 3, ...)
+    // Regenerated problems may have firewallNumber=1, causing duplicates
+    mathProblems.forEach((p, i) => { p.firewallNumber = i + 1; });
+
+    // Always renumber science afterFirewall values (3, 6, 9)
+    const furySlots = [3, 6, 9];
+    scienceProblems.forEach((p, i) => { p.afterFirewall = furySlots[i] || (3 * (i + 1)); });
 
     return { math: mathProblems, science: scienceProblems };
   }

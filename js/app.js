@@ -825,6 +825,9 @@ const App = {
           // Replace problems with teacher-approved versions
           window.TEST_PROBLEMS.math = approvedResult.math;
           window.TEST_PROBLEMS.science = approvedResult.science;
+          console.log('[Launch Debug] Science problems received:', approvedResult.science?.length, approvedResult.science);
+          console.log('[Launch Debug] Math problems received:', approvedResult.math?.length, 'firewallNumbers:', approvedResult.math?.map(p => p.firewallNumber));
+          console.log('[Launch Debug] Science afterFirewall values:', approvedResult.science?.map(q => q.afterFirewall));
           self.missionState.problems = [...approvedResult.math, ...approvedResult.science];
           window.missionState = self.missionState;
           self.updateMissionLog('[REVIEW] Teacher approved all problems. Launching mission.');
@@ -1086,6 +1089,8 @@ const App = {
 
     // Reset mission state
     const actualMathCount = (window.TEST_PROBLEMS && window.TEST_PROBLEMS.math) ? window.TEST_PROBLEMS.math.length : 10;
+    console.log('[StartMission Debug] mathTotal:', actualMathCount, 'scienceCount:', window.TEST_PROBLEMS?.science?.length);
+    console.log('[StartMission Debug] Science afterFirewall values:', window.TEST_PROBLEMS?.science?.map(q => q.afterFirewall));
     this.missionState = {
       currentFirewall: 1,
       mathCorrect: 0,
@@ -1507,25 +1512,29 @@ const App = {
 
     // Play GSAP animation sequence, then advance
     animator.playCorrectSequence(() => {
+      console.log('[Fury Debug] handleCorrectAnswer callback: currentFW=', currentFW, 'mathTotal=', this.missionState.mathTotal, 'shouldShowFury=', shouldShowFuryAfter(currentFW));
+
+      // Check Fury FIRST — science questions after FW 3, 6, 9 take priority over victory
+      // (Without this order, if mathTotal === 3/6/9, victory would trigger before Fury)
+      if (shouldShowFuryAfter(currentFW)) {
+        this.showFuryQuestion(currentFW);
+        return;
+      }
+
       // Check if mission complete (after last firewall)
       if (currentFW >= (this.missionState.mathTotal || 10)) {
         this.showVictoryScreen();
         return;
       }
 
-      // Check if we just COMPLETED firewall 3, 6, or 9 - trigger Fury science question
-      if (shouldShowFuryAfter(currentFW)) {
-        this.showFuryQuestion(currentFW);
-      } else {
-        // Advance to next firewall with transition animation
-        if (window.transitionEngine) {
-          window.transitionEngine.playTransition((type) => {
-            this.loadFirewall(currentFW + 1);
-          });
-        } else {
-          // Fallback if transitionEngine not available
+      // Advance to next firewall with transition animation
+      if (window.transitionEngine) {
+        window.transitionEngine.playTransition((type) => {
           this.loadFirewall(currentFW + 1);
-        }
+        });
+      } else {
+        // Fallback if transitionEngine not available
+        this.loadFirewall(currentFW + 1);
       }
     }, correctLine);
   },
@@ -1574,7 +1583,10 @@ const App = {
    * @param {number} afterFirewall - The firewall number (3, 6, or 9)
    */
   showFuryQuestion(afterFirewall) {
+    console.log('[Fury Debug] showFuryQuestion called for afterFirewall:', afterFirewall);
+    console.log('[Fury Debug] TEST_PROBLEMS.science:', window.TEST_PROBLEMS.science?.length, 'afterFirewall values:', window.TEST_PROBLEMS.science?.map(q => q.afterFirewall));
     const question = getScienceQuestion(afterFirewall);
+    console.log('[Fury Debug] getScienceQuestion result:', question ? 'FOUND' : 'NULL', question);
     if (!question) {
       console.error(`No science question found for firewall ${afterFirewall}`);
       // Skip to next math firewall
@@ -1675,7 +1687,7 @@ const App = {
 
       // Move to next firewall
       const nextFW = currentFW + 1;
-      if (nextFW > 10) {
+      if (nextFW > (this.missionState.mathTotal || 10)) {
         this.showVictoryScreen();
       } else {
         // Helper to advance to the next firewall with transition animation

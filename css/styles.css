@@ -2885,3 +2885,83 @@ body {
   border-color: rgba(0,229,255,0.5);
   color: #00e5ff;
 }
+
+/* ============================================
+   MC GAMEPLAY HUD — A/B/C/D Answer Buttons
+   Sized for TV display (readable from 20 feet)
+   ============================================ */
+#adaptive-answer-area.mc-answer-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.mc-answer-label {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--primary-cyan);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.mc-answer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.mc-answer-btn {
+  font-family: var(--font-body);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary-cyan);
+  background: rgba(0, 212, 255, 0.06);
+  border: 3px solid var(--primary-cyan-dim);
+  padding: 1.25rem 1.5rem;
+  min-height: 90px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mc-answer-btn:hover,
+.mc-answer-btn:focus {
+  background: rgba(0, 212, 255, 0.18);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  border-color: var(--primary-cyan);
+  outline: none;
+}
+
+.mc-answer-btn:active {
+  background: rgba(0, 212, 255, 0.3);
+  transform: scale(0.98);
+}
+
+.mc-answer-btn .mc-letter {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.mc-answer-btn .mc-text {
+  font-size: 1.8rem;
+}
+
+.mc-answer-btn.mc-correct {
+  border-color: var(--success-green);
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--success-green);
+}
+
+.mc-answer-btn.mc-wrong {
+  border-color: var(--error-red);
+  background: rgba(255, 68, 68, 0.15);
+  color: var(--error-red);
+}

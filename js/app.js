@@ -988,38 +988,32 @@ const App = {
 
       const container = document.createElement('div');
       container.id = 'adaptive-answer-area';
-      container.style.cssText = 'display: flex; flex-direction: column; gap: 0.6rem; width: 100%;';
+      container.className = 'mc-answer-area';
 
       const label = document.createElement('div');
-      label.style.cssText = 'font-family: Orbitron, sans-serif; font-size: 0.9rem; color: #00d4ff; letter-spacing: 0.15em; text-transform: uppercase; text-align: center;';
+      label.className = 'mc-answer-label';
       label.textContent = 'SELECT YOUR ANSWER';
       container.appendChild(label);
 
       const grid = document.createElement('div');
-      grid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;';
+      grid.className = 'mc-answer-grid';
 
       options.forEach(opt => {
         const btn = document.createElement('button');
-        btn.style.cssText = 'font-family: Rajdhani, sans-serif; font-size: 1.1rem; font-weight: 600; color: #00d4ff; background: rgba(0, 212, 255, 0.08); border: 2px solid #00d4ff; padding: 0.75rem 1rem; min-height: 60px; cursor: pointer; transition: all 0.2s ease; text-align: left; display: flex; align-items: center; gap: 0.75rem;';
+        btn.className = 'mc-answer-btn';
+        btn.dataset.letter = opt.letter;
 
         const letterSpan = document.createElement('span');
-        letterSpan.style.cssText = 'font-family: Orbitron, sans-serif; font-size: 1.3rem; font-weight: 700; min-width: 1.5rem;';
+        letterSpan.className = 'mc-letter';
         letterSpan.textContent = opt.letter;
 
         const textSpan = document.createElement('span');
+        textSpan.className = 'mc-text';
         textSpan.textContent = opt.text;
 
         btn.appendChild(letterSpan);
         btn.appendChild(textSpan);
 
-        btn.addEventListener('mouseenter', () => {
-          btn.style.background = 'rgba(0, 212, 255, 0.2)';
-          btn.style.boxShadow = '0 0 15px rgba(0, 212, 255, 0.3)';
-        });
-        btn.addEventListener('mouseleave', () => {
-          btn.style.background = 'rgba(0, 212, 255, 0.08)';
-          btn.style.boxShadow = 'none';
-        });
         btn.addEventListener('click', () => {
           if (typeof soundManager !== 'undefined') soundManager.play('ui-click');
           this.submitAdaptiveAnswer(opt.letter);
@@ -2096,6 +2090,22 @@ const App = {
             const at = this.missionState.currentProblem?.answerType;
             if (at !== 'comparison' && at !== 'multipleChoice') {
               this.checkAnswer();
+            }
+          }
+          break;
+        case 'KeyA':
+        case 'KeyB':
+        case 'KeyC':
+        case 'KeyD':
+          // MC answer shortcuts — A/B/C/D keys on firewall screen
+          if (this.state.currentScreen === 'firewall' &&
+              this.missionState.currentProblem?.answerType === 'multipleChoice' &&
+              !e.ctrlKey && !e.altKey && !e.metaKey) {
+            const letter = e.code.charAt(3); // 'KeyA' → 'A'
+            const mcBtn = document.querySelector(`.mc-answer-btn[data-letter="${letter}"]`);
+            if (mcBtn) {
+              e.preventDefault();
+              mcBtn.click();
             }
           }
           break;

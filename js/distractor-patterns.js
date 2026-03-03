@@ -46,6 +46,7 @@ DISTRACTOR CONSTRUCTION RULES (MANDATORY FOR ALL MULTIPLE CHOICE):
 6. Every rationale is ONE sentence following this format: "[Description of what the student did wrong], resulting in [value]."
 7. If you cannot trace how a single student error produces a specific value using only the numbers in the problem, do NOT use that value as a distractor.
 8. For MULTI-DIGIT addition or subtraction (any operand >= 100): You MUST show column-by-column work in your distractorReasoning computation field. Work from ones place leftward. At each column, either apply the specific error OR compute normally. Only use the FINAL value your column work produces as the distractor. If your column work produces a different value than what you planned, USE THE COLUMN WORK VALUE — it is correct and your planned value was wrong.
+9. ALL distractor values MUST be positive integers. NEVER generate a negative number as an answer option. Grade 3 students do not encounter negative numbers (negatives are introduced in grade 6 per TEKS 6.2B). For subtraction problems, use smaller-from-larger or no-regroup errors instead of reversed operand order.
 
 BAD EXAMPLE (DO NOT IMITATE):
   Problem: 36 ÷ 6 = ?    Correct: 6
@@ -74,19 +75,37 @@ MULTI-DIGIT ADDITION EXAMPLE (REQUIRED FORMAT FOR OPERANDS >= 100):
 
   NOTE: Every distractor value was DERIVED from the column work, not chosen first. The column work is the proof.
 
+MULTI-DIGIT SUBTRACTION EXAMPLE (REQUIRED FORMAT FOR OPERANDS >= 100):
+  Problem: 514 - 379 = ?    Correct: 135
+
+  Distractor 1 (forgot to reduce hundreds after borrowing):
+  Column work: Ones: 4<9 → borrow from tens: 14-9=5. Tens: 0<7 → borrow from hundreds: 10-7=3. Hundreds: 5-3=2 (ERROR: forgot hundreds was reduced to 4 by the borrow). → 235
+  Rationale: "Did not reduce the hundreds digit after regrouping for the tens, computing 5-3 instead of 4-3, resulting in 235."
+
+  Distractor 2 (smaller-from-larger in every column):
+  Column work: Ones: 9-4=5 (REVERSED: subtracted smaller from larger). Tens: 7-1=6 (REVERSED). Hundreds: 5-3=2. → 265
+  Rationale: "Subtracted the smaller digit from the larger in every column instead of regrouping, resulting in 265."
+
+  Distractor 3 (smaller-from-larger in ones only):
+  Column work: Ones: 9-4=5 (REVERSED: subtracted smaller from larger). Tens: 1<7 → borrow from hundreds: 11-7=4. Hundreds: 4-3=1. → 145
+  Rationale: "Subtracted smaller from larger in the ones column instead of regrouping, resulting in 145."
+
+  NOTE: ALL distractor values are POSITIVE. For subtraction, use regrouping errors and smaller-from-larger reversals — NEVER subtract the larger number from the smaller to get a negative.
+
 ANTI-PATTERNS TO AVOID:
 - NEVER use "but wrote X" or "but answered X" — if your computation doesn't reach the value, the distractor is invalid.
 - NEVER introduce numbers not in the problem (e.g., "divided 24 by 6" when the problem says 36÷6).
 - NEVER generate distractors by picking nearby integers and rationalizing afterward.
 - NEVER use multi-step error chains. Real students make ONE mistake, not three in sequence.
 - For multi-digit problems, NEVER describe a regrouping error without showing column-by-column work. If you say 'failed to regroup' but cannot show which column the error occurred in and what value each column produces, the distractor is invalid.
+- NEVER generate a negative number as a distractor option. Grade 3 students do not encounter negative numbers. For subtraction, use smaller-from-larger or regrouping errors instead of reversing the operand order.
 `;
 
 // ============================================================
 // UNIVERSAL RULES REMINDER (brief version)
 // Injected just before the generation query (recency zone).
 // ============================================================
-const DISTRACTOR_RULES_REMINDER = `Remember: each distractor = exactly ONE student error. Compute the distractor value FROM the error using ONLY numbers in the problem. Write distractorReasoning BEFORE options in your JSON output. Every rationale is ONE sentence: "[Error description], resulting in [value]." For multi-digit addition/subtraction (operands >= 100): show column-by-column work in your distractorReasoning computation field. Ones first, then tens, then hundreds. Only use the value your column work produces.`;
+const DISTRACTOR_RULES_REMINDER = `Remember: each distractor = exactly ONE student error. Compute the distractor value FROM the error using ONLY numbers in the problem. Write distractorReasoning BEFORE options in your JSON output. Every rationale is ONE sentence: "[Error description], resulting in [value]." For multi-digit addition/subtraction (operands >= 100): show column-by-column work in your distractorReasoning computation field. Ones first, then tens, then hundreds. Only use the value your column work produces. ALL distractor values must be positive — never generate negative numbers.`;
 
 // ============================================================
 // PER-TEKS DISTRACTOR PATTERNS

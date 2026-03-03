@@ -45,6 +45,7 @@ DISTRACTOR CONSTRUCTION RULES (MANDATORY FOR ALL MULTIPLE CHOICE):
 5. In your JSON output, write the "distractorReasoning" array BEFORE the "options" array.
 6. Every rationale is ONE sentence following this format: "[Description of what the student did wrong], resulting in [value]."
 7. If you cannot trace how a single student error produces a specific value using only the numbers in the problem, do NOT use that value as a distractor.
+8. For MULTI-DIGIT addition or subtraction (any operand >= 100): You MUST show column-by-column work in your distractorReasoning computation field. Work from ones place leftward. At each column, either apply the specific error OR compute normally. Only use the FINAL value your column work produces as the distractor. If your column work produces a different value than what you planned, USE THE COLUMN WORK VALUE — it is correct and your planned value was wrong.
 
 BAD EXAMPLE (DO NOT IMITATE):
   Problem: 36 ÷ 6 = ?    Correct: 6
@@ -56,18 +57,36 @@ GOOD EXAMPLE (IMITATE THIS):
   Distractors: 30, 42, 216
   WHY GOOD: 30 = 36-6 (subtracted instead of dividing). 42 = 36+6 (added instead of dividing). 216 = 36×6 (multiplied instead of dividing). Wide spread, each targets a specific wrong-operation error.
 
+MULTI-DIGIT ADDITION EXAMPLE (REQUIRED FORMAT FOR OPERANDS >= 100):
+  Problem: 438 + 375 = ?    Correct: 813
+
+  Distractor 1 (no regroup at tens AND hundreds):
+  Column work: Ones: 8+5=13 → write 3, carry 1. Tens: 3+7=10 → write 0 (DROPPED carry from ones). Hundreds: 4+3=7 (DROPPED carry from tens). → 703
+  Rationale: "Added without regrouping at the tens or hundreds places, resulting in 703."
+
+  Distractor 2 (no regroup at hundreds only):
+  Column work: Ones: 8+5=13 → write 3, carry 1. Tens: 3+7+1=11 → write 1, carry 1. Hundreds: 4+3=7 (DROPPED carry from tens). → 713
+  Rationale: "Regrouped correctly at the tens place but not at the hundreds place, resulting in 713."
+
+  Distractor 3 (ones-place arithmetic error):
+  Column work: Ones: 8+5=14 (ERROR: should be 13) → write 4, carry 1. Tens: 3+7+1=11 → write 1, carry 1. Hundreds: 4+3+1=8. → 814
+  Rationale: "Made an arithmetic error adding the ones digits, resulting in 814."
+
+  NOTE: Every distractor value was DERIVED from the column work, not chosen first. The column work is the proof.
+
 ANTI-PATTERNS TO AVOID:
 - NEVER use "but wrote X" or "but answered X" — if your computation doesn't reach the value, the distractor is invalid.
 - NEVER introduce numbers not in the problem (e.g., "divided 24 by 6" when the problem says 36÷6).
 - NEVER generate distractors by picking nearby integers and rationalizing afterward.
 - NEVER use multi-step error chains. Real students make ONE mistake, not three in sequence.
+- For multi-digit problems, NEVER describe a regrouping error without showing column-by-column work. If you say 'failed to regroup' but cannot show which column the error occurred in and what value each column produces, the distractor is invalid.
 `;
 
 // ============================================================
 // UNIVERSAL RULES REMINDER (brief version)
 // Injected just before the generation query (recency zone).
 // ============================================================
-const DISTRACTOR_RULES_REMINDER = `Remember: each distractor = exactly ONE student error. Compute the distractor value FROM the error using ONLY numbers in the problem. Write distractorReasoning BEFORE options in your JSON output. Every rationale is ONE sentence: "[Error description], resulting in [value]."`;
+const DISTRACTOR_RULES_REMINDER = `Remember: each distractor = exactly ONE student error. Compute the distractor value FROM the error using ONLY numbers in the problem. Write distractorReasoning BEFORE options in your JSON output. Every rationale is ONE sentence: "[Error description], resulting in [value]." For multi-digit addition/subtraction (operands >= 100): show column-by-column work in your distractorReasoning computation field. Ones first, then tens, then hundreds. Only use the value your column work produces.`;
 
 // ============================================================
 // PER-TEKS DISTRACTOR PATTERNS

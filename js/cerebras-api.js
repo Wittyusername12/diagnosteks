@@ -273,8 +273,8 @@ class CerebrasAPI {
     const operandAssignments = generateMissionOperands(teksCodes, count);
 
     const messages = [
-      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments, format, answerFormat) },
-      { role: 'user', content: `Generate ${count} math problems for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}. For pre-selected problems, use the EXACT numbers provided. Output operation and operands so JavaScript can independently calculate each answer.` }
+      { role: 'system', content: this._buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments, format, answerFormat, teksCodes) },
+      { role: 'user', content: `Generate ${count} math problems for grade ${gradeLevel} using TEKS: ${teksCodes.join(', ')}. For pre-selected problems, use the EXACT numbers provided. Output operation and operands so JavaScript can independently calculate each answer.${(answerFormat === 'mc' || answerFormat === 'mix') && typeof DISTRACTOR_RULES_REMINDER !== 'undefined' ? '\n\n' + DISTRACTOR_RULES_REMINDER : ''}` }
     ];
 
     const raw = await this._callWorker(messages, 0.7);
@@ -347,7 +347,7 @@ class CerebrasAPI {
      PROMPT BUILDERS
      ========================================= */
 
-  _buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments = [], format = 'mix', answerFormat = 'open') {
+  _buildMathSystemPrompt(gradeLevel, teksDescriptions, exemplars, crossCurricular, scienceTeksDescriptions, operandAssignments = [], format = 'mix', answerFormat = 'open', teksCodes = []) {
     const count = this.config.mathProblemsPerMission || 10;
 
     // Grade-specific number ranges
@@ -433,6 +433,11 @@ GOOD: "Tony Stark is upgrading 4 suits of armor in his lab. Each suit needs 9 ne
 DIAGNOSTIC PROBLEMS:
 Design at least 2 problems to reveal common student errors. Examples: carrying/borrowing across zeros, reversible digit answers, fraction misconceptions. Set "diagnosticFor" to an array describing the misconception (e.g., ["borrowing-across-zero"]).`;
 
+    // === BLOCK 1B: UNIVERSAL DISTRACTOR RULES (primacy zone — only when MC active) ===
+    if ((answerFormat === 'mc' || answerFormat === 'mix') && typeof UNIVERSAL_DISTRACTOR_RULES !== 'undefined') {
+      prompt += '\n\n' + UNIVERSAL_DISTRACTOR_RULES;
+    }
+
     // === BLOCK 2: FEW-SHOT EXEMPLARS ===
     if (exemplars && exemplars.length > 0) {
       prompt += `
@@ -487,61 +492,18 @@ Generate exactly ${ratio.word} of the ${count} math problems as word problems wi
 
 ANSWER FORMAT: MULTIPLE CHOICE
 ALL ${count} problems must use answerType "multipleChoice". For EACH problem, include these additional JSON fields:
+- "distractorReasoning": array of 3 strings — for each distractor, describe the single student error and compute the resulting value. Write this BEFORE generating options.
 - "options": array of 4 objects [{"letter": "A", "text": "..."}, {"letter": "B", "text": "..."}, {"letter": "C", "text": "..."}, {"letter": "D", "text": "..."}]
 - "correctAnswer": the letter (A, B, C, or D) of the correct option
-- "distractorRationales": object with 3 keys (one per wrong answer letter), each a 2-3 sentence STAAR-quality rationale
+- "distractorRationales": object with 3 keys (one per wrong answer letter), each a 1-sentence rationale
 
 MULTIPLE CHOICE RULES:
-5. Each problem must have exactly 4 options (A, B, C, D). One is correct, three are distractors.
-6. The correct answer's position (A, B, C, or D) must be RANDOMIZED — vary across problems.
-7. Each distractor must target a DIFFERENT common student error for this TEKS — not random wrong numbers.
-8. Distractors must be plausible: within grade-appropriate number ranges, positive whole numbers (for grades 1-3), and distinct from each other and the correct answer.
-9. Do NOT include correctAnswer as a separate numeric field — JavaScript computes the answer independently. The correctAnswer field is ONLY the letter.
-
-DISTRACTOR GENERATION ALGORITHM — follow this EXACTLY:
-Step 1: Identify the operation and operands (a, b) and correct answer (c).
-Step 2: Generate 3 distractors using the SPECIFIC rules below for each operation type.
-Step 3: Compute each distractor value FIRST from the error, THEN write the rationale explaining that single-step error.
-Step 4: All 4 option values (1 correct + 3 distractors) must be DISTINCT and WIDELY SPREAD — never consecutive integers.
-
-DISTRACTOR RECIPES BY OPERATION:
-
-For ADD problems (a + b = c):
-- Distractor 1 — Wrong operation: a − b (subtracted instead of adding)
-- Distractor 2 — Regrouping error: c ± 10 (forgot to carry or carried extra to tens place)
-- Distractor 3 — Partial computation: a + (tens digit of b only) or (tens digit of a) + b, or a wrong-operation variant like a × b if the numbers are small
-
-For SUBTRACT problems (a − b = c):
-- Distractor 1 — Wrong operation: a + b (added instead of subtracting)
-- Distractor 2 — Reversed operands: b − a (if b < a, use |b − a|) or regrouping error: c ± 10
-- Distractor 3 — Wrong operation: a × b (multiplied instead of subtracting) or partial computation error
-
-For MULTIPLY problems (a × b = c):
-- Distractor 1 — Wrong operation: a + b (added instead of multiplying)
-- Distractor 2 — Neighbor fact: (a−1) × b or a × (b−1) (confused with adjacent multiplication fact)
-- Distractor 3 — Other neighbor fact: (a+1) × b or a × (b+1), or a − b if distinct from other distractors
-
-For DIVIDE problems (a ÷ b = c):
-- Distractor 1 — Wrong operation: a × b (multiplied instead of dividing)
-- Distractor 2 — Wrong operation: a − b (subtracted instead of dividing) or a + b (added instead)
-- Distractor 3 — Operand confusion: b itself (confused divisor with quotient)
-
-COLLISION RULES: If any distractor equals the correct answer or another distractor, replace it with the next recipe in the list. If a − b = a + b (e.g., a=0), skip that recipe.
-
-REAL STAAR EXAMPLES showing this algorithm in action:
-• 7 × 8 = 56: distractors 15 (7+8, wrong op), 42 (6×7, neighbor fact), 48 (6×8, neighbor fact). Values: 15, 42, 48, 56 — widely spread.
-• 27 ÷ 9 = 3: distractors 18 (27−9, wrong op), 36 (27+9, wrong op), 9 (operand confusion). Values: 3, 9, 18, 36 — widely spread.
-• 4 × 6 = 24: distractors 10 (4+6, wrong op), 20 (4×5, neighbor fact), 28 (4×7, neighbor fact). Values: 10, 20, 24, 28 — widely spread.
-
-RATIONALE FORMAT: Each rationale MUST be one clear sentence:
-"The student likely [SINGLE error], resulting in [wrong computation with numbers]. The student needs to focus on [specific skill]."
-
-CRITICAL RULES:
-- Every distractor MUST be reachable in exactly ONE step from the given operands.
-- NEVER use consecutive integers near the correct answer (e.g., 48, 49, 50, 51). This has ZERO diagnostic value.
-- NEVER fabricate multi-step error chains (e.g., "added then divided then subtracted").
-- Compute the distractor value FIRST from a single misconception, THEN write the rationale.
-- All 4 option values must be DISTINCT. No two options may have the same numeric value.`;
+1. Each problem must have exactly 4 options (A, B, C, D). One is correct, three are distractors.
+2. The correct answer's position (A, B, C, or D) must be RANDOMIZED — vary across problems.
+3. Each distractor must target a DIFFERENT common student error for this TEKS — not random wrong numbers.
+4. Distractors must be plausible: within grade-appropriate number ranges, positive whole numbers (for grades 1-3), and distinct from each other and the correct answer.
+5. Do NOT include correctAnswer as a separate numeric field — JavaScript computes the answer independently. The correctAnswer field is ONLY the letter.
+6. Follow the DISTRACTOR CONSTRUCTION RULES provided earlier in this prompt. Compute each distractor value FROM a single student error FIRST, then write the rationale.`;
     } else if (answerFormat === 'mix') {
       // Same ratio logic as Problem Format mix: randomly pick 40/60, 50/50, or 60/40
       const mcMixOptions = [
@@ -566,27 +528,32 @@ CRITICAL RULES:
       prompt += `
 
 ANSWER FORMAT ASSIGNMENT:
-Problems ${mcNums}: Multiple Choice (answerType "multipleChoice"). Include "options" (4 choices A-D), "correctAnswer" (letter), and "distractorRationales" (object with 3 keys explaining each distractor).
+Problems ${mcNums}: Multiple Choice (answerType "multipleChoice"). Include "distractorReasoning" (array of 3 strings), "options" (4 choices A-D), "correctAnswer" (letter), and "distractorRationales" (object with 3 keys explaining each distractor).
 Problems ${orNums.join(', ')}: Open Response (answerType "integer", no options needed).
 
 MULTIPLE CHOICE RULES (for MC problems only):
-5. Each MC problem must have exactly 4 options (A, B, C, D). One is correct, three are distractors.
-6. The correct answer's position must be RANDOMIZED — vary across problems.
-7. Each distractor must target a DIFFERENT common student error for this TEKS.
-8. Distractors must be plausible: grade-appropriate, positive whole numbers (grades 1-3), distinct.
-9. Do NOT include correctAnswer as a separate numeric field — the correctAnswer field is ONLY the letter.
-
-DISTRACTOR ALGORITHM (required for each MC problem):
-Generate distractors using SINGLE-STEP errors from the given operands:
-- ADD/SUBTRACT: wrong operation (a−b or a+b), regrouping error (answer ± 10), partial computation
-- MULTIPLY: wrong operation (a+b), neighbor fact ((a±1)×b or a×(b±1))
-- DIVIDE: wrong operation (a×b, a−b, or a+b), operand confusion (b itself)
-Compute distractor value FIRST, then write rationale. All 4 values must be DISTINCT and WIDELY SPREAD — never consecutive integers.
-STAAR EXAMPLE: 7×8=56 → distractors: 15 (added 7+8), 42 (neighbor 6×7), 48 (neighbor 6×8). Spread: 15,42,48,56.
-Each rationale: "The student likely [ONE error], resulting in [computation]. The student needs to focus on [skill]."
-NEVER fabricate multi-step error chains. NEVER use consecutive integers near the correct answer.`;
+1. Each MC problem must have exactly 4 options (A, B, C, D). One is correct, three are distractors.
+2. The correct answer's position must be RANDOMIZED — vary across problems.
+3. Each distractor must target a DIFFERENT common student error for this TEKS.
+4. Distractors must be plausible: grade-appropriate, positive whole numbers (grades 1-3), distinct.
+5. Do NOT include correctAnswer as a separate numeric field — the correctAnswer field is ONLY the letter.
+6. Follow the DISTRACTOR CONSTRUCTION RULES provided earlier in this prompt. Compute each distractor value FROM a single student error FIRST, then write the rationale.`;
     }
     // answerFormat === 'open': no MC instructions, prompt stays as-is (zero regression)
+
+    // === BLOCK 4C: PER-TEKS DISTRACTOR PATTERNS (near-recency zone — only when MC active) ===
+    if ((answerFormat === 'mc' || answerFormat === 'mix') && typeof selectDistractorPatterns === 'function') {
+      const distractorGuides = selectDistractorPatterns(teksCodes);
+      if (distractorGuides.length > 0) {
+        prompt += `
+
+TEKS-SPECIFIC DISTRACTOR PATTERNS (from real TEA STAAR rationale documents — study these worked examples):
+${JSON.stringify(distractorGuides, null, 2)}
+
+Use these patterns as models. For each MC problem, identify which pattern applies to its operation and TEKS, then follow the construction rule and examples shown.`;
+        console.log(`[CerebrasAPI] Injected ${distractorGuides.length} TEKS distractor pattern guide(s) for: ${teksCodes.join(', ')}`);
+      }
+    }
 
     // === BLOCK 5: PRE-SELECTED NUMBERS ===
     if (operandAssignments && operandAssignments.length > 0) {
@@ -1234,7 +1201,18 @@ RULES:
 
     // MC instructions for regeneration (preserve answer format)
     if (opts.answerType === 'multipleChoice') {
-      prompt += `\n\nANSWER FORMAT: MULTIPLE CHOICE\nThis problem uses Multiple Choice. You MUST include:\n- "options": array of 4 objects [{"letter": "A", "text": "..."}, ...]\n- "correctAnswer": the letter (A, B, C, or D) of the correct option\n- "distractorRationales": object with 3 keys for wrong answers\nSet answerType to "multipleChoice". Randomize correct answer position.\n\nDISTRACTOR ALGORITHM: Generate distractors using SINGLE-STEP errors from the given operands:\n- ADD/SUBTRACT: wrong operation (a−b or a+b), regrouping error (answer ± 10)\n- MULTIPLY: wrong operation (a+b), neighbor fact ((a±1)×b or a×(b±1))\n- DIVIDE: wrong operation (a×b, a−b, a+b), operand confusion (b)\nCompute distractor value FIRST, then write rationale. All 4 values MUST be DISTINCT and WIDELY SPREAD.\nExample: 7×8=56 → distractors 15 (7+8), 42 (6×7), 48 (6×8). Spread: 15,42,48,56.\nEach rationale: "The student likely [ONE error], resulting in [computation]. The student needs to focus on [skill]."\nNEVER use consecutive integers. NEVER fabricate multi-step error chains.`;
+      // Inject universal distractor rules (primacy-style, but in regeneration prompt)
+      if (typeof UNIVERSAL_DISTRACTOR_RULES !== 'undefined') {
+        prompt += '\n\n' + UNIVERSAL_DISTRACTOR_RULES;
+      }
+      prompt += `\n\nANSWER FORMAT: MULTIPLE CHOICE\nThis problem uses Multiple Choice. You MUST include:\n- "distractorReasoning": array of 3 strings — for each distractor, describe the single student error and compute the resulting value. Write this BEFORE generating options.\n- "options": array of 4 objects [{"letter": "A", "text": "..."}, ...]\n- "correctAnswer": the letter (A, B, C, or D) of the correct option\n- "distractorRationales": object with 3 keys for wrong answers\nSet answerType to "multipleChoice". Randomize correct answer position.\nFollow the DISTRACTOR CONSTRUCTION RULES above. Compute each distractor value FROM a single student error FIRST, then write the rationale.`;
+      // Inject per-TEKS distractor patterns (near-recency)
+      if (typeof selectDistractorPatterns === 'function') {
+        const regenDistrGuides = selectDistractorPatterns([teksCode]);
+        if (regenDistrGuides.length > 0) {
+          prompt += `\n\nTEKS-SPECIFIC DISTRACTOR PATTERNS (from real TEA STAAR rationale documents):\n${JSON.stringify(regenDistrGuides, null, 2)}`;
+        }
+      }
     }
 
     // Difficulty-shift path: tell the LLM the original problem and what direction to move
@@ -1264,9 +1242,10 @@ TEACHER REQUEST: Generate a problem with ${dir} numbers than the original.
       prompt += `\n\nTEACHER FEEDBACK — address this: "${feedback}"`;
     }
 
+    const regenUserMsg = `Generate 1 math problem for grade ${gradeLevel}, TEKS ${teksCode}.${opts.answerType === 'multipleChoice' && typeof DISTRACTOR_RULES_REMINDER !== 'undefined' ? '\n\n' + DISTRACTOR_RULES_REMINDER : ''}`;
     const messages = [
       { role: 'system', content: prompt },
-      { role: 'user', content: `Generate 1 math problem for grade ${gradeLevel}, TEKS ${teksCode}.` }
+      { role: 'user', content: regenUserMsg }
     ];
 
     const raw = await this._callWorker(messages, 0.7);

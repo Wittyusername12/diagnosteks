@@ -728,6 +728,17 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
         const isComputation = ['ADD', 'SUBTRACT', 'MULTIPLY', 'DIVIDE',
           'DECIMAL_ADD', 'DECIMAL_SUBTRACT', 'DECIMAL_MULTIPLY'].includes(operation);
 
+        // Build distractorRationales: use LLM-provided object, or construct from reasoning array
+        let rationales = p.distractorRationales || null;
+        if (!rationales && Array.isArray(p.distractorReasoning) && p.distractorReasoning.length >= 3) {
+          const distractorLetters = ['A', 'B', 'C', 'D'].filter(l => l !== mcCorrectLetter);
+          rationales = {};
+          distractorLetters.forEach((letter, i) => {
+            if (p.distractorReasoning[i]) rationales[letter] = p.distractorReasoning[i];
+          });
+          console.log('[CerebrasAPI] Built distractorRationales from distractorReasoning for', mcCorrectLetter);
+        }
+
         if (isComputation && p.operands && p.operands.length >= 2) {
           // MC math problem: compute answer from operands, keep options
           const operands = this._validateOperands(p.operands, operation);
@@ -744,7 +755,7 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
             operands,
             options: mcOptions,
             distractorReasoning: p.distractorReasoning || null,
-            distractorRationales: p.distractorRationales || null,
+            distractorRationales: rationales,
             teks: p.teksCode || p.teks || '',
             primaryType: p.primaryType || 'computation',
             difficulty: p.difficulty || 'medium',
@@ -765,7 +776,7 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
           operands: p.operands || [],
           options: mcOptions,
           distractorReasoning: p.distractorReasoning || null,
-          distractorRationales: p.distractorRationales || null,
+          distractorRationales: rationales,
           teks: p.teksCode || p.teks || '',
           primaryType: p.primaryType || 'conceptual',
           difficulty: p.difficulty || 'medium',

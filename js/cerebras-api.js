@@ -1122,8 +1122,10 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
     const teksDesc = this._getTeksDescriptions(gradeLevel, 'math', [teksCode]);
 
     // Detect if teacher requested easier or harder numbers
+    // Skip detection when mathConstraints is set — teacher wants exact same numbers (e.g., MC/OR conversion)
     const fbLower = (feedback || '').toLowerCase();
-    const difficultyShift = (fbLower.includes('smaller') || fbLower.includes('simpler')) ? 'easier'
+    const difficultyShift = opts.mathConstraints ? null
+      : (fbLower.includes('smaller') || fbLower.includes('simpler')) ? 'easier'
       : (fbLower.includes('larger') || fbLower.includes('more complex') || fbLower.includes('difficulty')) ? 'harder'
       : null;
 

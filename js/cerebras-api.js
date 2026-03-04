@@ -199,6 +199,100 @@ function generateMissionOperands(mathTeks, numProblems) {
   return assignments;
 }
 
+// ============================================================
+// PRE-COMPUTED DISTRACTOR VALUES — JavaScript picks values,
+// LLM writes rationales. Digit-by-digit algorithms verified
+// against real STAAR rationale documents (2019-2025).
+// Pure function, no side effects.
+// ============================================================
+
+function computeDistractorValues(operation, op1, op2, correctAnswer) {
+  const candidates = [];
+
+  switch (operation) {
+    case 'ADD': {
+      // (a) Wrong operation — subtracted instead of adding
+      candidates.push(Math.abs(op1 - op2));
+      // (b) Regrouping failure — add each column mod 10, no carrying
+      //     Verified: 438+375→703 (STAAR 2019 #15 Option B)
+      let noCarry = 0, placeA = 1, tmpA1 = op1, tmpB1 = op2;
+      while (tmpA1 > 0 || tmpB1 > 0) {
+        noCarry += ((tmpA1 % 10) + (tmpB1 % 10)) % 10 * placeA;
+        tmpA1 = Math.floor(tmpA1 / 10);
+        tmpB1 = Math.floor(tmpB1 / 10);
+        placeA *= 10;
+      }
+      // If no carrying needed, regrouping failure = correct; use fallback
+      if (noCarry !== correctAnswer && noCarry > 0) {
+        candidates.push(noCarry);
+      } else {
+        candidates.push(correctAnswer - 1);
+      }
+      // (c) Ones column error
+      candidates.push(correctAnswer + 1);
+      break;
+    }
+    case 'SUBTRACT': {
+      // (a) Wrong operation — added instead of subtracting
+      //     Verified: 375-83→458 (STAAR 2024 #1 Option C)
+      candidates.push(op1 + op2);
+      // (b) Direction reversal — |top - bottom| per column, no regrouping
+      //     Verified: 514-379→265 (STAAR 2021 #20 Option H)
+      let dirRev = 0, placeS = 1, tmpA2 = op1, tmpB2 = op2;
+      const len = Math.max(String(op1).length, String(op2).length);
+      for (let i = 0; i < len; i++) {
+        dirRev += Math.abs((tmpA2 % 10) - (tmpB2 % 10)) * placeS;
+        tmpA2 = Math.floor(tmpA2 / 10);
+        tmpB2 = Math.floor(tmpB2 / 10);
+        placeS *= 10;
+      }
+      candidates.push(dirRev || (correctAnswer + 5));
+      // (c) Borrow error — forgot to reduce tens after borrowing
+      candidates.push(correctAnswer + 10);
+      break;
+    }
+    case 'MULTIPLY': {
+      // (a) Wrong operation — added
+      candidates.push(op1 + op2);
+      // (b) Wrong operation — subtracted
+      candidates.push(Math.abs(op1 - op2));
+      // (c) Neighbor fact
+      let neighbor = op1 * (op2 + 1);
+      if (neighbor === correctAnswer) neighbor = op1 * (op2 - 1);
+      candidates.push(neighbor);
+      break;
+    }
+    case 'DIVIDE': {
+      // (a) Wrong operation — multiplied
+      candidates.push(op1 * op2);
+      // (b) Wrong operation — subtracted
+      candidates.push(Math.abs(op1 - op2));
+      // (c) Wrong operation — added
+      candidates.push(op1 + op2);
+      break;
+    }
+    default:
+      return null;
+  }
+
+  // Filter: remove values equal to correctAnswer or <= 0, then deduplicate
+  let filtered = candidates.filter(v => v !== correctAnswer && v > 0);
+  filtered = [...new Set(filtered)];
+
+  // Fill if fewer than 3 unique values remain
+  const fillers = [correctAnswer + 10, correctAnswer - 10, correctAnswer + 100];
+  for (const f of fillers) {
+    if (filtered.length >= 3) break;
+    if (f > 0 && f !== correctAnswer && !filtered.includes(f)) {
+      filtered.push(f);
+    }
+  }
+
+  // Return exactly 3, sorted ascending
+  filtered = filtered.slice(0, 3).sort((a, b) => a - b);
+  return filtered.length === 3 ? filtered : null;
+}
+
 class CerebrasAPI {
   constructor(config) {
     this.config = config || window.CEREBRAS_CONFIG || {};
@@ -560,10 +654,33 @@ Use these patterns as models. For each MC problem, identify which pattern applie
       const opSymbols = { 'ADD': '+', 'SUBTRACT': '\u2212', 'MULTIPLY': '\u00D7', 'DIVIDE': '\u00F7' };
       const lines = operandAssignments.map((a, i) => {
         const diff = i < 3 ? 'easy' : i < 7 ? 'medium' : 'hard';
+        let line;
         if (a.operation) {
-          return `Problem ${i + 1}: ${a.operation} ${a.operands[0]} ${opSymbols[a.operation] || '?'} ${a.operands[1]}, TEKS ${a.teks}, ${diff}`;
+          line = `Problem ${i + 1}: ${a.operation} ${a.operands[0]} ${opSymbols[a.operation] || '?'} ${a.operands[1]}, TEKS ${a.teks}, ${diff}`;
+        } else {
+          line = `Problem ${i + 1}: (your choice of operation and numbers), TEKS ${a.teks}, ${diff}`;
         }
-        return `Problem ${i + 1}: (your choice of operation and numbers), TEKS ${a.teks}, ${diff}`;
+
+        // Pre-compute distractor values for MC problems
+        const isMC = answerFormat === 'mc' || (answerFormat === 'mix' && mcIndices && mcIndices.includes(i));
+        if (isMC && a.operation && a.operands && a.operands.length >= 2) {
+          const correctVal = this._computeAnswer(a.operation, a.operands);
+          const dVals = computeDistractorValues(a.operation, a.operands[0], a.operands[1], correctVal);
+          if (dVals) {
+            const positions = ['A', 'B', 'C', 'D'];
+            const correctPos = positions[Math.floor(Math.random() * 4)];
+            const dPos = positions.filter(p => p !== correctPos);
+            line += `\n  REQUIRED DISTRACTOR VALUES (do NOT compute your own):
+  Option ${correctPos}: ${correctVal} (CORRECT ANSWER)
+  Option ${dPos[0]}: ${dVals[0]}
+  Option ${dPos[1]}: ${dVals[1]}
+  Option ${dPos[2]}: ${dVals[2]}
+  Set correctAnswer to "${correctPos}". Write a 1-sentence rationale for each distractor explaining what student arithmetic error produces that exact value.`;
+            console.log(`[CerebrasAPI] Pre-computed distractor values for problem ${i + 1}: [${dVals.join(', ')}] (operation: ${a.operation})`);
+          }
+        }
+
+        return line;
       });
 
       prompt += `
@@ -1245,6 +1362,32 @@ TEACHER REQUEST: Generate a problem with ${dir} numbers than the original.
       // Standard path: use pre-generated operands
       const opSymbols = { 'ADD': '+', 'SUBTRACT': '−', 'MULTIPLY': '×', 'DIVIDE': '÷' };
       prompt += `\n\nPRE-SELECTED NUMBERS: ${operandResult.operation} ${operandResult.operands[0]} ${opSymbols[operandResult.operation] || '?'} ${operandResult.operands[1]}, TEKS ${teksCode}. Use these EXACT numbers in your problem.`;
+    }
+
+    // Pre-computed distractor values for MC regeneration
+    if (opts.answerType === 'multipleChoice') {
+      let regenOp1, regenOp2, regenOperation, regenAnswer;
+      if (opts.mathConstraints && opts.mathConstraints.operands && opts.mathConstraints.operands.length >= 2) {
+        regenOp1 = opts.mathConstraints.operands[0];
+        regenOp2 = opts.mathConstraints.operands[1];
+        regenOperation = opts.mathConstraints.operation;
+        regenAnswer = opts.mathConstraints.answer;
+      } else if (!difficultyShift && operandResult && operandResult.operation) {
+        regenOp1 = operandResult.operands[0];
+        regenOp2 = operandResult.operands[1];
+        regenOperation = operandResult.operation;
+        regenAnswer = this._computeAnswer(regenOperation, [regenOp1, regenOp2]);
+      }
+      if (regenOp1 !== undefined && regenOperation) {
+        const dVals = computeDistractorValues(regenOperation, regenOp1, regenOp2, regenAnswer);
+        if (dVals) {
+          const positions = ['A', 'B', 'C', 'D'];
+          const correctPos = positions[Math.floor(Math.random() * 4)];
+          const dPos = positions.filter(p => p !== correctPos);
+          prompt += `\n\nREQUIRED DISTRACTOR VALUES (do NOT compute your own):\nOption ${correctPos}: ${regenAnswer} (CORRECT ANSWER)\nOption ${dPos[0]}: ${dVals[0]}\nOption ${dPos[1]}: ${dVals[1]}\nOption ${dPos[2]}: ${dVals[2]}\nSet correctAnswer to "${correctPos}". Write a 1-sentence rationale for each distractor explaining what student arithmetic error produces that exact value.`;
+          console.log(`[CerebrasAPI] Pre-computed distractor values for regen: [${dVals.join(', ')}] (operation: ${regenOperation})`);
+        }
+      }
     }
 
     // Few-shot exemplars

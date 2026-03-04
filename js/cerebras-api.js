@@ -206,6 +206,30 @@ function generateMissionOperands(mathTeks, numProblems) {
 // Pure function, no side effects.
 // ============================================================
 
+// Shared column-arithmetic helpers used by compute and label functions
+function _regroupFailAdd(a, b) {
+  let result = 0, place = 1, tmpA = a, tmpB = b;
+  while (tmpA > 0 || tmpB > 0) {
+    result += ((tmpA % 10) + (tmpB % 10)) % 10 * place;
+    tmpA = Math.floor(tmpA / 10);
+    tmpB = Math.floor(tmpB / 10);
+    place *= 10;
+  }
+  return result;
+}
+
+function _directionReversalSub(a, b) {
+  let result = 0, place = 1, tmpA = a, tmpB = b;
+  const len = Math.max(String(a).length, String(b).length);
+  for (let i = 0; i < len; i++) {
+    result += Math.abs((tmpA % 10) - (tmpB % 10)) * place;
+    tmpA = Math.floor(tmpA / 10);
+    tmpB = Math.floor(tmpB / 10);
+    place *= 10;
+  }
+  return result;
+}
+
 function computeDistractorValues(operation, op1, op2, correctAnswer) {
   const candidates = [];
 
@@ -215,13 +239,7 @@ function computeDistractorValues(operation, op1, op2, correctAnswer) {
       candidates.push(Math.abs(op1 - op2));
       // (b) Regrouping failure — add each column mod 10, no carrying
       //     Verified: 438+375→703 (STAAR 2019 #15 Option B)
-      let noCarry = 0, placeA = 1, tmpA1 = op1, tmpB1 = op2;
-      while (tmpA1 > 0 || tmpB1 > 0) {
-        noCarry += ((tmpA1 % 10) + (tmpB1 % 10)) % 10 * placeA;
-        tmpA1 = Math.floor(tmpA1 / 10);
-        tmpB1 = Math.floor(tmpB1 / 10);
-        placeA *= 10;
-      }
+      const noCarry = _regroupFailAdd(op1, op2);
       // If no carrying needed, regrouping failure = correct; use fallback
       if (noCarry !== correctAnswer && noCarry > 0) {
         candidates.push(noCarry);
@@ -238,14 +256,7 @@ function computeDistractorValues(operation, op1, op2, correctAnswer) {
       candidates.push(op1 + op2);
       // (b) Direction reversal — |top - bottom| per column, no regrouping
       //     Verified: 514-379→265 (STAAR 2021 #20 Option H)
-      let dirRev = 0, placeS = 1, tmpA2 = op1, tmpB2 = op2;
-      const len = Math.max(String(op1).length, String(op2).length);
-      for (let i = 0; i < len; i++) {
-        dirRev += Math.abs((tmpA2 % 10) - (tmpB2 % 10)) * placeS;
-        tmpA2 = Math.floor(tmpA2 / 10);
-        tmpB2 = Math.floor(tmpB2 / 10);
-        placeS *= 10;
-      }
+      const dirRev = _directionReversalSub(op1, op2);
       candidates.push(dirRev || (correctAnswer + 5));
       // (c) Borrow error — forgot to reduce tens after borrowing
       candidates.push(correctAnswer + 10);
@@ -291,6 +302,51 @@ function computeDistractorValues(operation, op1, op2, correctAnswer) {
   // Return exactly 3, sorted ascending
   filtered = filtered.slice(0, 3).sort((a, b) => a - b);
   return filtered.length === 3 ? filtered : null;
+}
+
+// ============================================================
+// DISTRACTOR LABELING — reverse-identifies which algorithm
+// produced each value and attaches a STAAR-language hint.
+// ============================================================
+
+function labelDistractorValues(operation, op1, op2, correctAnswer, values) {
+  return values.map(v => {
+    switch (operation) {
+      case 'ADD':
+        if (v === Math.abs(op1 - op2))
+          return { value: v, label: 'wrong-operation', hint: 'The student subtracted instead of adding.' };
+        if (v === _regroupFailAdd(op1, op2) && v !== correctAnswer)
+          return { value: v, label: 'regrouping-failure', hint: 'The student added each column without regrouping (carrying).' };
+        if (v === correctAnswer + 1 || v === correctAnswer - 1)
+          return { value: v, label: 'ones-error', hint: 'The student made an error in the ones column.' };
+        break;
+      case 'SUBTRACT':
+        if (v === op1 + op2)
+          return { value: v, label: 'wrong-operation', hint: 'The student added instead of subtracting.' };
+        if (v === _directionReversalSub(op1, op2) && v !== correctAnswer)
+          return { value: v, label: 'direction-reversal', hint: 'The student subtracted the smaller digit from the larger in each column instead of regrouping.' };
+        if (v === correctAnswer + 10)
+          return { value: v, label: 'borrow-error', hint: 'The student forgot to reduce the tens digit after borrowing.' };
+        break;
+      case 'MULTIPLY':
+        if (v === op1 + op2)
+          return { value: v, label: 'wrong-operation', hint: 'The student added instead of multiplying.' };
+        if (v === Math.abs(op1 - op2))
+          return { value: v, label: 'wrong-operation', hint: 'The student subtracted instead of multiplying.' };
+        if (v === op1 * (op2 + 1) || v === op1 * (op2 - 1))
+          return { value: v, label: 'neighbor-fact', hint: 'The student recalled a nearby multiplication fact.' };
+        break;
+      case 'DIVIDE':
+        if (v === op1 * op2)
+          return { value: v, label: 'wrong-operation', hint: 'The student multiplied instead of dividing.' };
+        if (v === Math.abs(op1 - op2))
+          return { value: v, label: 'wrong-operation', hint: 'The student subtracted instead of dividing.' };
+        if (v === op1 + op2)
+          return { value: v, label: 'wrong-operation', hint: 'The student added instead of dividing.' };
+        break;
+    }
+    return { value: v, label: 'nearby-value', hint: 'The student made a computational error.' };
+  });
 }
 
 class CerebrasAPI {
@@ -667,16 +723,17 @@ Use these patterns as models. For each MC problem, identify which pattern applie
           const correctVal = this._computeAnswer(a.operation, a.operands);
           const dVals = computeDistractorValues(a.operation, a.operands[0], a.operands[1], correctVal);
           if (dVals) {
+            const labeled = labelDistractorValues(a.operation, a.operands[0], a.operands[1], correctVal, dVals);
             const positions = ['A', 'B', 'C', 'D'];
             const correctPos = positions[Math.floor(Math.random() * 4)];
             const dPos = positions.filter(p => p !== correctPos);
             line += `\n  REQUIRED DISTRACTOR VALUES (do NOT compute your own):
   Option ${correctPos}: ${correctVal} (CORRECT ANSWER)
-  Option ${dPos[0]}: ${dVals[0]}
-  Option ${dPos[1]}: ${dVals[1]}
-  Option ${dPos[2]}: ${dVals[2]}
-  Set correctAnswer to "${correctPos}". Write a 1-sentence rationale for each distractor explaining what student arithmetic error produces that exact value.`;
-            console.log(`[CerebrasAPI] Pre-computed distractor values for problem ${i + 1}: [${dVals.join(', ')}] (operation: ${a.operation})`);
+  Option ${dPos[0]}: ${labeled[0].value} [${labeled[0].label}] — ${labeled[0].hint}
+  Option ${dPos[1]}: ${labeled[1].value} [${labeled[1].label}] — ${labeled[1].hint}
+  Option ${dPos[2]}: ${labeled[2].value} [${labeled[2].label}] — ${labeled[2].hint}
+  Set correctAnswer to "${correctPos}". Paraphrase each hint into a 1-sentence rationale for that distractor.`;
+            console.log(`[CerebrasAPI] Pre-computed distractors for problem ${i + 1}: [${labeled.map(d => d.value + ' (' + d.label + ')').join(', ')}]`);
           }
         }
 
@@ -1381,11 +1438,12 @@ TEACHER REQUEST: Generate a problem with ${dir} numbers than the original.
       if (regenOp1 !== undefined && regenOperation) {
         const dVals = computeDistractorValues(regenOperation, regenOp1, regenOp2, regenAnswer);
         if (dVals) {
+          const labeled = labelDistractorValues(regenOperation, regenOp1, regenOp2, regenAnswer, dVals);
           const positions = ['A', 'B', 'C', 'D'];
           const correctPos = positions[Math.floor(Math.random() * 4)];
           const dPos = positions.filter(p => p !== correctPos);
-          prompt += `\n\nREQUIRED DISTRACTOR VALUES (do NOT compute your own):\nOption ${correctPos}: ${regenAnswer} (CORRECT ANSWER)\nOption ${dPos[0]}: ${dVals[0]}\nOption ${dPos[1]}: ${dVals[1]}\nOption ${dPos[2]}: ${dVals[2]}\nSet correctAnswer to "${correctPos}". Write a 1-sentence rationale for each distractor explaining what student arithmetic error produces that exact value.`;
-          console.log(`[CerebrasAPI] Pre-computed distractor values for regen: [${dVals.join(', ')}] (operation: ${regenOperation})`);
+          prompt += `\n\nREQUIRED DISTRACTOR VALUES (do NOT compute your own):\nOption ${correctPos}: ${regenAnswer} (CORRECT ANSWER)\nOption ${dPos[0]}: ${labeled[0].value} [${labeled[0].label}] — ${labeled[0].hint}\nOption ${dPos[1]}: ${labeled[1].value} [${labeled[1].label}] — ${labeled[1].hint}\nOption ${dPos[2]}: ${labeled[2].value} [${labeled[2].label}] — ${labeled[2].hint}\nSet correctAnswer to "${correctPos}". Paraphrase each hint into a 1-sentence rationale for that distractor.`;
+          console.log(`[CerebrasAPI] Pre-computed distractors for regen: [${labeled.map(d => d.value + ' (' + d.label + ')').join(', ')}]`);
         }
       }
     }

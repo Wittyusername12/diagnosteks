@@ -1,8 +1,12 @@
-# Iron Man STEM Mission - Complete Project Brief v3.9
+# Iron Man STEM Mission - Complete Project Brief v4.1
 
-**Version:** 3.9  
-**Last Updated:** February 20, 2026  
-**Status:** Active Development -- Phase 3 COMPLETE, Phase 4 IN PROGRESS, Exemplar Bank COMPLETE
+**Version:** 4.1  
+**Last Updated:** March 4, 2026  
+**Status:** Active Development -- Phase 3 COMPLETE, Phase 4 IN PROGRESS (Teacher Review built + 15 bugfix rounds, MC mode FUNCTIONAL for Tier 1 arithmetic TEKS with pre-computed STAAR-quality distractors, Layer 5 async validation ATTEMPTED AND ABANDONED — see §10), Exemplar Bank COMPLETE, Distractor Pattern Bank COMPLETE (Tier 1), Student Response System PLANNED (Phase 5A/5B)
+
+**v4.1 Changes:** MC Distractor Pipeline — complete end-to-end architecture for STAAR-quality multiple choice distractors. Added Distractor Pattern Bank (`distractor-patterns.js`) with 97 worked examples across 27 patterns for 5 Tier 1 TEKS (3.4A, 3.4F, 3.4J, 3.4D, 3.4K), all extracted from official TEA STAAR rationale documents 2019-2025 (Section 7). Added pre-computed distractor value architecture: JavaScript `computeDistractorValues()` function in `cerebras-api.js` calculates distractor values using deterministic digit-by-digit algorithms (direction-reversal, borrow-error, regroup-fail, wrong-operation) instead of relying on LLM arithmetic — LLM receives pre-computed values and writes rationales for them (Section 7). Added rationale label injection: `computeDistractorValues()` returns `{value, rationale, tag}` triples so the LLM paraphrases pre-built rationale strings instead of inventing its own (Section 7). Fixed `selectExemplars` 10-total cap → 5 per TEKS (Section 7). Added MC-specific validation checks to pipeline: duplicate value detection (HARD GATE), rationale-value cross-check (HARD GATE), consecutive integer detection, wide-spread check (Section 10). Promoted MC duplicate check and rationale-value cross-check from WARNING to HARD GATE after discovering LLM fabricates distractor arithmetic (Section 10). Layer 5 async validation (self-consistency voting + blind review) built, tested, and ABANDONED — zero incremental value over Layers 1-4, see §10 postmortem. Added MC gameplay HUD with holographic A/B/C/D buttons and keyboard input (Section 18). Fixed science question skipping bug (Fury interruptions now fire correctly at firewalls 3/6/9). Fixed `distractorReasoning` → `distractorRationales` field bridge in `cerebras-api.js`. Documented 15 bugfix rounds (v4–v15) covering Teacher Review Screen features, validation edge cases, and MC integration (Section 18). Added `distractor-patterns.js` and `validation-engine.js` to Implementation Files (Section 17). Updated Phase 4 build checklist with completed items. Updated Known Issues with current state. Added distractor pipeline research reports to file references.
+
+**v4.0 Changes:** Strategic reframing — generator identified as core technology, Iron Man mission as first delivery surface (Section 1). Added Student Response System Architecture with Cloudflare Durable Object/WebSocket infrastructure, two-phase deployment (5A anonymous, 5B tracked), retroactive upgrade architecture, and team competition (Section 2). Added Multiple Choice mode with distractor generation, Mix format ratio enforcement with explicit integer counts, ★ Favorite `whyThisIsGood` annotation field for flywheel quality signal, and dual-input flywheel (teacher annotation + student performance data) (Section 7). Added POLLING conditional state to mission state machine for student device answer collection (Section 8). Added five Teacher Review Screen features: per-problem TEKS override toggle, TEKS description tooltips, cross-curricular badge label fix, ★ Favorite annotation field, post-mission analytics dashboard for Phase 5B (Section 9). Added two-tier validation context (Tier 1 hard gate for initial generation, Tier 2 advisory with override for regeneration) (Section 10). Added three new setup screen controls: Answer Format selector (orthogonal to Problem Format), Student Devices toggle (OFF/ANONYMOUS/TRACKED), Competition Mode selector (Section 15). Added Student Response System configuration constants (Section 16). Major build phase restructure: MC mode added to Phase 4, new Phase 5 (5A anonymous + 5B tracked student response), old Phase 5 → Phase 6 (Response Intelligence), old Phase 6 → Phase 7 (Voice Integration) (Section 18). Three new sections: Privacy & Compliance with COPPA/FERPA/Texas Student Privacy Act analysis (Section 21), Patent & IP Strategy with three independent claims and filing strategy (Section 22), Platform Vision with six delivery surfaces and standards portability roadmap (Section 23). Updated Core Design Principles: Principle #2 updated for Base Mode with student device exception, Principle #7 added (Generator-First Architecture). Added Pre-Generation Paradigm clarifying note (answer collection ≠ problem generation). All §X cross-references updated for new section numbering.
 
 **v3.9 Changes:** Added Few-Shot Exemplar Bank Architecture (Section 7) -- complete STAAR-extracted problem exemplar bank covering 100% of Grade 3 Math TEKS (135 items across 3 batches: 65 Readiness, 67 Supporting, 3 Synthetic for never-tested TEKS). Documented 21-field Storage Schema and 7-field Injection Schema. Added exemplar selection function spec with TEKS-budget scaling and diversity maximization. Documented 12-code simplified operation vocabulary for exemplar metadata (distinct from generation pipeline's 15 operation codes). Added three exemplar bank files and five audit reports to Files Reference. Updated Asset Status table with Exemplar Bank COMPLETE row. Updated Phase 4 Prompt 2 to reference exemplar bank as prerequisite input. Added few-shot prompting research report to Research Reports list. Updated Known Issues with exemplar bank completion milestone.
 
@@ -33,36 +37,50 @@
 2. [Technical Architecture](#2-technical-architecture)
    - [Provider Architecture (Phase 4)](#provider-architecture-phase-4) [NEW v3.8]
    - [PixiJS GPU Effects Architecture](#pixijs-gpu-effects-architecture--v32) [NEW]
+   - [Student Response System Architecture (Phase 5)](#student-response-system-architecture-phase-5) [NEW v4.0]
 3. [Mission Narrative](#3-mission-narrative)
 4. [Mission Structure](#4-mission-structure)
 5. [Visual Design](#5-visual-design)
 6. [Pattern Detection System](#6-pattern-detection-system) [NEW]
-7. [AI Problem Generation](#7-ai-problem-generation) [EXPANDED v3.8]
+7. [AI Problem Generation](#7-ai-problem-generation) [EXPANDED v3.8, UPDATED v4.1]
    - [Problem Type Taxonomy](#problem-type-taxonomy) [NEW v3.8]
+   - [Format-Specific Generation Instructions](#format-specific-generation-instructions) [UPDATED v4.1]
+   - [MC Distractor Pipeline Architecture](#mc-distractor-pipeline-architecture) [NEW v4.1]
    - [Cross-Curricular Mode](#cross-curricular-mode) [NEW v3.8]
    - [Process Standards Note](#process-standards-note) [NEW v3.8]
    - [Few-Shot Exemplar Bank](#few-shot-exemplar-bank) [NEW v3.9]
+   - [Dual-Input Flywheel](#dual-input-flywheel-phase-5b-enhancement) [NEW v4.0]
 8. [Mission Integration Architecture](#8-mission-integration-architecture) [NEW]
-9. [Teacher Review Screen](#9-teacher-review-screen) [NEW v3.8]
-10. [Multi-Layer Validation Pipeline](#10-multi-layer-validation-pipeline) [NEW v3.8]
+   - [POLLING State (Student Device Mode)](#polling-state-student-device-mode) [NEW v4.0]
+9. [Teacher Review Screen](#9-teacher-review-screen) [NEW v3.8, UPDATED v4.0]
+10. [Multi-Layer Validation Pipeline](#10-multi-layer-validation-pipeline) [NEW v3.8, UPDATED v4.1]
 11. [SVG Diagram Generator](#11-svg-diagram-generator) [NEW v3.8]
 12. [PDF Upload Architecture](#12-pdf-upload-architecture) [NEW v3.8]
 13. [Response Bank Reference](#13-response-bank-reference)
 14. [Audio Architecture](#14-audio-architecture)
-15. [Teacher Controls](#15-teacher-controls)
-16. [Configuration Constants](#16-configuration-constants) [NEW]
-17. [Implementation Files](#17-implementation-files) [NEW, UPDATED v3.8]
-18. [Build Phases](#18-build-phases) [UPDATED v3.8]
+15. [Teacher Controls](#15-teacher-controls) [UPDATED v4.0]
+16. [Configuration Constants](#16-configuration-constants) [NEW, UPDATED v4.0]
+17. [Implementation Files](#17-implementation-files) [NEW, UPDATED v4.1]
+18. [Build Phases](#18-build-phases) [RESTRUCTURED v4.0]
 19. [Claude Code Guidelines](#19-claude-code-guidelines)
 20. [Module Integration Architecture](#20-module-integration-architecture)
+21. [Privacy & Compliance](#21-privacy--compliance) [NEW v4.0]
+22. [Patent & IP Strategy](#22-patent--ip-strategy) [NEW v4.0]
+23. [Platform Vision & Multiple Delivery Surfaces](#23-platform-vision--multiple-delivery-surfaces) [NEW v4.0]
 
 ---
 
 ## 1. Project Overview
 
-An immersive, AI-powered classroom experience where the teacher (dressed as Iron Man/Tony Stark) leads elementary students through a "hacking mission" to retrieve stolen arc reactor blueprints from S.H.I.E.L.D.'s mainframe. Students solve TEKS-aligned math problems to break through firewalls, with an AI-powered Jarvis providing dynamic responses, hints, and banter.
+This project has two architectural layers:
+
+**Core Technology:** A curriculum-aligned AI problem generation engine with a multi-layer validation pipeline and self-improving teacher feedback flywheel. The engine takes curriculum standards (currently Texas TEKS), generates problems via LLM (Groq/Llama 3.3 70B), validates them through four deterministic hard-gate layers, presents them for teacher review with per-problem feedback controls, and stores teacher-approved problems as exemplars that improve future generation quality. This pipeline is the patentable innovation and the foundation everything else is built on.
+
+**First Application:** An immersive Iron Man-themed classroom mission that uses the generation engine to deliver TEKS-aligned math problems inside an engaging Marvel narrative. Students help Tony Stark hack into S.H.I.E.L.D.'s mainframe by solving math problems to breach firewalls, with an AI-powered Jarvis providing dynamic responses, hints, and banter. This is the demo, proof of concept, and first delivery surface for the core technology.
 
 **Philosophy:** Walt Disney approach -- entertain first, educate second. This should feel like students are IN the Marvel universe, not watching a PowerPoint.
+
+**Platform Principle:** The generation engine is delivery-surface agnostic. The Iron Man mission is the first application; future surfaces include worksheet generation, test prep, tutoring, and district assessment tools (see §23).
 
 **Target Audience:** Grades 1-5 (grade selected at mission start)
 
@@ -70,16 +88,17 @@ An immersive, AI-powered classroom experience where the teacher (dressed as Iron
 
 **Hardware:** Surface Laptop 5 (12th Gen i7, 16GB RAM), single screen display to TV via HDMI (1920x1080), Bluetooth earpiece mic with mute button
 
-**Deployment:** Local file:// on teacher's Surface Laptop, displayed via HDMI to classroom TV (1920x1080). No server, no hosting -- double-click index.html. Only cloud component is the Cloudflare Worker proxy for API calls during pre-lesson setup.
+**Deployment:** Local file:// on teacher's Surface Laptop, displayed via HDMI to classroom TV (1920x1080). No server, no hosting -- double-click index.html. Only cloud component in base mode is the Cloudflare Worker proxy for API calls during pre-lesson setup. When Student Devices are enabled (Phase 5), the Worker also hosts Durable Objects for real-time answer collection during the lesson — but the core app still runs from file://.
 
 ### Core Design Principles
 
 1. **Entertainment First** -- Every element should feel like a Marvel movie scene
-2. **Teacher Controls Everything** -- Students don't interact directly with the system; the teacher inputs all answers
+2. **Teacher Controls Everything (Base Mode)** -- In the default configuration, students don't interact directly with the system; the teacher inputs all answers. When Student Devices are enabled (see §15), students interact through a constrained interface (room codes, answer selection) while the teacher retains override authority on all inputs.
 3. **Pre-Record Everything Possible** -- Minimize real-time API calls for speed and reliability
 4. **Questions Generated at Session Start** -- AI generates all 10 math problems + 3 science questions BEFORE the mission begins
 5. **Pattern Detection is Diagnostic** -- ~90% of student errors follow identifiable patterns (research-validated)
 6. **Human-in-the-Loop** -- Teacher verifies AI-generated problems before class, solving accuracy concerns
+7. **Generator-First Architecture** -- The problem generation pipeline (generation → validation → review → flywheel) is architecturally independent of the mission UI. Any component of the pipeline can be used by other delivery surfaces without modification.
 
 ---
 
@@ -95,7 +114,7 @@ Problems are generated BEFORE the lesson -- even just 10 minutes before while yo
 | **Model Size** | Small/fast models only | Can use large, smart models (Llama 3.3 70B Versatile via Groq) |
 | **Accuracy** | Risk of LLM math errors | Teacher reviews and verifies every problem |
 | **Audio** | Must synthesize in real-time | Pre-synthesize everything with Cartesia |
-| **During Lesson** | Requires API calls + internet | ZERO API calls, works completely offline |
+| **During Lesson** | Requires API calls + internet | ZERO API calls in normal flow* -- works offline (see exceptions below) |
 | **Reliability** | Depends on API uptime | 100% -- everything cached locally |
 
 **The Flow:**
@@ -106,17 +125,17 @@ PRE-LESSON (5-15 minutes before class):
 | 2. Click "Generate Mission"                                              |
 | 3. Groq (Llama 3.3 70B Versatile) generates problems (10-30 seconds)     |
 | 4. Problems display on screen for teacher review                         |
-| 5. Teacher can "Regenerate" any problem that looks wrong                 |
-| 6. Click "Approve & Synthesize"                                          |
+| 5. Teacher reviews problems, can "Regenerate" any (see §9 for workflow)  |
+| 6. Click "Start Mission" after approving all problems                    |
 | 7. Cartesia API synthesizes all problem-specific audio (30-60 seconds)   |
 | 8. Everything cached locally. System shows "Mission Ready"               |
 +--------------------------------------------------------------------------+
 
-DURING LESSON:
+DURING LESSON (base mode):
 +--------------------------------------------------------------------------+
-| * ZERO API calls required                                                |
+| * ZERO API calls required (Layer 3 Dynamic Mode is the one exception)    |
 | * All audio plays from local cache instantly                             |
-| * Runs even if WiFi drops                                                |
+| * Runs even if WiFi drops (base mode; Student Devices require network)   |
 | * System tracks current problem, plays appropriate pre-cached audio      |
 +--------------------------------------------------------------------------+
 ```
@@ -126,6 +145,8 @@ DURING LESSON:
 - No "Loading..." or delays during the mission -- instant feedback
 - School WiFi issues won't break the experience
 - Uses the smartest available AI models (quality > speed)
+
+**Note:** The student response system (§2, Phase 5) operates DURING the lesson via real-time WebSocket, but this is answer COLLECTION, not problem GENERATION. All problems are still pre-generated. The student devices simply provide a new input channel for answers that were previously entered solely by the teacher.
 
 ---
 
@@ -256,7 +277,8 @@ Track session data for educator review and portfolio documentation.
 - **Model:** Llama 3.3 70B Versatile -- selected for highest instruction-following score (IFEval 92.1), strong math reasoning (MATH-CoT 77.0), and multilingual robustness (MGSM 91.1) per deep research analysis. For K-5 problem generation, controllability > raw capability.
 - Generates 10 math problems + 3 science questions per mission
 - Problems include metadata for pattern detection (see Section 7)
-- 14,400 free requests/day on Groq free tier -- one mission uses ~13 requests (less than 0.1% of daily limit)
+- 14,400 free requests/day on Groq free tier -- one mission uses ~13 generation requests with current Layers 1-4
+- **Token limit is the binding constraint, not requests.** Groq free tier also caps at 100,000 tokens/day (TPD). A single mission generation + auto-regeneration retries consumes ~15,000-25,000 tokens. Heavy iterative testing during development (multiple missions + many manual regenerations per session) can exhaust the TPD limit before the request limit. The project upgraded to Groq Dev Tier during development for higher token limits. Classroom usage (one mission generation + 3-5 manual tweaks) fits comfortably within free tier.
 - OpenAI-compatible API format (same request/response structure, just different provider)
 - **During lesson:** ZERO API calls (everything pre-generated)
 - **Dynamic mode only:** Groq called for Layer 3 "Jarvis, analyze this" requests
@@ -272,7 +294,7 @@ Track session data for educator review and portfolio documentation.
 - MGSM 91.1 -- multilingual math robustness (relevant for bilingual classrooms)
 - For K-5 generation, controllability matters more than raw capability
 - Explicit child safety documentation in model card
-- Groq free tier: 14,400 requests/day (mission uses ~13)
+- Groq free tier: 14,400 requests/day, 100,000 tokens/day (mission uses ~13 requests, ~15-25K tokens; token limit is binding during heavy testing — project upgraded to Dev Tier)
 - Llama Guard 3 8B available as optional safety classification pass (free on Groq)
 
 **Why Cloudflare Worker proxy:**
@@ -294,7 +316,7 @@ Track session data for educator review and portfolio documentation.
 - Voice answer input with natural language parsing
 
 **4. Voice Output (Layered System)**
-- **Response Bank (permanent):** Pre-synthesized WAV files for all predictable responses (~387 lines)
+- **Response Bank (permanent):** Pre-synthesized WAV files for all predictable responses (~750 lines — see §13)
   - Generated ONCE via Cartesia API, saved permanently
   - Covers: correct/wrong answers, hints, banter, Fury/Widow lines
 - **Problem-Specific Audio (per-session):** 
@@ -320,7 +342,7 @@ const response = await fetch('https://api.cartesia.ai/tts/bytes', {
     model_id: 'sonic-english',
     voice: { id: '585af41f-1554-4b87-88d6-fb47127a48b9' }, // Jarvis
     transcript: 'Perhaps try breaking 45 into 40 plus 5, sir.',
-    output_format: 'mp3'
+    output_format: 'wav'
   })
 });
 const audioBlob = await response.blob();
@@ -338,7 +360,7 @@ GSAP provides MCU-level cinematic animations. Selected after analysis showed it 
 - **Physics2D** for particle effects (firewall breach debris, energy dispersal)
 - **Web Audio API sync** for audio-visual coordination
 
-**Why GSAP:** The Webflow acquisition (Fall 2024) made all premium plugins free -- ScrambleText, SplitText, Physics2D would have cost ~$200/year. GSAP's `timeline.time(audio.currentTime)` pattern enables sub-frame precision sync with pre-generated Cartesia audio -- critical for MCU-quality sequences. Benchmarks at 5x faster than CSS transitions.
+**Why GSAP:** The Webflow acquisition of GSAP (Fall 2024) led to all premium plugins becoming free in April 2025 -- ScrambleText, SplitText, Physics2D would have cost ~$200/year. GSAP's `timeline.time(audio.currentTime)` pattern enables sub-frame precision sync with pre-generated Cartesia audio -- critical for MCU-quality sequences. Benchmarks at 5x faster than CSS transitions.
 
 **Installation:** `npm install gsap` -- Bundle locally, NO CDN (school content filters may block)
 
@@ -482,7 +504,7 @@ Particles: `new PIXI.Graphics()` circles with `PIXI.BLEND_MODES.ADD`, scattered 
 
 ### Audio-Visual Sync Architecture
 
-> **Moved to Phase 6 (Voice Integration) in v3.6.** Audio-visual synchronization requires pre-generated Cartesia audio to exist, which doesn't happen until Phase 6+. See Phase 6 for the LESSON_PACK timing data structure, FirewallSequence audio sync pattern, and drift correction architecture.
+> **Moved to Phase 6 (Voice Integration) in v3.6; that phase was renumbered to Phase 7 in v4.0.** Audio-visual synchronization requires pre-generated Cartesia audio to exist, which doesn't happen until Phase 7. See Phase 7 for the LESSON_PACK timing data structure, FirewallSequence audio sync pattern, and drift correction architecture.
 
 ### Jayse Hansen Principle (HUD Design)
 
@@ -550,6 +572,86 @@ Every HUD element must have **purpose that students can understand**:
 - **Nick Fury:** TO BE CLONED BY USER
 - **Black Widow:** TO BE CLONED BY USER
 
+### Student Response System Architecture (Phase 5)
+
+The student response system extends the existing Cloudflare Worker infrastructure to enable real-time student device participation during missions. It is deployed in two phases: anonymous (5A) and tracked (5B).
+
+**Infrastructure Stack:**
+
+| Component | Role | Details |
+|-----------|------|---------|
+| Cloudflare Durable Object | Per-room WebSocket state manager | One Durable Object instance per active room. Manages all WebSocket connections between teacher's Surface Laptop and student Chromebooks. Maintains live answer tallies and connected device count. Memory clears when room expires (5A) or after D1 write (5B). |
+| Cloudflare Worker (existing) | Room creation, code generation, routing | Extends the current Groq proxy worker at `ironman-api.shanewaldrop123.workers.dev`. Adds room CRUD endpoints. API key and room state managed as Worker secrets and Durable Object bindings. |
+| Student-facing page | Constrained answer input | Pure HTML/JS served directly from the Cloudflare Worker (not from file://). Runs on any device with a modern browser: Chromebooks, tablets, phones. Displays room code entry, waiting screen, question text, and A/B/C/D answer buttons. |
+| Teacher's file:// app | Mission control | Communicates with Durable Object via fetch() and WebSocket. Same pattern as existing Groq API calls — no deployment model change. Teacher initiates room, pushes questions, receives aggregated tallies, confirms answers. |
+| Cloudflare D1 (Phase 5B only) | Persistent storage | SQLite at the edge. Stores session records, per-student answers, TEKS mastery data. Written at session end, not during real-time gameplay. |
+
+**Room Code System:**
+
+```
+Teacher clicks "Start Student Session"
+         |
+         v
+Worker generates 6-digit room code (e.g., 482917)
+         |
+         v
+Students navigate to URL, enter code → see waiting screen
+         |
+         v
+Teacher advances to firewall N
+         |
+         v
+Durable Object pushes question + MC options to all connected devices via WebSocket
+         |
+         v
+Students tap A/B/C/D → answers flow back to Durable Object
+         |
+         v
+Aggregated tally sent to teacher's display as live bar chart
+         |
+         v
+Teacher accepts majority vote OR overrides with own selection
+```
+
+**Two-Phase Deployment:**
+
+**Phase 5A — Anonymous (no compliance required):**
+No student names, no persistence. Session ends → Durable Object memory clears. Aggregate data only ("Room 482917, Q3: 18 chose A, 4 chose B, 6 chose C, 2 chose D"). No COPPA/FERPA triggers. Functionally equivalent to "raise your hand if you think B." Can be deployed in classrooms immediately.
+
+**Phase 5B — Tracked (requires school authorization):**
+Students enter first name + class period on the join screen. Per-student answers recorded. Session data written to D1 at session end. TEKS mastery tracking across sessions. Requires school authorization under COPPA school consent exception (see §21).
+
+**Retroactive Upgrade Architecture (5A → 5B):**
+
+The upgrade from anonymous to tracked is PURELY ADDITIVE, not replacement:
+
+```javascript
+// Phase 5A — anonymous WebSocket message
+{ room: "482917", answer: "B" }
+
+// Phase 5B — tracked WebSocket message (adds student field)
+{ room: "482917", student: "Johnny", answer: "B" }
+```
+
+The Durable Object handles both formats with a simple conditional: if `student` field is present, record per-student data; if absent, tally only. The ONLY architectural addition for 5B is a D1 write call at session end before memory clears. Phase 5A builds 85% of the engineering (real-time sync, Durable Object state, WebSocket reliability, student UI, teacher poll display). Phase 5B adds the remaining 15% (D1 schema, persistence logic, analytics dashboard, privacy controls).
+
+**Team Competition Architecture:**
+
+When Competition Mode is set to Teams (see §15), the student join screen includes a "Pick your team" selector. The WebSocket message adds a team field:
+
+```javascript
+// Team mode message
+{ room: "482917", answer: "B", team: "stark" }
+```
+
+The Durable Object maintains per-team running tallies instead of a single aggregate. The teacher's display shows per-team score bars (holographic leaderboard with arc reactor energy bars). For the tracked version, D1 adds a `team` column so analytics show team performance breakdowns.
+
+**Network Considerations:**
+
+Cloudflare Durable Objects use standard HTTPS WebSocket upgrade (port 443) — the same port as regular web traffic, compatible with most school firewalls. Kahoot, Nearpod, and Pear Deck all use this same pattern successfully in school environments. Fallback: HTTP long-polling for restrictive firewalls (degraded mode, slower but universally compatible).
+
+**Hardware Note:** The core app still runs from file:// on the teacher's Surface Laptop. Student devices are Chromebooks/tablets on the school WiFi. The teacher's laptop must be on the same network (or any network with internet access to reach Cloudflare).
+
 ---
 
 ## 3. Mission Narrative
@@ -599,7 +701,7 @@ This exact sequence happens at the very beginning:
 
 ### 13 Mission Screens (10 Math + 3 Science) [v3.5]
 
-- **Firewalls 1-10:** All math problems (TEKS-aligned, open response) -- these are the "firewalls" being hacked
+- **Firewalls 1-10:** All math problems (TEKS-aligned, answer format per teacher selection — see §15) -- these are the "firewalls" being hacked
 - **After Firewalls 3, 6, 9:** Nick Fury science interruptions (multiple choice A/B/C/D) -- inserted BETWEEN math firewalls, NOT replacing them
 
 **Complete mission sequence:**
@@ -638,7 +740,7 @@ When students answer incorrectly:
 1. Play WRONG-XX audio (random from pool) + wrong-answer SFX
 2. Increment wrong attempt counter
 3. Play wrong animation (red glow + shake)
-4. **1st wrong answer on this firewall:** After 1.5s delay, Jarvis dialogue box updates with a random generic hint from `JARVIS_GENERIC_HINTS` array (15 lines from response_bank.md Section 5B). Console logs `[Hint] Jarvis generic hint: ...`. This is a TEXT-ONLY placeholder -- Phase 5 upgrades to pattern-specific hints with audio.
+4. **1st wrong answer on this firewall:** After 1.5s delay, Jarvis dialogue box updates with a random generic hint from `JARVIS_GENERIC_HINTS` array (15 lines from response_bank.md Section 5B). Console logs `[Hint] Jarvis generic hint: ...`. This is a TEXT-ONLY placeholder -- Phase 6 upgrades to pattern-specific hints with audio.
 5. **2nd wrong answer on this firewall:** Black Widow ALWAYS appears (deterministic, no coin flip). `checkWidowHint()` fires with `wrongAttemptsThisFirewall >= 2`. Subject to existing max appearances (4) + spacing rules (2 firewalls between).
 6. **3rd+ wrong answers:** Widow can appear again per spacing/max rules.
 
@@ -1042,7 +1144,7 @@ When Black Widow appears, she uses her own hint versions for the same patterns:
 
 ---
 
-## 7. AI Problem Generation [EXPANDED v3.8]
+## 7. AI Problem Generation [EXPANDED v3.8, UPDATED v4.1]
 
 ### Core Principle
 
@@ -1087,13 +1189,17 @@ Each generated problem MUST follow this structure. Schema expanded from v3.7 to 
     "teksCode": "3.4A",
     "difficulty": "medium",      // "easy" | "medium" | "hard"
     "diagnosticFor": ["STOP_BORROW_AT_ZERO"],
-    "scienceTeksConnection": null  // Cross-curricular: e.g., "3.9B" or null
+    "scienceTeksConnection": null, // Cross-curricular: e.g., "3.9B" or null
+    "scienceLabel": null          // LLM-generated label for cross-curricular badge, e.g., "Forces & Motion" or null [ADDED v4.1]
   },
   "diagram": null                // SVG diagram descriptor or null -- see Section 11
 }
 ```
 
 **Multiple-choice answer format** (for identification, conceptual, and financial literacy types):
+
+> **Note (v4.1):** The schema below shows the ORIGINAL v3.8 MC format used for non-arithmetic MC problems (geometry identification, conceptual questions, etc.) where the options are text strings. For arithmetic MC problems generated through the distractor pipeline, the actual format uses `mcOptions` with numeric `value` fields and a separate `distractorRationales` object — see the "MC Schema Extensions" subsection in the MC Distractor Pipeline Architecture section below.
+
 ```javascript
 {
   "answerType": "multipleChoice",
@@ -1130,6 +1236,8 @@ The `operation` field must be one of:
 - `MEASURE` -- for measurement computation (perimeter, area, volume, angles)
 - `DATA_READ` -- for reading data displays (bar graphs, dot plots, etc.)
 - `CONCEPTUAL` -- for understanding checks (multiple choice)
+
+**Operation Normalization (Bugfix v6/v9):** The LLM sometimes returns operation values as natural language ("addition", "subtraction", "minus") or operator symbols ("+", "-", "×", "÷", "*", "/") instead of the canonical enum codes above. The `_validateOperation()` function in `cerebras-api.js` normalizes these via an alias map before any downstream processing. Before this fix, unrecognized values like "-" defaulted to ADD, which caused operation badges to display incorrectly. The alias map covers all common variants: "addition"→ADD, "subtract"→SUBTRACT, "minus"→SUBTRACT, "-"→SUBTRACT, "+"→ADD, "×"→MULTIPLY, "*"→MULTIPLY, "÷"→DIVIDE, "/"→DIVIDE, etc.
 
 ### Fraction Answer Format
 
@@ -1192,11 +1300,13 @@ Math word problems can incorporate science TEKS themes, creating cross-curricula
 - Example: If math TEKS is 3.4A (addition/subtraction within 1,000) and science TEKS is 3.9B (organisms and environments), the LLM might generate: "Tony Stark's research lab has 456 rainforest plant specimens. If 189 specimens need to be moved to the new biodome, how many remain in the lab?"
 - The math is unchanged. The science context is flavor text that reinforces science vocabulary.
 
+**Science Integration Style (Bugfix v10):** The system prompt explicitly instructs the LLM to weave science concepts into the narrative naturally through vocabulary and scenario choice — NOT by appending explanation sentences. Before this fix, the LLM would tack on sentences like "This situation involves rapid changes in position." or "This situation involves motion and position changes as the packages are delivered." at the end of word problems. The updated prompt directive says the science theme should be invisible as a teaching mechanism: the student encounters science vocabulary organically in the story context, not as a labeled-out lesson. The cross-curricular badge on the review screen tells the teacher which science TEKS is represented; the student never sees that metadata.
+
 **Architecture impact:** ZERO. This is pure prompt engineering -- one paragraph in the system prompt. No new UI elements, no new API calls, no new validation logic. The setup screen already has both math and science TEKS selections.
 
 **Teacher Review Screen integration:**
 - Purple badge on each problem indicating which science TEKS it connects to (if any)
-- Per-problem feedback can request different science pairing or disable cross-curricular for specific problems
+- Per-problem cross-curricular control via "✦ Science" dropdown chip: teacher can select any mission science TEKS, choose from ALL grade-level science TEKS via "Choose Other TEKS..." option, or remove science context entirely. Math is always preserved through mathConstraints when changing science theme.
 
 ### Process Standards Note [NEW v3.8]
 
@@ -1210,6 +1320,107 @@ The system prompt includes a brief preamble: "All generated problems should use 
 
 This covers the spirit of all seven process standards without adding teacher-facing complexity.
 
+### Format-Specific Generation Instructions [NEW v4.0]
+
+**Problem Format (Word Problem / Bare Math / Mix):**
+
+When the teacher selects **Mix** format on the setup screen, the system picks a random ratio from three options each generation cycle: 60/40 word-to-bare, 50/50, or 40/60. The LLM prompt receives EXPLICIT integer counts rather than soft language. For a 10-problem mission:
+
+| Random Selection | LLM Instruction |
+|-----------------|-----------------|
+| 60/40 | "Generate exactly 6 word problems and 4 bare arithmetic problems" |
+| 50/50 | "Generate exactly 5 word problems and 5 bare arithmetic problems" |
+| 40/60 | "Generate exactly 4 word problems and 6 bare arithmetic problems" |
+
+This explicit count approach prevents the LLM from defaulting to nearly all word problems, which occurs when instructions use approximate language like "approximately half."
+
+**Answer Format (Open Response / Multiple Choice / Mix):**
+
+This is an independent axis from Problem Format (see §15 for the orthogonal selector UI). A bare math problem can have MC options, and a word problem can have open response.
+
+### MC Distractor Pipeline Architecture [NEW v4.1]
+
+When answer format is **Multiple Choice**, the generation pipeline uses a three-layer distractor architecture that produces STAAR-quality distractors with 100% rationale accuracy. This architecture was developed iteratively after discovering that the LLM cannot reliably compute distractor values or reverse-engineer rationales from bare values.
+
+**Layer 1 — Distractor Pattern Bank (`distractor-patterns.js`):**
+
+A per-TEKS pattern bank teaches the LLM HOW to construct diagnostic distractors. Each TEKS entry contains 2-6 error patterns with worked examples showing: problem → student error → resulting distractor value → one-sentence rationale. All 97 worked examples trace to real TEA-authored STAAR rationale documents (2019-2025). The bank is injected into the MC system prompt using a primacy-zone/recency-zone architecture:
+
+- `UNIVERSAL_DISTRACTOR_RULES` (~500 tokens) injected in the **primacy zone** (beginning of system prompt) — enforces rules like "each distractor targets exactly ONE student error" and "only use numbers from the problem"
+- Per-TEKS patterns injected in the **middle** alongside question exemplars — provides TEKS-specific error construction rules and worked examples
+- `DISTRACTOR_RULES_REMINDER` (~50 tokens) injected in the **recency zone** (end of system prompt) — reinforces key rules exploiting the U-shaped attention curve
+
+At injection time, `selectDistractorPatterns(selectedTeks)` returns ALL patterns for all selected TEKS with no budget cap. `toDistractorInjectionFormat()` strips storage-only fields (source attribution, TEKS descriptions) keeping only what the LLM needs. Typical injection: ~1,800 tokens for 2 TEKS.
+
+The pattern bank builds in tiers:
+- **Tier 1 (COMPLETE):** 3.4A, 3.4F, 3.4J, 3.4D, 3.4K — core arithmetic, worst audit failures. 27 patterns, 97 examples.
+- **Tier 2 (PLANNED):** 3.4H, 3.4E, 3.5A, 3.5B, 3.4B, 3.4G, 3.6C — high frequency
+- **Tier 3 (PLANNED):** 3.3x fractions, 3.2x place value, 3.7B perimeter, 3.7C time
+- **Tier 4 (PLANNED):** 3.9x financial, 3.6A-B geometry, 3.8A-B data, 3.5C-E conceptual
+
+**Layer 2 — Pre-Computed Distractor Values (`computeDistractorValues()` in `cerebras-api.js`):**
+
+CRITICAL DISCOVERY: The LLM cannot reliably perform digit-by-digit arithmetic. When told "apply a direction-reversal error to 416 − 229," it describes the error correctly but computes the wrong numeric value. This produced 67% fabricated distractor values for multi-digit addition/subtraction.
+
+Solution: JavaScript computes distractor values using deterministic algorithms that mirror real student errors, then injects those values into the LLM prompt. The LLM writes rationales for pre-determined values instead of computing its own.
+
+`computeDistractorValues(operation, operands, correctAnswer)` returns an array of 3 `{value, rationale, tag}` triples. Algorithms by operation:
+
+- **ADD:** direction-reversal (swap operand order in column subtraction), regroup-fail (skip carry propagation), wrong-operation (subtract instead of add)
+- **SUBTRACT:** direction-reversal (subtract smaller from larger per-column), borrow-error (fail to decrement after borrowing), wrong-operation (add instead of subtract)
+- **MULTIPLY:** wrong-operation (add instead of multiply), neighbor-fact (adjacent multiplication table entry), off-by-one (correct ± one factor)
+- **DIVIDE:** wrong-operation (multiply instead of divide), chose-operand (report divisor or dividend), neighbor-fact (adjacent division fact)
+
+All algorithms guarantee: no duplicate values, no value equals correctAnswer, wide spread (not consecutive integers), and every value traces to exactly one identifiable student error.
+
+**Layer 3 — Rationale Label Injection:**
+
+CRITICAL DISCOVERY: Even with correct pre-computed values, the LLM cannot reverse-engineer what student error produced each value. It invents plausible-sounding but mathematically incoherent rationales (79% were wrong, vague, or fabricated in testing).
+
+Solution: `computeDistractorValues()` builds the rationale string at the same time it computes the value — both come from the same digit-by-digit algorithm. The LLM receives `{value, rationale, tag}` and paraphrases the given rationale instead of inventing one.
+
+Before/after metrics (tested across 5 MC problems, 15 total distractors):
+- Accurate rationales: 21% → 100%
+- Phantom numbers in rationales: 25% → 0%
+- "Made multiple errors" cop-outs: 33% → 0%
+- Math errors in rationale text: 21% → 0%
+- Auto-regeneration needed: YES (Q1 took 2+ retries) → NO (all 5 first-try)
+
+**MC Schema Extensions:**
+
+The problem schema gains two MC-specific fields when `answerType === 'multipleChoice'`:
+
+```javascript
+{
+  // ... standard problem fields ...
+  "answerType": "multipleChoice",
+  "mcOptions": [
+    { "letter": "A", "text": "583", "value": 583 },
+    { "letter": "B", "text": "593", "value": 593 },
+    { "letter": "C", "text": "645", "value": 645 },
+    { "letter": "D", "text": "821", "value": 821 }
+  ],
+  "distractorRationales": {
+    "A": "The student added without carrying from the ones to the tens column",
+    "C": "The student added instead of subtracting",
+    "D": "The student subtracted the smaller digit from the larger in each column"
+  },
+  "correctAnswer": "B"
+}
+```
+
+The `distractorRationales` field maps each incorrect option letter to a one-sentence explanation of the student error that produces that value. This field is built by `cerebras-api.js` from the LLM's `distractorReasoning` output (a computation-first array) via a bridge function.
+
+**MC-Specific Validation Checks (added to validation pipeline when MC is active — see §10):**
+- **Duplicate value detection (HARD GATE):** No two options can share the same numeric value. Triggers auto-regeneration on failure. Pre-computed values make this virtually impossible to trigger.
+- **Rationale-value cross-check (HARD GATE):** Every number mentioned in a distractor rationale must match the actual option value. Catches LLM-fabricated arithmetic. Promoted from WARNING to HARD GATE after discovering 67% fabrication rate.
+- **Consecutive integer detection:** Flags problems where distractors are all within ±3 of the correct answer (diagnostic of LLM falling back to "lazy" distractor generation).
+- **Wide-spread check:** Verifies distractor values span a meaningful range relative to the correct answer.
+
+When answer format is **Mix**, each problem is randomly assigned either Open Response or MC, independent of its problem format (word/bare). The LLM prompt specifies which problems get MC options (by firewall number) so distractors are only generated where needed. Mix ratio uses the same explicit-integer-count approach as Problem Format: randomly selects 60/40, 50/50, or 40/60 MC-to-open ratio per generation cycle.
+
+**TEKS Coverage Note:** The pre-computed distractor architecture works for ALL arithmetic TEKS (3.4x operations: ADD, SUBTRACT, MULTIPLY, DIVIDE) regardless of whether that specific TEKS has a distractor-patterns.js entry. The pattern bank provides TEKS-specific pedagogical guidance; the pre-compute function provides correct numeric values. TEKS without pattern bank entries still get pre-computed values with correct spread — they just lack the STAAR-specific error taxonomy in the rationale. Fraction TEKS (3.3x), geometry, measurement, data analysis, and financial literacy TEKS are NOT currently supported by the MC pipeline and require different problem generation architectures.
+
 ### Few-Shot Exemplar Bank [NEW v3.9]
 
 **Purpose:** The Groq/Llama 3.3 70B system prompt includes carefully selected few-shot exemplars that show the LLM what a high-quality STAAR-style problem looks like. Without these, the LLM generates syntactically valid but pedagogically weak problems -- correct math with useless distractors, missing diagnostic value, and inconsistent difficulty targeting. The exemplar bank solves this by providing real STAAR problems (and 3 synthetic items for never-tested TEKS) as concrete patterns for the LLM to emulate.
@@ -1220,11 +1431,27 @@ This covers the spirit of all seven process standards without adding teacher-fac
 
 The exemplar system has three layers that reinforce each other over time:
 
-**Tier 1 -- Seed Bank (this file set).** 135 gold-standard exemplars extracted from official STAAR released tests (2019-2025) plus 3 synthetic items. Read-only, admin-maintained. The selection function draws from this bank for EVERY system prompt, picking 1-5 relevant exemplars per TEKS depending on how many TEKS are selected (not all 135 -- see selection function below). This is what Claude Code sessions implement.
+**Tier 1 -- Seed Bank (this file set).** 135 gold-standard exemplars extracted from official STAAR released tests (2019-2025) plus 3 synthetic items. Read-only, admin-maintained. The selection function draws from this bank for EVERY system prompt, picking up to 5 relevant exemplars per TEKS (not all 135 -- see selection function below). This is what Claude Code sessions implement.
 
 **Tier 2 -- teks-rules.json constraints.** Static validation rules per TEKS (allowed number ranges, permitted operations, denominator sets, step counts). Constrains what the LLM can generate independently of exemplars. See Section 7 "teks-rules.json File Spec."
 
 **Tier 3 -- Organic Growth Library (future).** Every teacher-approved problem becomes a candidate exemplar. Stored in localStorage per teacher. Over time, the best teacher-vetted problems supplement the seed bank, creating a personalized exemplar set per classroom. Selection ratio: always pull at least 1 from seed bank, fill remaining slots with teacher exemplars if available.
+
+**★ Favorite Annotation Mechanism (Tier 3 Quality Signal) [NEW v4.0]:**
+
+When the teacher clicks ★ Favorite on a problem in the Teacher Review Screen, an optional text input expands: "What made this problem great? (optional)". The teacher can type a brief annotation (e.g., "love the difficulty level," "perfect wording for my students," "great distractor design") or skip it entirely. If provided, the annotation is saved as `whyThisIsGood` on the exemplar object. If left blank, the field is null and the exemplar is still saved — favoriting without annotation is perfectly valid.
+
+When this exemplar is later injected as a few-shot example, `whyThisIsGood` is included alongside the problem, giving the LLM explicit signal about what qualities to replicate. This is the primary mechanism for the flywheel's quality improvement: the LLM doesn't just see "here's a good problem," it sees "here's a good problem AND here's specifically what makes it good."
+
+**Dual-Input Flywheel (Phase 5B Enhancement) [NEW v4.0]:**
+
+The flywheel receives quality signal from two independent channels:
+
+**Input Stream 1 — Teacher Annotation (existing):** ★ Favorite with optional `whyThisIsGood`, stored as exemplar, injected into future generation for same TEKS. This is available from Phase 4 onward.
+
+**Input Stream 2 — Student Performance Data (Phase 5B only):** Per-TEKS accuracy rates, distractor selection frequency, and response time patterns. When the tracked student device version is active, student performance metadata attaches to exemplars: "22/25 students got this right — good baseline problem" or "8/25 got this right — excellent diagnostic problem."
+
+Future generation can use this signal in two ways. First, if students consistently pick the "forgot to regroup" distractor on 3.4A problems, the system can generate more regrouping-focused problems. Second, if 90% of the class aces a TEKS, the system can suggest harder difficulty parameters next time. The flywheel improves from two independent channels without any model fine-tuning or retraining.
 
 **Batch Structure:**
 
@@ -1294,7 +1521,7 @@ Readiness standards were extracted first because TEA weights them more heavily o
 - `correctAnswerValue`: number `292` for verifiable numeric answers, `null` for conceptual questions where answer is a concept not a number
 - `options`: array of `{letter, text}` objects for MC/multiselect, `null` for free-response
 
-**Injection Schema (7 fields):** When exemplars are injected into the Groq system prompt, the 21-field storage schema is stripped down to 7 fields. The stripping function removes identification metadata, selection metadata, and fields the LLM doesn't need to see. Token cost varies by exemplar length (shortest ~160 tokens for terse items like griddables, longest ~660 tokens for items with long stems and detailed rationales, average ~400 across all 135 items in compact JSON). A typical mission selecting 3-4 TEKS injects 8-9 exemplars totaling ~3,200-3,600 tokens. The maximum case (10 exemplars) is ~4,000 tokens. This is well within the Llama 3.3 70B 128K context window and represents ~3% of the available budget.
+**Injection Schema (7 fields):** When exemplars are injected into the Groq system prompt, the 21-field storage schema is stripped down to 7 fields. The stripping function removes identification metadata, selection metadata, and fields the LLM doesn't need to see. Token cost varies by exemplar length (shortest ~160 tokens for terse items like griddables, longest ~660 tokens for items with long stems and detailed rationales, average ~400 across all 135 items in compact JSON). With the current 5-per-TEKS selection cap (no global cap), a typical mission selecting 3-4 TEKS injects 15-20 exemplars totaling ~6,000-8,000 tokens. The maximum practical case (5 TEKS × 5 exemplars = 25) would be ~10,000 tokens. Even the maximum is well within the Llama 3.3 70B 128K context window, representing ~6-8% of the available budget. (Note: the original 10-exemplar global cap produced ~4,000 tokens at ~3% — that cap was removed after discovering it starved multi-TEKS missions of sufficient coverage.)
 
 ```javascript
 // toInjectionFormat() strips storage schema --> injection schema
@@ -1313,15 +1540,7 @@ function toInjectionFormat(exemplar) {
 
 **Exemplar Selection Function:** The selection function picks the best N exemplars for a given set of TEKS, balancing coverage with diversity. It returns injection-ready 7-field items (calls `toInjectionFormat` internally -- do NOT apply `toInjectionFormat` again to its output).
 
-Budget scaling (how many exemplars per TEKS, with hard cap of 10 total):
-- 1 TEKS selected --> 5 exemplars
-- 2 TEKS --> 5 per TEKS = 10 total
-- 3 TEKS --> 3 per TEKS = 9 total
-- 4 TEKS --> 2 per TEKS = 8 total
-- 5 TEKS --> 2 per TEKS = 10 total
-- 6+ TEKS --> 1 per TEKS
-
-Formula: `perTeks = max(1, min(5, floor(10 / selectedTeks.length)))`. Hard cap: `maxTotal = 10` (applied via `.slice(0, maxTotal)` after selection).
+Budget scaling: up to 5 exemplars per TEKS, no global cap. The selection function returns the best exemplars for each requested TEKS independently — if 3 TEKS are selected, it returns up to 5 exemplars per TEKS (up to 15 total). This was changed from the original "hard cap 10 total" design after discovering that the budget-constrained approach starved multi-TEKS missions of sufficient exemplar coverage.
 
 For each TEKS, the function filters the exemplar bank to matching items, then uses `diverseSelect()` to pick the best N while maximizing diversity across operation (Priority 1) and stepCount (Priority 2), with remaining slots filled from the pool. Teacher-edited exemplars (Tier 3, future) are preferred when available.
 
@@ -1376,7 +1595,7 @@ The AI prompt must enforce:
 7. **Grade appropriateness** -- Number ranges match grade expectations
 8. **Cross-curricular theming** -- When enabled, incorporate science TEKS vocabulary
 9. **Diagram descriptor** -- Include diagram field when visual would aid understanding (see Section 11)
-10. **Few-shot exemplar injection** -- Include STAAR-sourced exemplars from the exemplar bank (Section 7 "Few-Shot Exemplar Bank"), stripped to injection schema, positioned after instructions but before the generation query per few-shot positioning research. Exemplars are dynamically selected to match the teacher's chosen TEKS (1-5 per TEKS depending on how many TEKS are selected, hard cap 10 total -- see selection function spec). **CRITICAL: The system prompt must explicitly instruct the LLM not to copy exemplars verbatim.** Include language like: *"Study these examples carefully. They show the quality standard you must match -- the difficulty level, narrative style, and distractor reasoning. Generate ORIGINAL problems inspired by these patterns. Do NOT copy or closely paraphrase any example."* The exemplar bank teaches patterns, not recycles problems. Without this instruction, the LLM may reproduce exemplars word-for-word instead of generating new content.
+10. **Few-shot exemplar injection** -- Include STAAR-sourced exemplars from the exemplar bank (Section 7 "Few-Shot Exemplar Bank"), stripped to injection schema, positioned after instructions but before the generation query per few-shot positioning research. Exemplars are dynamically selected to match the teacher's chosen TEKS (up to 5 per TEKS, no global cap -- see selection function spec). **CRITICAL: The system prompt must explicitly instruct the LLM not to copy exemplars verbatim.** Include language like: *"Study these examples carefully. They show the quality standard you must match -- the difficulty level, narrative style, and distractor reasoning. Generate ORIGINAL problems inspired by these patterns. Do NOT copy or closely paraphrase any example."* The exemplar bank teaches patterns, not recycles problems. Without this instruction, the LLM may reproduce exemplars word-for-word instead of generating new content.
 
 ### Grade-Specific Number Ranges
 
@@ -1425,7 +1644,7 @@ Static JSON lookup file containing every content standard across grades 1-5 (exc
 
 **Data sources:** TEA Machine-Readable TEKS at teks.texasgateway.org (IMS Global CASE format, JSON-LD via REST API) and Common Standards Project open-source API (github.com/commonstandardsproject/api).
 
-**Coverage:** Approximately 60-70% of the ~150 student expectations across grades 1-5 contain quantifiable constraints checkable programmatically. The remaining 30-40% (too conceptual for rule-based validation) are handled by the LLM self-assessment layer in the validation pipeline (Section 10).
+**Coverage:** Approximately 61% of the 217 student expectations across grades 1-5 (132 entries) contain quantifiable constraints checkable programmatically. The remaining ~39% (too conceptual for rule-based validation) rely on the teacher review screen (Section 9) — the teacher is the quality gate for problems where automated rules cannot verify alignment.
 
 **Consumers:** Problem generation system prompt (tells LLM what constraints to follow), validation pipeline Layers 3 and 4 (Section 10), Teacher Review Screen problem type badges (Section 9).
 
@@ -1542,6 +1761,49 @@ missionState = {
                                          +-------------------------+
 ```
 
+### POLLING State (Student Device Mode) [NEW v4.0]
+
+When Student Devices are enabled (see §15), a CONDITIONAL state is inserted into the mission flow between QUESTION_DISPLAYED and ANSWER_SUBMITTED. When Student Devices are OFF (the default), this state is skipped entirely and the existing flow is unchanged.
+
+```
+FIREWALL N DISPLAYED (question renders on TV)
+         |
+         v
++----------------------------------------------------------------------+
+|  QUESTION_DISPLAYED                                                   |
+|  (existing state — always reached)                                    |
++----------------------------------------------------------------------+
+         |
+         +--- Student Devices OFF? ---> Skip to ANSWER_SUBMITTED
+         |                               (teacher types/speaks answer directly)
+         |
+         +--- Student Devices ON? ---v
+                                     |
++----------------------------------------------------------------------+
+|  POLLING (conditional state — only when Student Devices enabled)       |
+|  -------------------------------------------------------------------  |
+|  1. Durable Object pushes question + MC options to all connected      |
+|     student devices via WebSocket                                      |
+|  2. Student devices display question and A/B/C/D answer buttons       |
+|  3. Teacher's screen shows live bar chart of incoming responses       |
+|     updating in real-time                                              |
+|  4. Teacher can:                                                       |
+|     a) Wait for all students to respond (or POLL_TIMEOUT_SECONDS)     |
+|     b) Accept the majority vote (system auto-selects most popular)    |
+|     c) Override with their own selection (teacher always has final     |
+|        authority — this is Core Design Principle #2)                   |
+|  5. Exits to: ANSWER_SUBMITTED with the teacher's confirmed answer    |
++----------------------------------------------------------------------+
+         |
+         v
++----------------------------------------------------------------------+
+|  ANSWER_SUBMITTED                                                     |
+|  (existing state — answer source is transparent to downstream logic)  |
++----------------------------------------------------------------------+
+```
+
+The answer processing pipeline, pattern detection, hint system, and all downstream logic are identical regardless of whether the answer came from teacher input or student device polling. The POLLING state is purely an input-collection mechanism.
+
 ### Event System
 
 The mission system emits events for UI updates:
@@ -1616,20 +1878,40 @@ The Teacher Review Screen appears after mission generation completes. It uses a 
 **Right Panel -- Detail + Feedback:**
 - Full problem text with narrative
 - Complete answer with work shown (expression, operands, result)
-- All validation detail chips: Math Correct/Incorrect, TEKS Match/Mismatch, Grade OK/Flag, LLM Review status
+- All validation detail chips: Structure ✅/❌, Math ✅/❌, Content ✅/⚠️, TEKS ✅/❌, Llama Guard safety flag (🛡️ blue shield icon with purple label text, if triggered)
 - Expandable "Why this score?" panel showing each validation signal and specific flags in plain language
 - Cross-curricular badge (purple) showing science TEKS connection if applicable
-- Llama Guard flag (orange warning banner with flag reason, if triggered)
+- Llama Guard safety flag (🛡️ blue shield icon with purple label text in the bottom legend, if triggered by content flagging)
 
 **Per-Problem Feedback System:**
-- Quick-action chips for common tweaks (zero typing required for most cases):
-  - "Easier Numbers" -- regenerate with simpler operands
-  - "Harder Numbers" -- regenerate with larger operands
-  - "Word Problem" -- convert bare math to word problem
-  - "Bare Math" -- convert word problem to bare expression
-- Free-text feedback field for anything custom (e.g., "Use division instead of multiplication")
-- Each feedback submission triggers one new Groq call containing the original problem + teacher's feedback
-- "Replace with Custom" button opens form: question text, answer, TEKS tag (dropdown), difficulty (dropdown), optional science TEKS connection
+
+Quick-action chips for common tweaks (zero typing required for most cases). Each chip has a distinct architecture — they are NOT all identical API calls:
+
+**"Easier Numbers" / "Harder Numbers" (difficulty chips):** These send an API call to the LLM but SKIP `generateOperandsForTeks()` entirely. Instead, the original problem's operands are included in the feedback as context (e.g., "These are the current numbers: 84 + 15. Use SMALLER numbers appropriate for this grade level."). The LLM chooses new numbers guided by the feedback, and Layer 4 TEKS validation catches anything out of range. See "Easier/Harder Numbers Architecture" subsection below for the root cause analysis that led to this design.
+
+**"Word Problem" (format chip):** Sends an API call WITH `mathConstraints` containing the original problem's `{ operands, operation, answer, expression }`. The LLM generates narrative around those exact numbers. After the LLM returns, the system FORCES math fields (operand1, operand2, operation, answer, expression) back to the original constrained values — the LLM is only trusted for narrative text (`questionStem`) and `scienceLabel`. This prevents the known failure mode where the LLM correctly uses constrained numbers in the story text but hallucinates entirely different values in the JSON response fields.
+
+**"Bare Math" (format chip):** LOCAL transformation — NO API call. The problem object already has an `expression` field (e.g., "78 - 30 = ?") even for word problems. The chip reads `expression`, rewrites `questionStem` to "Solve: " + expression, updates `format` to 'bare', and re-renders. Instant, deterministic, zero failure modes. Falls back to building from operand1/operand2/operation if `expression` is missing.
+
+**"✦ Science" (cross-curricular chip):** Opens a dropdown showing the mission's selected science TEKS with short descriptions (e.g., "3.7B: Forces & Motion"), plus "Choose Other TEKS..." (expands to ALL grade-level science TEKS) and "Remove Science" options. Selecting a TEKS triggers an API call with `mathConstraints` (preserving the math) and the selected science TEKS as theming context. Only appears on word problems (bare math has no narrative for science context).
+
+**"Multiple Choice" / "Open Response" (answer format chips):** Per-problem answer format conversion. The "Multiple Choice" chip appears on open response problems; the "Open Response" chip appears on MC problems. "Multiple Choice" sends an API call requesting the LLM to generate the problem with A/B/C/D options and diagnostically-designed distractors. "Open Response" converts in the opposite direction — strips MC options and returns to numeric input. These follow the same pattern as the Word Problem / Bare Math chips but operate on the answer format axis rather than the problem format axis. Implemented in MC bugfix v1.
+
+**All regeneration chips append two implicit constraints** before the LLM call: operation preservation ("IMPORTANT: Keep the same operation (subtraction). Do not change to a different operation.") and format preservation ("Keep this as a word problem with context." or "Keep this as a bare math expression."). These are logged as `[Review] Enhanced feedback:` in the console. Exception: difficulty chips (Easier/Harder) do NOT get mathConstraints because their purpose is to change the numbers.
+
+Free-text feedback field for anything custom (e.g., "Use division instead of multiplication"). Free-text feedback triggers a standard Groq regeneration call with the teacher's text as feedback. **Important fix (bugfix v11):** The original code truncated feedback text to ~40 characters before sending to the LLM API — a silent data loss bug. A teacher typing "can you incorporate black panther and wakanda technology?" would see the LLM receive only "can you incorporate black " and hallucinate freely. The fix sends the complete feedback string to the API; the console.log now truncates cosmetically with "..." for readability only.
+
+"Replace with Custom" button opens form: question text, answer, TEKS tag (dropdown), difficulty (dropdown), optional science TEKS connection.
+
+**Easier/Harder Numbers Architecture — Root Cause & Fix (Bugfix Round 15):**
+
+The original regeneration path called `generateOperandsForTeks(teksCode, Math.floor(Math.random() * 10))` to pick NEW random operands before every regeneration. The `problemIndex` parameter controlled tier selection: < 3 = easy, < 7 = medium, >= 7 = hard. Because the index was random, "Easier Numbers" had a ~70% chance of selecting medium or hard tier operands — producing numbers LARGER than the originals. The LLM then received contradictory instructions: the feedback text said "Use smaller, simpler numbers" while the PRE-SELECTED NUMBERS line in the system prompt said "Use these EXACT numbers: 409 - 141." The LLM obeyed the explicit instruction, producing bigger numbers.
+
+This also explained why "Harder Numbers" appeared to work flawlessly during testing: the random generator's natural bias toward medium/hard tiers (70%) aligned with the teacher's intent for larger numbers. The asymmetry was only visible when testing "Easier Numbers" with wide-range TEKS like 3.4A (anything within 1,000).
+
+The fix: difficulty chips (Easier/Harder Numbers) SKIP `generateOperandsForTeks()` entirely during regeneration. Instead, the original problem's operands are included as context in the feedback text, and the LLM is free to choose appropriate numbers guided by the difficulty direction. Layer 4 TEKS validation catches anything that exceeds TEKS constraints. This is the correct division of labor: the LLM handles creative number selection, deterministic validation handles constraint enforcement.
+
+NOTE: This fix applies ONLY to difficulty chips. The "Word Problem" and "✦ Science" chips still use `mathConstraints` to preserve the exact original math. The "Bare Math" chip uses no API call at all.
 
 **Primary/Secondary Problem Type Display:**
 - Primary type gets full-color badge (matching TEKS type color system -- cyan for computation, green for geometry, orange for data analysis, etc.)
@@ -1649,20 +1931,93 @@ The Teacher Review Screen appears after mission generation completes. It uses a 
 - "Start Mission" button activates only after all problems approved
 - Approved problems locked (visual indicator changes), can be unlocked by clicking again
 
+**Navigation — Back to Setup Screen:**
+
+A "← Back to Setup" link appears in the review screen header, allowing the teacher to return to the setup/selection screen if she chose the wrong grade, wrong TEKS, or wants to start over. If the teacher has any approved problems, a confirmation dialog warns about losing progress (e.g., "You have 6 approved problems. Going back will discard your review. Continue?"). After confirming, the previous setup selections (grade, TEKS, cross-curricular, answer format) are preserved so the teacher only needs to change what was wrong, not re-select everything. Implemented in bugfix v10 (commit `4e29ce2`), button size enlarged in bugfix v11 (commit `3e78d49`) for classroom TV visibility.
+
 **UPLOADED vs AI GENERATED Badges:**
 - For hybrid missions (PDF upload + AI generation), each problem shows badge indicating source
 - UPLOADED badge: blue outline
 - AI GENERATED badge: cyan outline
 
+### Per-Problem TEKS Override Toggle [NEW v4.0]
+
+Each problem card includes a small toggle labeled "TEKS Override" (default OFF). This toggle controls how Layer 4 (TEKS Alignment) of the validation pipeline behaves during regeneration for that specific problem.
+
+**When OFF (default):** TEKS validation operates as a hard gate. If the teacher clicks a quick-action chip (e.g., "↑ Harder Numbers") and the regenerated problem violates TEKS constraints, the system auto-regenerates without showing the violating problem. This is the safe default — the teacher never sees TEKS-misaligned content. If all 3 auto-regeneration retries are exhausted without producing a TEKS-compliant problem, an amber banner appears near the validation chips: "Could not generate within TEKS constraints. Enable TEKS Override to go beyond limits." This guides the teacher to the override toggle rather than silently failing. Implemented in bugfix v4.
+
+**When ON:** TEKS validation switches to ADVISORY mode. Violations display as amber warnings with explanation text (e.g., "⚠ Operands exceed TEKS 3.4F limit (10×10)"), but the problem is NOT auto-regenerated and NOT blocked. The teacher can review the warning and choose to keep or re-roll the problem.
+
+**Use case:** Teacher clicks "↑ Harder Numbers" on a 3.4F problem (multiply up to 10×10). LLM returns operands of 12×8. Validation flags TEKS violation (exceeds 10×10 limit). Without override, the system auto-regenerates. WITH override toggle ON, the system shows the warning but allows the teacher to keep the problem — because the teacher knows their students and wants to push them beyond TEKS minimums.
+
+**Scope rules:**
+- This applies ONLY to the regeneration path via quick-action chips. Custom problems entered via "Replace with Custom" already skip TEKS validation entirely (confirmed working). Initial generation always uses hard gate enforcement.
+- The toggle is per-problem, not global — the teacher can override validation for one problem while keeping it strict for the other nine.
+- Layers 1-2 (structural integrity, mathematical correctness) are ALWAYS hard gates regardless of override. A math error can never be overridden. See §10 for the complete two-tier validation system.
+
+### TEKS Description Tooltips [NEW v4.0]
+
+Hovering over any cyan TEKS badge (e.g., "3.4F") shows a native browser tooltip with the full TEKS description text. Data source is `window.TEKS_RULES_DATA` from teks-rules-data.js (217 math TEKS entries). Example: hovering "3.4F" shows "recall facts to multiply up to 10 by 10 with automaticity and recall the corresponding division facts." Implementation is a `title` attribute on the badge element, populated by looking up the TEKS code in the rules data at render time.
+
+### Cross-Curricular Badge Label Fix [NEW v4.0]
+
+**Problem:** Purple cross-curricular badge currently displays "✦ 3.7B: 3.7B" (TEKS code duplicated where the description should be).
+
+**Root cause:** teks-rules.json contains ONLY math TEKS. Science TEKS codes numerically overlap with math codes. Math 3.7B = "determine the perimeter of a polygon" while Science 3.7B = "demonstrate how position and motion can be changed by pushing and pulling." Looking up a science TEKS code in teks-rules.json returns the WRONG description.
+
+**Fix:** The LLM provides the science description directly in its response. The system prompt already contains science TEKS text. The LLM output schema includes `crossCurricular.label` which must be a human-readable description (e.g., "Forces & Motion"), NOT the raw TEKS code. The review screen maps `crossCurricular.label` directly to the badge display text. Fixed badge displays "✦ 3.7B: Forces & Motion" (code + human-readable description from LLM).
+
+### ★ Favorite Annotation Field [NEW v4.0]
+
+When the teacher clicks ★ Favorite on a problem, a text input expands below the star with placeholder text "What made this problem great? (optional)". The textarea is approximately 2 lines tall. The annotation is entirely optional — the teacher can leave it blank and the exemplar is still saved.
+
+**Data flow:**
+- On save: `whyThisIsGood` field added to the exemplar object stored in localStorage via `ExemplarBank.save()`
+- If left blank: field is `null`, exemplar still saved (favoriting without annotation is perfectly valid)
+- When this exemplar is later retrieved for few-shot injection via `toInjectionFormat()`, `whyThisIsGood` is included in the 7-field injection schema alongside the problem content
+- The LLM sees both the problem pattern AND what the teacher liked about it, enabling targeted quality improvement
+
+See §7 "★ Favorite Annotation Mechanism" for the flywheel architecture this feeds into.
+
+### Post-Mission Analytics Dashboard (Phase 5B Only) [NEW v4.0]
+
+When tracked student devices are active (Phase 5B — see §2, §15, §21), the review screen gains a post-mission analytics view accessible after the mission completes. This is NOT visible during the pre-mission review phase.
+
+**Analytics available:**
+- Per-problem accuracy: which problems had lowest/highest student accuracy
+- Distractor analysis: which wrong answers were selected most frequently, mapped to the misconceptions they diagnose
+- Per-student TEKS performance: which TEKS each student demonstrated mastery on vs. struggled with
+- Team breakdowns: if Competition Mode was set to Teams, performance data sliced by team
+
+**Phase gating:** This feature is clearly Phase 5B functionality. It requires tracked student device data (per-student answers persisted to Cloudflare D1). It is NOT built in Phase 4 or Phase 5A. The review screen should not display any analytics UI elements until Phase 5B is implemented and tracked mode is active for the session.
+
+**Relationship to Benchmark Tracking (§1):** This dashboard supplements, not replaces, the Benchmark Tracking export. Benchmark Tracking provides per-session JSON/CSV export from the teacher's local machine (available in base mode, no student devices required). The Analytics Dashboard provides cross-session, per-student insights backed by D1 persistence (Phase 5B only).
+
 ---
 
-## 10. Multi-Layer Validation Pipeline [NEW v3.8]
+## 10. Multi-Layer Validation Pipeline [NEW v3.8, UPDATED v4.1]
 
 ### Overview
 
-Five-layer progressive validation ensures every AI-generated problem passes automated quality checks before reaching the Teacher Review Screen. The system uses Tier 2 configuration (7-8 API calls per problem) for maximum rigor.
+Four-layer progressive validation ensures every AI-generated problem passes automated quality checks before reaching the Teacher Review Screen. All four layers are sync and instant. A fifth layer (async LLM review) was built, tested, and permanently abandoned after proving zero incremental value — see the postmortem below.
 
-### The Five Layers
+### Two-Tier Validation Context [NEW v4.0]
+
+The validation pipeline has four active layers (all sync/instant). The layers operate in one of two tiers depending on the generation context. This distinction is critical for understanding the TEKS override toggle (§9) and its interaction with the validation pipeline.
+
+**Tier 1 — Initial Generation (hard gate on all layers):**
+When the teacher clicks "Generate Mission," all 10+3 problems go through the full pipeline with ALL active layers as hard gates. TEKS violations in Layer 4 trigger auto-regeneration. No teacher override is possible at this stage. This ensures the FIRST set of problems the teacher sees is always structurally valid, mathematically correct, and TEKS-compliant.
+
+**Tier 2 — Regeneration via Quick-Action Chips (advisory with override):**
+When the teacher uses per-problem feedback chips like "↑ Harder Numbers," "↺ Different Context," "Word Problem," etc., the regenerated problem goes through validation with context-sensitive enforcement:
+
+If the problem's TEKS override toggle is ON (see §9): Layer 4 TEKS alignment violations produce an amber WARNING instead of a hard FAIL. The composite score calculation treats the Layer 4 score as informational — it is logged for the teacher to see but not factored into the pass/fail determination. The teacher can review the amber warning and decide whether to keep the problem.
+
+If the problem's TEKS override toggle is OFF (default): Validation behaves identically to Tier 1. TEKS violations still trigger auto-regeneration.
+
+**Invariant across both tiers:** Layers 1-2 (structural integrity, mathematical correctness) are ALWAYS hard gates regardless of tier or override toggle. A math error can never be overridden. You cannot ship a problem where 24×3 is claimed to equal 68.
+
+### The Four Layers
 
 **Layer 1 -- Structural Validation (sync, instant):**
 Verify LLM returned valid JSON with all required fields from the problem schema. HARD GATE -- if schema malformed, problem immediately flagged red, can be regenerated without further checks. Uses safeParseLLMJson() to handle common LLM output errors (trailing commas, unquoted keys, single quotes).
@@ -1670,16 +2025,49 @@ Verify LLM returned valid JSON with all required fields from the problem schema.
 **Layer 2 -- Mathematical Verification (sync, instant):**
 Parse expression field with math.js (loaded via CDN at unpkg.com/mathjs@15.1.0/lib/browser/math.js, ~200KB, no build tooling required), compare computed result to expectedAnswer. HARD GATE -- if math wrong, composite score immediately capped at 0, problem gets red flag regardless of all other signals. Math.js handles fractions natively and supports BigNumber mode to avoid JavaScript floating-point traps (0.1 + 0.2 === 0.30000000000000004). For elementary math, configure Fraction mode for fraction problems, use epsilon comparison (Math.abs(a - b) < 1e-10) for decimals.
 
+**Layer 2 MC Extension -- Multiple Choice Validation [NEW v4.1]:**
+
+When `answerType === 'multipleChoice'`, four additional checks run within Layer 2:
+
+1. **MC Duplicate Value Check (HARD GATE):** Extracts numeric values from all 4 options, verifies no two are identical. Triggers auto-regeneration on failure. Log: `[Validation] MC duplicate check: pass/FAIL`. Pre-computed distractor values (§7) make this virtually impossible to trigger since values are guaranteed unique by construction.
+
+2. **MC Rationale-Value Cross-Check (HARD GATE):** For each distractor rationale, extracts all numbers mentioned in the text and verifies they are consistent with the actual option value. Catches LLM-fabricated arithmetic where the rationale describes computing 245 but the option shows 358. Promoted from WARNING to HARD GATE after audit revealed 67% fabrication rate on multi-digit subtraction. Log: `[Validation] MC rationale-value cross-check: pass/FAIL`.
+
+3. **Consecutive Integer Detection (WARNING):** Flags problems where all 3 distractors fall within ±3 of the correct answer. Diagnostic of the LLM falling back to "lazy" distractor generation (picking nearby integers instead of computing real student errors). Does not trigger auto-regen but logged for teacher review.
+
+4. **Wide-Spread Check (WARNING):** Verifies that the spread (max distractor − min distractor) exceeds a threshold relative to the correct answer magnitude. STAAR distractors typically span 10x-100x wider ranges than consecutive integers.
+
 **Layer 3 -- Content Policy and Sensibility Checks (sync, instant):**
 Validate grade-appropriate number ranges (lookup table: Grade 1 up to 20, Grade 3 up to 1,000, Grade 5 up to 1,000,000). Check nonsensical scenarios: fractional indivisible objects (4.5 "friends"), negative results for early grades, division by zero. Keyword-operation consistency as soft warning ("shared equally" should map to division, "altogether" to addition -- but generates warnings not failures, since "more" can indicate subtraction in context). Runs from static rules engine, no API calls.
 
 **Layer 4 -- TEKS Alignment Check (sync, instant):**
 Look up target TEKS code in teks-rules.json (Section 7), verify problem's operation type, operand sizes, number ranges, fraction denominators match standard's specifications. Returns 0-1 alignment score based on proportion of rules passed. Approximately 60-70% of TEKS student expectations contain quantifiable constraints checkable here.
 
-**Layer 5 -- LLM Second-Opinion Review (async, 1-3 seconds):**
-Separate Groq API call asks Llama 3.3 to evaluate generated problem (without seeing it generated it) against structured rubric covering clarity, solvability, grade-appropriateness, TEKS conceptual alignment. Uses Chain-of-Verification's factored approach -- reviewer call does NOT see generation prompt. Returns rubric scores in JSON.
+**Layer 5 — LLM Second-Opinion Review [BUILT, TESTED, ABANDONED v4.1]:**
 
-### Tier 2 Configuration (Primary Implementation Target)
+> **This feature was built, tested extensively, and permanently abandoned.** The postmortem below is preserved to prevent anyone from re-attempting this approach without understanding why it failed. confidence.js has been deleted from the codebase.
+
+Layer 5 was built (confidence.js + solveProblem/reviewProblem in cerebras-api.js) and tested extensively. The implementation included self-consistency voting (5 generation samples, temperature > 0, agreement scoring) and Chain-of-Verification blind review (separate Groq call, factored approach).
+
+**Why Layer 5 was reverted — full analysis:**
+
+**Bugs encountered:** (A) regenerating a problem while Layer 5 was still running caused a crash (callback tried to update a deleted problem), and (B) the regeneration mode-selection logic misinterpreted feedback strings as difficulty shifts, causing a regeneration loop.
+
+**Zero incremental value in testing:** Across all real testing, every single math problem scored "pass" from Layer 5. Self-consistency was 5/5 agreement on every problem. Blind reviewer scores ranged 0.82-0.98 for math. Layers 1-4 had already verified math correctness, JSON validity, grade appropriateness, and TEKS constraint compliance. Layer 5 rubber-stamped all ten math problems and caught zero issues that Layers 1-4 missed.
+
+**Science scoring was counterproductive:** The blind reviewer applied math TEKS standards to science questions, producing scores of 0.44 and 0.52 with concerns like "The problem does not align with TEKS standard 3.6C and is not a math problem." This was noise, not signal — science questions are intentionally not math questions.
+
+**Cost:** 78 extra API calls per mission (6 per problem × 13 problems). ~187 lines of wiring code in teacher-review.js. Made debugging harder because every regeneration was interleaved with Layer 5 validation calls in the console.
+
+**The teacher IS Layer 5:** The project brief's Section 9 describes an entire Teacher Review Screen where a professional educator examines every single problem before students ever see it. The teacher can read the problem, judge whether the wording is confusing, decide if the difficulty is right for her specific students, and use quick-action chips or custom feedback. This human review is infinitely more valuable than an LLM scoring "engagement" at 0.90 versus 0.82. The teacher knows her students. The LLM does not.
+
+**Conclusion:** Layer 5 was solving a problem that doesn't exist. By the time a problem survives schema validation (Layer 1), JS math verification (Layer 2), grade checking (Layer 3), and TEKS rule enforcement (Layer 4), it is already a solid problem. There is nothing ambiguous left for an LLM second-opinion to find. confidence.js is deleted from the codebase and will not be rebuilt.
+
+**Decision:** Layer 5 is permanently abandoned. The MC distractor pipeline (pre-computed values + rationale labels) has proven more impactful — it prevents bad distractors at generation time rather than flagging them after the fact. The teacher review screen is the real quality gate, and it works.
+
+### Tier 2 Async Configuration (ABANDONED — historical reference only) [UPDATED v4.1]
+
+> **This configuration was never deployed and will not be implemented.** It is preserved here solely as historical documentation of the abandoned Layer 5 design. The system runs Layers 1-4 only (sync, instant) with MC validation extension.
 
 - 7-8 API calls per problem: 1 generation + 5 self-consistency samples + 1 LLM blind review + 1 Universal Self-Consistency selection
 - For 13 problems: ~91-104 calls per mission
@@ -1692,7 +2080,9 @@ Separate Groq API call asks Llama 3.3 to evaluate generated problem (without see
   - Remaining badges pop in seconds later
 - Promise.allSettled() for graceful degradation if individual calls fail
 
-### Composite Scoring
+### Composite Scoring (ABANDONED — required Layer 5 which is abandoned) [UPDATED v4.1]
+
+> **The system does NOT use composite scoring and never will in its current architecture.** Layers 1-4 operate as binary hard gates (pass/fail). A problem either passes all four layers or gets auto-regenerated. The composite scoring formula below was the PLANNED design for the abandoned Layer 5 and is preserved here only as historical documentation.
 
 Hard gates enforce non-negotiable requirements; weighted average handles everything else:
 
@@ -1723,13 +2113,13 @@ function computeCompositeScore(signals) {
 
 | Configuration | Calls/Problem | Calls/Mission (13) | % of Groq Daily Limit |
 |--------------|---------------|--------------------|-----------------------|
-| Tier 1 (minimal) | 2 | ~26 | 0.2% |
-| Tier 2 (full) | 7-8 | ~91-104 | 0.7% |
-| With regenerations | +7-8 each | Varies | Still under 2% |
+| **Layers 1-4 (CURRENT)** | **~1** | **~13** | **0.09%** |
+| With regenerations | +1 each | Varies | Still under 1% |
+| ~~Tier 2 / Layer 5 (ABANDONED)~~ | ~~7-8~~ | ~~91-104~~ | ~~0.7%~~ |
 
 ### School District Value Proposition
 
-When an administrator asks "how do you know AI-generated problems are correct?" the answer is: "We run five independent generation passes and compare answers, then a separate AI reviewer checks the problem without seeing the original generation, then deterministic JavaScript independently computes the answer, then we verify TEKS alignment against the actual TEA standards database, and THEN the teacher reviews everything with a confidence dashboard showing exactly which checks passed or failed." Each layer individually defensible, combination genuinely more rigorous than most published edtech products. This aligns with the 1EdTech Consortium's December 2025 guidance calling for "risk-based oversight" of AI in education -- this system IS that guidance implemented.
+When an administrator asks "how do you know AI-generated problems are correct?" the answer is: "Every problem passes four independent automated checks — structural validation confirms proper formatting, deterministic JavaScript independently computes the answer and catches any math errors, content policy filters catch grade-inappropriate scenarios, and TEKS alignment verification checks operand ranges and operation types against the actual TEA standards database — and THEN the teacher reviews everything on a confidence dashboard showing exactly which checks passed or failed, with one-click controls to regenerate anything she doesn't like." Each layer individually defensible, combination genuinely more rigorous than most published edtech products. This aligns with the 1EdTech Consortium's December 2025 guidance calling for "risk-based oversight" of AI in education — this system IS that guidance implemented.
 
 ---
 
@@ -1871,7 +2261,7 @@ Llama 3.3 70B is text-only -- cannot process images. Scanned PDFs require OCR wh
 
 ## 13. Response Bank Reference
 
-The complete response bank is in `response_bank.md` (750+ lines). Here's the structure:
+The complete response bank is in `response_bank.md` (~750 lines). Here's the structure:
 
 | Section | Count | Description |
 |---------|-------|-------------|
@@ -2117,6 +2507,7 @@ Until dialogue is recorded, the system can use browser TTS:
 | **P** | Pause Mission | During gameplay |
 | **R** | Resume Mission | While paused |
 | **Enter** | Submit Answer | When answer input has focus |
+| **A, B, C, D** | Select MC answer | When question is Multiple Choice (coexists with number input — system knows which input mode is active based on problem's answer format) |
 
 ### Hint Triggering (H key)
 
@@ -2138,6 +2529,46 @@ Accept multiple formats:
 - **Numbers:** "37" or "thirty-seven" or "the answer is thirty-seven"
 - **Fractions:** "3/4" or "three fourths" or "three over four"
 - **Multiple choice:** "B" or "Answer B" or "the answer is B"
+
+### Setup Screen Controls [NEW v4.0]
+
+The following controls appear on the setup screen alongside the existing Grade and TEKS selectors. They configure how the mission generates and collects answers.
+
+**Answer Format Selector (orthogonal to Problem Format):**
+
+This selector controls whether students provide numeric answers or select from multiple choice options. It is INDEPENDENT of the existing Problem Format selector (Word Problem / Bare Math / Mix). These are orthogonal axes — a bare math problem can have MC options, and a word problem can require open response. Both selectors appear on the setup screen, visually distinct and clearly labeled.
+
+| Option | Behavior |
+|--------|----------|
+| Open Response (default) | Teacher types the numeric answer. Existing behavior. |
+| Multiple Choice | Question displays A/B/C/D options on TV. Teacher selects letter (or students do, if Student Devices active). LLM generates 3 diagnostically-designed distractors per problem (see §7 "Format-Specific Generation Instructions"). |
+| Mix | Each problem randomly assigned Open Response or MC. LLM prompt specifies which problems get MC options by firewall number so distractors are only generated where needed. |
+
+**Button order convention:** Both selector rows follow the same layout pattern — the "Mix" option always appears in the middle position. Problem Format displays as: Word Problem | **Mix** | Bare Math. Answer Format displays as: Open Response | **Mix** | Multiple Choice. This consistency was implemented via a dedicated CC prompt that swapped the original "Multiple Choice" and "Mix" button positions.
+
+**Show Expression Toggle:**
+
+Controls whether the mathematical expression (e.g., "78 - 30 = ?") is visible alongside word problem narratives during gameplay. Persisted in localStorage via `app.js` (`[ExprToggle] Stored showExpression: true/false` in console). Default: ON (expression visible). When OFF, students must extract the mathematical operation from the word problem context — a higher-order comprehension skill. Has no effect on bare math problems (which are ONLY the expression). This is a teacher scaffolding preference, not a generation setting — it does not affect problem generation, validation, or review. Visible in every console session log at startup.
+
+**Student Devices Toggle:**
+
+Controls whether student Chromebooks/tablets can connect to the mission for answer polling. This is the primary control for the student response system (see §2 "Student Response System Architecture").
+
+| Option | Behavior |
+|--------|----------|
+| OFF (default) | Existing single-screen teacher-operated mode. No room codes, no student connections. All answer input via teacher keyboard or voice. |
+| ANONYMOUS | Enables room codes. Students connect via URL + 6-digit code. No names collected, no data persistence. Aggregate poll results only ("18 chose A, 4 chose B..."). No COPPA/FERPA triggers (see §21). |
+| TRACKED | Full assessment mode. Students enter first name + class period. Per-student answers recorded and persisted to Cloudflare D1. TEKS mastery tracking across sessions. Requires school authorization under COPPA school consent exception (see §21). This option is grayed out with tooltip "Requires school authorization — see Settings" until authorization is configured. |
+
+**Competition Mode Selector (conditionally visible):**
+
+This selector is ONLY visible when Student Devices is not OFF. When Student Devices is OFF, Competition Mode is hidden since it has no effect.
+
+| Option | Behavior |
+|--------|----------|
+| Whole Class (default) | Everyone cooperates. Single aggregate tally of student answers. Current mission experience with poll result overlay. |
+| Teams (2-4 teams) | Competitive scoring with live team scoreboard. Holographic leaderboard with arc reactor energy bars on teacher TV. Team assignment options: Random (system assigns on join), Student Choice (students pick team on join screen), Teacher Assigned (teacher types team rosters during setup). |
+| Individual | Every student for themselves, live quiz leaderboard. Phase 5B only — requires TRACKED mode for individual identification. Grayed out when Student Devices is ANONYMOUS. |
 
 ---
 
@@ -2181,11 +2612,22 @@ const CONFIG = {
   VOICE_DEFAULT_VOLUME: 1.0,         // Default character voice volume
   USE_TTS_FALLBACK: true             // Use browser TTS when audio file missing
 };
+
+// Student Response System (Phase 5) [NEW v4.0]
+const STUDENT_RESPONSE_CONFIG = {
+  ROOM_CODE_LENGTH: 6,                    // Digits in room code
+  ROOM_CODE_EXPIRY_MINUTES: 120,          // Room code valid for 2 hours
+  MAX_CONNECTED_DEVICES: 40,              // Maximum student connections per room
+  POLL_TIMEOUT_SECONDS: 60,               // Auto-close poll after 60s (teacher can still override)
+  POLL_SHOW_RESULTS_LIVE: true,           // Show bar chart updating in real-time (vs reveal-all-at-once)
+  TEAM_COUNT_OPTIONS: [2, 3, 4],          // Allowed number of teams in Teams mode
+  DEFAULT_TEAM_NAMES: ['Stark', 'Banner', 'Rogers', 'Romanoff']  // Default team names (teacher can customize)
+};
 ```
 
 ---
 
-## 17. Implementation Files [NEW, UPDATED v3.8]
+## 17. Implementation Files [NEW, UPDATED v4.1]
 
 ### Complete JavaScript Modules
 
@@ -2205,20 +2647,24 @@ These files were created during Phase 2.5 (GSAP + PixiJS integration) and exist 
 |------|----------|--------|---------|
 | `hud-config.js` | `js/hud-config.js` | * Complete | Central configuration object (`window.HUD_CONFIG`) |
 | `im-animations.css` | `css/im-animations.css` | * Complete | Namespaced CSS foundation for all animation classes |
-| `firewall-sequence.js` | `js/firewall-sequence.js` | * Complete | Transition engine -- 6 randomized transitions, GSAP timeline orchestration |
+| `firewall-sequence.js` | `js/firewall-sequence.js` | * Complete | Transition engine -- 5 randomized math transitions (+ Fury science animation at FW 3/6/9, Black Widow glitch at opening + pre-FW10 message as separate events), GSAP timeline orchestration |
 | `pixi-effect-manager.js` | `js/pixi-effect-manager.js` | * Complete | PixiJS singleton manager (single PIXI.Application, GSAP ticker sync) |
 
-### Phase 4 Implementation Files [NEW v3.8]
+### Phase 4 Implementation Files [NEW v3.8, UPDATED v4.1]
 
-These files will be created during Phase 4 prompts:
+These files are created during Phase 4 prompts:
 
 | File | Location | Status | Purpose |
 |------|----------|--------|---------|
-| `config.js` | `js/config.js` | * Complete (Prompt 1) | Groq Worker URL, model name, retry settings |
-| `cerebras-api.js` | `js/cerebras-api.js` | * Complete (Prompt 1), needs Prompt 2 update | API wrapper -- generateMission(), calculateAnswer(). Prompt 2 adds: combine 3 exemplar arrays into ALL_EXEMPLARS, call selectExemplars(selectedTeks, ALL_EXEMPLARS), inject into system prompt. Requires exemplar files loaded first (slots 13.51-13.53) |
-| `validator.js` | `js/validator.js` | TODO (Prompt 3-4) | Five-layer validation pipeline with progressive async results |
-| `confidence.js` | `js/confidence.js` | TODO (Prompt 4) | Composite scoring and category assignment |
-| `teks-rules.json` | `data/teks-rules.json` | TODO (Prompt 3) | Static lookup of ~150 elementary math SEs with validation constraints |
+| `config.js` | `js/config.js` | ✓ Complete (Prompt 1) | Groq Worker URL, model name, retry settings |
+| `cerebras-api.js` | `js/cerebras-api.js` | ✓ Complete (Prompt 1 + MC pipeline) | API wrapper — generateMission(), calculateAnswer(), computeDistractorValues(). Contains: exemplar selection (selectExemplars, 5 per TEKS cap), distractor pattern injection (selectDistractorPatterns), pre-computed distractor value algorithms (ADD/SUBTRACT/MULTIPLY/DIVIDE), rationale label generation, distractorReasoning→distractorRationales bridge, MC mix ratio logic. Requires exemplar + distractor-patterns files loaded first (see Script Load Order). |
+| `distractor-patterns.js` | `js/distractor-patterns.js` | ✓ Complete (Tier 1) | Distractor Pattern Bank — 1,586 lines, 97 worked examples, 27 patterns, 5 Tier 1 TEKS (3.4A, 3.4F, 3.4J, 3.4D, 3.4K). Exports: DISTRACTOR_PATTERNS, UNIVERSAL_DISTRACTOR_RULES, DISTRACTOR_RULES_REMINDER, selectDistractorPatterns(), toDistractorInjectionFormat(). Browser + Node compatible (conditional module.exports guard). |
+| `validation-engine.js` | `js/validation-engine.js` | ✓ Complete | Inline validation within validateProblem() — Layers 1-4 structural, math, content policy, TEKS alignment checks. MC extension: duplicate value detection (HARD GATE), rationale-value cross-check (HARD GATE), consecutive integer detection, wide-spread check. Originally planned as `validator.js` in the brief; actual implementation created under this name by Prompt 3. |
+| `teks-rules.json` | `data/teks-rules.json` | ✓ Complete | Static TEKS validation constraints (217 entries, 132 with quantifiable rules) |
+| `teks-rules-data.js` | `js/teks-rules-data.js` | ✓ Complete | `window.TEKS_RULES_DATA` — browser-loadable runtime version of teks-rules.json. 217 math TEKS entries with description fields. Used by teacher-review.js for TEKS description tooltips on hover (§9). |
+| `teacher-review.js` | `js/teacher-review.js` | ✓ Complete (Prompt 3 + 15 bugfix rounds + MC bugfix v1) | Teacher Review Screen — split-panel layout, all quick-action chips (difficulty, format, science, MC/Open Response), free-text feedback, TEKS override toggle with retry-exhausted banner, ★ Favorite annotation, approval workflow, back button to setup screen, validation display with traffic light badges. The most heavily modified file in the project. |
+| `validator.js` | `js/validator.js` | SUPERSEDED | Originally planned as the five-layer validation pipeline. Never created — the Prompt 3 implementation put sync validation into `validation-engine.js` instead. This name appears in older brief sections as the planned target; the actual file is `validation-engine.js`. |
+| `confidence.js` | `js/confidence.js` | ABANDONED | Composite scoring and category assignment — built, tested, permanently abandoned. Zero incremental value over Layers 1-4 in testing; teacher review screen is the quality gate. See §10 postmortem. |
 | `diagramRenderer.js` | `js/diagramRenderer.js` | TODO (Prompt 5) | DiagramRegistry pattern, SVG renderers for 8 diagram types |
 | `diagramAnimations.js` | `js/diagramAnimations.js` | TODO (Prompt 5) | GSAP DrawSVGPlugin "power-on" animation for diagrams |
 | `diagram-hud.css` | `css/diagram-hud.css` | TODO (Prompt 5) | CSS custom properties for diagram theming, SVG filter definitions |
@@ -2248,10 +2694,13 @@ This is the complete dependency chain for `index.html`. Files MUST load in this 
 | 13.51 | `js/Batch_1_readiness_standards_exemplars.js` | `<script>` | 65 Readiness exemplars + utility functions (selectExemplars, toInjectionFormat, diverseSelect) [v3.9] |
 | 13.52 | `js/Batch_2_supporting_standards_exemplars.js` | `<script>` | 67 Supporting exemplars (renamed from __1_ version) [v3.9] |
 | 13.53 | `js/Batch_3_missing_teks_exemplars.js` | `<script>` | 3 Synthetic exemplars for never-tested TEKS [v3.9] |
-| 13.6 | `js/cerebras-api.js` | `<script>` | API wrapper -- requires config.js + exemplar files [v3.8, UPDATED v3.9] |
+| 13.54 | `js/distractor-patterns.js` | `<script>` | Distractor Pattern Bank — DISTRACTOR_PATTERNS, UNIVERSAL_DISTRACTOR_RULES, selectDistractorPatterns() as browser globals. Must load before cerebras-api.js which calls selectDistractorPatterns() [v4.1] |
+| 13.6 | `js/cerebras-api.js` | `<script>` | API wrapper -- requires config.js + exemplar files + distractor-patterns.js [v3.8, UPDATED v4.1] |
 | 13.7 | math.js (CDN) | `<script>` | Expression evaluation for validation [v3.8] |
-| 13.8 | `js/validator.js` | `<script>` | Validation pipeline -- requires math.js + config [v3.8] |
-| 13.9 | `js/confidence.js` | `<script>` | Composite scoring -- requires validator.js [v3.8] |
+| 13.8 | `js/teks-rules-data.js` | `<script>` | `window.TEKS_RULES_DATA` — 217 math TEKS entries with descriptions, auto-generated from teks-rules.json. Used by teacher-review.js for TEKS description tooltips. [v4.0] |
+| 13.85 | `js/validation-engine.js` | `<script>` | Layers 1-4 validation + MC extension — requires math.js + config. Originally planned as `validator.js` in the brief; actual implementation created under this name by Prompt 3. [v3.8, UPDATED v4.1] |
+| 13.9 | `js/confidence.js` | `<script>` | ABANDONED — was composite scoring for Layer 5. File deleted from codebase. Not in current `<script>` tags. [v3.8, ABANDONED v4.1] |
+| 13.95 | `js/teacher-review.js` | `<script>` | Teacher Review Screen UI — split-panel layout, quick-action chips, per-problem feedback, TEKS override toggle, ★ Favorite annotation, approval workflow, back button navigation. Most heavily modified file in the project (15 bugfix rounds + MC bugfix v1). Requires cerebras-api.js + validation-engine.js + teks-rules-data.js. [v3.8, UPDATED v4.1] |
 | 14 | `js/diagramRenderer.js` | `<script>` | SVG diagram registry [v3.8] |
 | 14.5 | `js/diagramAnimations.js` | `<script>` | Diagram GSAP animations -- requires GSAP + diagramRenderer [v3.8] |
 | 15 | `js/app.js` | `<script>` | Entry point -- last, wires everything together |
@@ -2576,12 +3025,12 @@ At the start of each transition, `playTransition()` calls `pixiEffectManager.ini
 
 ---
 
-### Asset Status Summary
+### Asset Status Summary [UPDATED v4.1]
 
 | Asset | Status |
 |-------|--------|
 | Sound Effects (23 WAV files) | [DONE] COMPLETE |
-| Sound Integration (all events wired) | [DONE] COMPLETE v3.7 -- 15 gameplay + 6 transition + 11 UI sounds |
+| Sound Integration (all events wired) | [DONE] COMPLETE v3.7 -- 32 event-to-sound mappings (15 gameplay + 6 transition + 11 UI) using 23 unique WAV files (some events share files) |
 | pattern-detector.js | [DONE] COMPLETE |
 | mission-integration.js | [DONE] COMPLETE |
 | sound-manager.js | [DONE] COMPLETE |
@@ -2589,17 +3038,25 @@ At the start of each transition, `playTransition()` calls `pixiEffectManager.ini
 | TEKS Files (grades 1-5) | [DONE] COMPLETE |
 | UI/HTML Interface | [WIP] IN PROGRESS |
 | Dialogue Audio (Jarvis/Fury/Widow) | [TODO] NOT STARTED |
-| Groq API Integration (via Cloudflare Worker) | [WIP] Prompt 1 COMPLETE -- API module + Worker deployed, CORS tested |
-| Teacher Review Screen | [TODO] NOT STARTED (Prompt 2-3) |
-| Multi-Layer Validation Pipeline | [TODO] NOT STARTED (Prompt 3-4) |
+| Groq API Integration (via Cloudflare Worker) | [DONE] COMPLETE — API module + Worker deployed, CORS tested, exemplar injection working, distractor pattern injection working |
+| Teacher Review Screen | [DONE] COMPLETE — Option C split panel built, 15 bugfix rounds (v4-v15), TEKS override toggle, tooltips, cross-curricular badge, ★ Favorite annotation |
+| Multi-Layer Validation Pipeline | [DONE] Layers 1-4 COMPLETE (sync, instant). Layer 5 (async LLM review) built, tested, ABANDONED — zero incremental value. MC validation extension COMPLETE (duplicate detection, rationale-value cross-check, consecutive integer detection, wide-spread check). |
 | SVG Diagram Generator | [TODO] NOT STARTED (Prompt 5) |
 | PDF Upload System | [TODO] NOT STARTED (Prompt 6) |
-| teks-rules.json | [TODO] NOT STARTED |
+| teks-rules.json | [DONE] COMPLETE — 217 entries, 132 with quantifiable rules |
 | Few-Shot Exemplar Bank (135 items, 46 TEKS) | [DONE] COMPLETE v3.9 -- Batches 1-3 extracted, audited (5 passes), 100% Grade 3 Math TEKS coverage |
+| Distractor Pattern Bank (Tier 1) | [DONE] COMPLETE v4.1 -- 97 examples, 27 patterns, 5 TEKS (3.4A/F/J/D/K), 4-part audit verified, all from TEA STAAR rationales 2019-2025 |
+| Pre-Computed Distractor Values | [DONE] COMPLETE v4.1 -- computeDistractorValues() in cerebras-api.js, deterministic algorithms for ADD/SUBTRACT/MULTIPLY/DIVIDE |
+| Rationale Label Injection | [DONE] COMPLETE v4.1 -- {value, rationale, tag} triples, 100% rationale accuracy |
+| Multiple Choice Mode | [DONE] FUNCTIONAL for Tier 1 arithmetic TEKS — distractor pipeline, validation checks, gameplay HUD with A/B/C/D buttons + keyboard. Tier 2+ TEKS distractor patterns NOT YET BUILT. |
 | GSAP Animations + PixiJS Effects | [DONE] 5 transitions in pool COMPLETE + Fury SHIELD animation COMPLETE -- Black Widow overlay remaining |
 | **Transition Engine (FirewallSequence)** | [DONE] COMPLETE -- 5 randomized transitions + Widow glitch, PixiJS integration, transition sounds wired |
 | **PixiJS Foundation** | [DONE] COMPLETE -- PixiEffectManager singleton, 45 filters, GSAP ticker sync |
 | Benchmark Export System | [TODO] NOT STARTED |
+| Student Response System (Anonymous) | [TODO] NOT STARTED (Phase 5A) |
+| Student Response System (Tracked) | [TODO] NOT STARTED (Phase 5B) |
+| Team Competition Mode | [TODO] NOT STARTED (Phase 5A/5B) |
+| Post-Mission Analytics Dashboard | [TODO] NOT STARTED (Phase 5B) |
 
 ---
 
@@ -2801,38 +3258,30 @@ const TEST_PROBLEMS = {
 - [x] Offline math verification working (calculateAnswer returns correct results)
 - [x] Script tags added to index.html
 
-**Prompt 2: Problem Generation Pipeline**
-- [ ] Wire "Generate Mission" button -> Cloudflare Worker -> Groq
-- [ ] System prompt with TEKS instructions, cross-curricular mode, structured JSON output (including diagram descriptor field), and explicit "generate ORIGINAL problems, do NOT copy exemplars" instruction
-- [ ] Integrate Few-Shot Exemplar Bank: selection function picks 1-5 exemplars per selected TEKS from the 135-item bank (Batches 1-3), capped at 10 total, already stripped to injection schema by selectExemplars(), embeds in system prompt after instructions but before query (per few-shot positioning research)
-- [ ] Parse response, store in mission state
-- [ ] Progress indicator during generation ("Generating problem 3 of 13...")
-- [ ] Fallback: load test-problems.js if API fails
-- [ ] Testable: console shows valid JSON array of 13 problems
+**Prompt 2: Problem Generation Pipeline [COMPLETE v4.1]**
+- [x] Wire "Generate Mission" button -> Cloudflare Worker -> Groq
+- [x] System prompt with TEKS instructions, cross-curricular mode, structured JSON output, and explicit "generate ORIGINAL problems, do NOT copy exemplars" instruction
+- [x] Integrate Few-Shot Exemplar Bank: selectExemplars picks up to 5 exemplars per selected TEKS, stripped to injection schema, embedded in system prompt
+- [x] Parse response, store in mission state
+- [x] Progress indicator during generation
+- [x] Fallback: load test-problems.js if API fails
+- [x] Pre-generated operands: JavaScript generates operation + operands per TEKS rules, LLM receives constrained operands
+- [x] Mix format ratio: explicit integer counts (e.g., "6 word / 4 bare") randomly selected per generation
 
-**Prompt 3: Teacher Review Screen + Instant Validation Layers**
-- [ ] Build Option C split panel UI (Section 9) with ALL validation display elements from day one
-- [ ] Traffic light badges, validation detail chips, expandable "Why this score?" panel
-- [ ] Wire instant validation layers (Layers 1-4 from Section 10):
-  - Structural validation (valid JSON?)
-  - Deterministic math check (math.js computes expression, compares to expectedAnswer)
-  - Content policy checks (negative results, fractional people, grade-appropriate ranges)
-  - TEKS rule matching from teks-rules.json
-- [ ] LLM Review chip shows "Pending" placeholder (wired in Prompt 4)
-- [ ] Per-problem feedback with quick-action chips + free text
-- [ ] Approve workflow, confidence-based sort order
-- [ ] Testable: Review Screen displays with static test data, all sync validation badges populate
+**Prompt 3: Teacher Review Screen + Instant Validation Layers [COMPLETE v4.1]**
+- [x] Build Option C split panel UI (Section 9) with ALL validation display elements
+- [x] Traffic light badges, validation detail chips
+- [x] Wire instant validation layers (Layers 1-4): structural, math, content policy, TEKS alignment
+- [x] Per-problem feedback with quick-action chips + free text
+- [x] Approve workflow
+- [x] 15 bugfix rounds (v4 through v15) addressing: TEKS override toggle, cross-curricular badge, tooltips, ★ Favorite annotation, ID collision bug, CSS visibility, bare math chip, word problem chip, science explanation length, division validation (dividend≤10 → divisor/quotient≤10), firewall-missing-problem handling
 
-**Prompt 4: Tier 2 Async Validation Layers**
-- [ ] Self-consistency voting (5 generation samples, temperature > 0, agreement scoring)
-- [ ] Chain-of-Verification blind review (separate Groq call, factored approach)
-- [ ] Universal Self-Consistency selection
-- [ ] Composite confidence scoring with hard gates and weighted averaging
-- [ ] Progressive UI updates -- "Pending" chips from Prompt 3 populate as async results arrive
-- [ ] Rate limiter for Groq calls (3 concurrent max)
-- [ ] Promise.allSettled() for graceful degradation
-- [ ] Touches only validator.js, confidence.js, and data-binding layer -- NOT Review Screen HTML/CSS
-- [ ] Testable: Full validation pipeline runs, all badges populate, composite scores display
+**Prompt 4: Async Validation Layers [BUILT, TESTED, ABANDONED v4.1]**
+- [x] Self-consistency voting built (5 generation samples, agreement scoring)
+- [x] Chain-of-Verification blind review built
+- [x] Progressive UI updates implemented
+- [ ] ~~Composite confidence scoring~~ — ABANDONED. Two bugs surfaced during testing: (A) regeneration during async Layer 5 caused crashes, (B) regen mode-selection misinterpreted feedback as difficulty shifts. More fundamentally, Layer 5 added zero incremental value — see §10 postmortem.
+- **Decision:** Layer 5 permanently abandoned. Layers 1-4 (sync, instant) provide sufficient validation. MC distractor pre-compute prevents most quality issues at generation time rather than catching them after. The teacher review screen is the quality gate.
 
 **Prompt 5: SVG Diagram Generator**
 - [ ] DiagramRegistry with 6-8 Tier 1 diagram types (Section 11)
@@ -2848,8 +3297,40 @@ const TEST_PROBLEMS = {
 - [ ] Groq parsing call with TEKS context
 - [ ] Hybrid missions (uploaded + AI-generated to fill 13 total)
 - [ ] UPLOADED vs AI GENERATED badges on Review Screen
-- [ ] Manual custom problem entry form
+- [x] Manual custom problem entry form — "Replace with Custom Problem" button on each problem card opens inline form with fields: question text, answer, TEKS tag (dropdown with short descriptions from teks-rules-data.js), difficulty (dropdown), optional science TEKS connection (dropdown with descriptions). Enhanced in bugfix v11 with TEKS description labels in dropdowns.
 - [ ] Testable: Upload a PDF, see extracted problems on Review Screen
+
+**Phase 4 Bugfix Rounds [UPDATED v4.1]:**
+- [x] Bugfix v1-v3: Initial cleanup, validation fixes, state management
+- [x] Bugfix v4: TEKS override toggle, cross-curricular badge fix, TEKS tooltips, ★ Favorite annotation, mix ratio display
+- [x] Bugfix v5: Cross-contamination ID collision — regenerated problems always received `id: 'fw-1'` because `_parseMathResponse()` uses `firewallNumber = p.firewallNumber || (index + 1)` and single-problem regeneration always has `index = 0`. Then `Object.assign(p, bestMapped, ...)` overwrote the original problem's ID, causing multiple regenerated problems to share the same `_validation` cache key. Fix: "savedId" pattern — save `p.id` before Object.assign, restore after, applied in both `_regenerateProblem` and `_autoRegenerateFailures`. **Architectural warning:** Any future code using Object.assign on problem objects MUST preserve the ID field.
+- [x] Bugfix v6-v7: CSS visibility fixes, bare math chip
+- [x] Bugfix v8: Bare math event handler (broken by v7 restructure), word problem chip preserving math, per-problem cross-curricular dropdown chip (replaced checkbox with "✦ Science" chip button opening TEKS selector dropdown)
+- [x] Bugfix v9: Word problem chip's subtle failure (LLM used constrained numbers in narrative but changed expression to different numbers)
+- [x] Bugfix v10: Science explanation sentences too long, cross-curricular feedback loop
+- [x] Bugfix v11: Back button size enlargement for classroom TV visibility, feedback text 40-character truncation fix (silent data loss — full string now sent to API), TEKS descriptions added to custom problem dropdowns, "false" literal rendering bug for crossCurricular field, legend indicator colors (green/yellow/red)
+- [x] Bugfix v12: Textarea focus loss on first keystroke
+- [x] Bugfix v13: Division validation too strict (dividend≤10 → divisor/quotient≤10), firewall-missing-problem graceful handling
+- [x] Bugfix v14: Operation & format preservation — implicit constraints appended to all regeneration feedback (e.g., "IMPORTANT: Keep the same operation (subtraction)." + "Keep this as a word problem with context."). See chip architecture §9.
+- [x] Bugfix v15: Easier/Harder Numbers fix — difficulty chips skip `generateOperandsForTeks()` during regeneration, include original operands as LLM context instead. Root cause: random tier index in `generateOperandsForTeks()` gave 70% chance of bigger numbers for "Easier." See Easier/Harder architecture §9.
+
+**Key bugfix lesson:** Scope creep was the #1 cause of regressions. Multi-target CC prompts that tried to fix 3+ things simultaneously caused cascading breakage. The most successful fixes were single-target, surgically specific prompts following the XML tag template from the CC prompting report.
+
+**Phase 4 Feature Add: Multiple Choice Mode [FUNCTIONAL v4.1]**
+- [x] Setup screen Answer Format toggle (Open Response / Multiple Choice / Mix) — orthogonal to existing Problem Format selector (see §15)
+- [x] Distractor Pattern Bank (`distractor-patterns.js`) — Tier 1 COMPLETE: 27 patterns, 97 examples across 3.4A/F/J/D/K. 4-part audit: math verification, schema/pipeline, source attribution, pedagogical integrity. Zero critical issues.
+- [x] Pre-computed distractor values (`computeDistractorValues()` in `cerebras-api.js`) — deterministic JS algorithms for ADD/SUBTRACT/MULTIPLY/DIVIDE. Eliminates LLM arithmetic errors.
+- [x] Rationale label injection — `computeDistractorValues()` returns `{value, rationale, tag}` triples. LLM paraphrases pre-built rationales instead of inventing them. 100% accuracy.
+- [x] MC-specific validation checks — duplicate detection (HARD GATE), rationale-value cross-check (HARD GATE), consecutive integer detection, wide-spread check
+- [x] `distractorReasoning` → `distractorRationales` bridge in cerebras-api.js
+- [x] Gameplay HUD A/B/C/D rendering — holographic-styled option buttons with selection highlighting
+- [x] Keyboard A/B/C/D input for MC problems, coexisting with number input for open response
+- [x] Mix mode: random per-problem assignment of open response vs. MC with explicit integer counts
+- [x] Per-problem MC ↔ Open Response quick-action chips on Teacher Review Screen (MC bugfix v1) — see chip architecture §9
+- [x] Answer Format button order swap: Open Response | Mix | Multiple Choice (Mix in middle, matching Problem Format layout) — see §15
+- [x] Science question skipping bug fixed (Fury interruptions now fire correctly at firewalls 3/6/9)
+- [ ] Tier 2+ distractor pattern entries (3.4H, 3.4E, 3.5A, 3.5B, 3.4B, 3.4G, 3.6C) — NOT YET BUILT
+- [ ] Content filter update: "battle" → YELLOW not RED — NOT YET DONE
 
 **Phase 4 Test Criteria (overall):**
 - [ ] Generate a full mission, review all problems on Review Screen
@@ -2858,10 +3339,53 @@ const TEST_PROBLEMS = {
 - [ ] Start mission and play through with generated content
 - [ ] Test API failure -> fallback to static problems
 - [ ] Upload a PDF, verify problems extracted and displayed
+- [ ] Generate MC problems, verify 4 options display with exactly 1 correct
+- [ ] Test TEKS override toggle on a regenerated problem
 
 ---
 
-### Phase 5: Response Intelligence (Three-Layer System)
+### Phase 5: Student Response System [NEW v4.0]
+
+**Goal:** Transform the app from a single-screen teacher-operated demo into an interactive classroom assessment tool where students participate on their own devices.
+
+**Dependency chain:** Multiple Choice mode (Phase 4) → Phase 5A → Phase 5B. MC must exist before student devices can render answer options. SVG diagrams (Phase 4 Prompt 5) should ideally be stable before Phase 5A, since diagram-containing questions need to render on student devices.
+
+**Rationale for placement:** The Student Response System is higher-impact than dialogue audio (Phase 6) — it transforms the app from a demo into an assessment tool. And having a working prototype strengthens the non-provisional patent filing (see §22).
+
+**Phase 5A — Anonymous (no compliance required):**
+- [ ] Extend existing Cloudflare Worker to support room creation and Durable Object bindings
+- [ ] Cloudflare Durable Object for real-time room state (one per active room, manages WebSocket connections)
+- [ ] WebSocket infrastructure (teacher's file:// app ↔ Durable Object ↔ student devices)
+- [ ] Room code generation (6-digit, 2-hour expiry) and room management endpoints
+- [ ] Student-facing HTML/JS page served from Worker (room code entry, question display, A/B/C/D buttons, waiting screen)
+- [ ] Teacher poll display — live bar chart overlay on mission HUD showing incoming responses in real-time
+- [ ] POLLING state integration — new conditional state in mission flow between QUESTION_DISPLAYED and ANSWER_SUBMITTED (see §8)
+- [ ] Majority-vote input mode (auto-selects most popular answer, teacher can override)
+- [ ] Competition Mode: Whole Class (aggregate tally) and Teams (per-team running tallies, holographic leaderboard)
+- [ ] Team assignment options: Random, Student Choice, Teacher Assigned
+- [ ] HTTP long-polling fallback for restrictive school firewalls
+- [ ] CAN BE TESTED IN CLASSROOMS IMMEDIATELY — no legal compliance required (see §21)
+- [ ] Estimated effort: 2-3 focused Claude Code sessions
+
+**Phase 5B — Tracked (requires school authorization before classroom deployment):**
+- [ ] Cloudflare D1 database schema (sessions, students, answers, TEKS mastery tables)
+- [ ] Student identity on join screen (first name + class period)
+- [ ] Per-student answer persistence — session data written to D1 at session end
+- [ ] Retroactive upgrade from 5A: additive WebSocket message field (`student`), D1 write call before Durable Object memory clears (see §2 "Retroactive Upgrade Architecture")
+- [ ] TEKS mastery tracking — per-student, per-TEKS accuracy calculations across sessions
+- [ ] Second flywheel input stream — student performance data attaches to exemplar metadata (see §7 "Dual-Input Flywheel")
+- [ ] Teacher analytics dashboard — post-mission view on review screen: accuracy by problem, distractor analysis, per-student TEKS performance, team breakdowns (see §9 "Post-Mission Analytics Dashboard")
+- [ ] Privacy policy document (what collected, how used, what NOT done, retention, deletion mechanism — see §21)
+- [ ] Data deletion mechanism (teacher or school can request at any time)
+- [ ] School authorization workflow
+- [ ] Competition Mode: Individual leaderboards (requires tracked mode for student identification)
+- [ ] BUILD technically with synthetic data (25 fake students, simulated answer patterns) — deploy only after school authorization obtained
+- [ ] Three-stage testing pathway: synthetic data → adult volunteers → formal pilot with school authorization (see §21)
+- [ ] Estimated additional effort: 2-3 sessions beyond Phase 5A
+
+---
+
+### Phase 6: Response Intelligence (Three-Layer System) [RENUMBERED from Phase 5 in v4.0]
 
 **Goal:** Jarvis gives intelligent, contextual responses instead of generic "correct/incorrect."
 
@@ -2873,19 +3397,19 @@ const TEST_PROBLEMS = {
   - **Layer 3:** Dynamic Groq fallback (for edge cases, ~1 sec delay)
 - [ ] Connect pattern detection results to hint selection (HINT-PAT-XX IDs)
 - [ ] Test all 11 error patterns trigger correct hints
-- [ ] Implement Black Widow hint system (appears 2-4 times randomly)
+- [ ] Implement Black Widow hint system (deterministic on 2nd wrong answer, max 4 appearances, min 2-firewall spacing — see §4)
 - [ ] Implement Fury introduction lines before science questions
 - [ ] Wire `mission-integration.js` event system to UI
 
 **Test Criteria:**
 - [ ] Intentionally answer "off by 1" -> verify HINT-PAT-01 or -02 triggers
 - [ ] Intentionally answer with reversed digits -> verify HINT-PAT-06 or -07 triggers
-- [ ] Verify Black Widow appears at random points
+- [ ] Verify Black Widow appears deterministically on 2nd wrong answer per firewall (no randomness)
 - [ ] Verify Fury speaks intro line before each science question
 
 ---
 
-### Phase 6: Voice Integration
+### Phase 7: Voice Integration [RENUMBERED from Phase 6 in v4.0]
 
 **Goal:** Jarvis speaks, teacher can speak commands.
 
@@ -2993,7 +3517,7 @@ class FirewallSequence {
 
 ---
 
-### Phase 7: Dialogue Recording + Polish + Reporting
+### Phase 8: Dialogue Recording + Polish + Reporting [RENUMBERED from Phase 7 in v4.0]
 
 **Goal:** Classroom-ready experience with full audio and benchmark tracking.
 
@@ -3027,7 +3551,29 @@ class FirewallSequence {
 
 ---
 
-### Phase Summary Table
+### Phase Dependency Chain [NEW v4.0]
+
+```
+Phase 1 (Interface) → Phase 2 (Gameplay Loop) → Phase 2.5 (Animations)
+                                                       ↓
+                                                  Phase 3 (Sound)
+                                                       ↓
+                                                  Phase 4 (AI Gen + Review + Validation)
+                                                       ↓
+                                                  Bugfix v4 → MC Mode (Phase 4 Feature Add)
+                                                       ↓
+                                                  Phase 5A (Anonymous Student Response)
+                                                       ↓
+                                                  Phase 5B (Tracked Student Response)
+                                                       ↓
+                                              Phase 6 (Response Intelligence)
+                                                       ↓
+                                              Phase 7 (Voice Integration)
+                                                       ↓
+                                              Phase 8 (Dialogue + Polish)
+```
+
+### Phase Summary Table [UPDATED v4.0]
 
 | Phase | What It Builds | What You Can Test | Dependencies |
 |-------|----------------|-------------------|--------------|
@@ -3038,12 +3584,16 @@ class FirewallSequence {
 | **4 P1** | API module + Cloudflare Worker | file:// -> Worker -> Groq chain, offline math verification | Phase 2 |
 | **4 P2** | Problem generation pipeline | Generate 13 problems via Groq, store in mission state | Phase 4 P1 |
 | **4 P3** | Teacher Review Screen + sync validation | Split panel UI, instant validation (math, TEKS, content), feedback system | Phase 4 P2 |
-| **4 P4** | Async validation (Tier 2) | Self-consistency voting, LLM blind review, composite confidence scores | Phase 4 P3 |
+| **4 P4** | ~~Async validation~~ | ~~Self-consistency voting, LLM blind review, composite confidence scores~~ | ABANDONED — see §10 postmortem |
 | **4 P5** | SVG diagram generator | 8 diagram types render at 1920x1080 with HUD theming | Phase 4 P2 |
 | **4 P6** | PDF upload + hybrid missions | Extract problems from PDF, mix with AI-generated | Phase 4 P3 |
-| **5** | Response intelligence | Pattern detection, hint quality, Widow/Fury intros | Phase 3, 4 |
-| **6** | Voice I/O + audio-visual sync | Jarvis speech, teacher voice commands, A/V sync with transitions | Phase 5 |
-| **7** | Polish + reporting | Classroom-ready experience, benchmark exports | All above |
+| **4 MC** | Multiple Choice mode | MC option display, distractor generation, A/B/C/D input | Bugfix v4 |
+| **5A** | Anonymous student response | Room codes, live polling, majority vote, team competition | Phase 4 MC |
+| **5B** | Tracked student response + analytics | Per-student TEKS mastery, analytics dashboard, D1 persistence | Phase 5A |
+| **6** | Response intelligence | Pattern detection, hint quality, Widow/Fury intros | Phase 3, 4 |
+| **7** | Voice I/O + audio-visual sync | Jarvis speech, teacher voice commands, A/V sync with transitions | Phase 6 (Response Intelligence) |
+| **8** | Polish + reporting | Classroom-ready experience, benchmark exports | All above |
+
 
 
 ## 19. Claude Code Guidelines
@@ -3231,7 +3781,7 @@ After making changes, verify:
 
 ### AI Problem Schema
 
-The AI must output problems in exactly this format:
+> **Note:** The schema below shows the **pattern-detection-relevant subset** of fields used by `detectMathError()` and the event flow logic. The complete problem schema — including `answerUnit`, `primaryType`, `validationTypes`, `scienceTeksConnection`, `scienceLabel`, `diagram`, and MC-specific extensions (`mcOptions`, `distractorRationales`) — is defined in §7 "Problem Schema." The LLM outputs the full schema; this section highlights only the fields consumed by the mission gameplay loop.
 
 ```javascript
 {
@@ -3280,7 +3830,7 @@ detectMathError(correct, parsed, problemData, grade)
 |   | IF wrongAttemptsThisFirewall == 1:      |       |
 |   |   -> wait 1.5s                          |       |
 |   |   -> show JARVIS_GENERIC_HINTS text     |       |
-|   |     (Phase 5: upgrade to pattern-specific)|     |
+|   |     (Phase 6: upgrade to pattern-specific)|     |
 |   |                                         |       |
 |   | IF wrongAttemptsThisFirewall >= 2:      |       |
 |   |   -> checkWidowHint() (deterministic)    |       |
@@ -3359,6 +3909,142 @@ These are already implemented in `mission-integration.js`:
 
 ---
 
+## 21. Privacy & Compliance [NEW v4.0]
+
+This section documents the legal framework governing the student response system (§2, §15, Phase 5A/5B in §18). It is included in the project brief because the brief doubles as patent documentation and compliance paper trail.
+
+### COPPA (Children's Online Privacy Protection Act)
+
+COPPA applies when a commercial operator collects personal information online from children under 13. The 2025 COPPA amendments (finalized April 22, 2025; compliance required April 22, 2026) expanded the definition of "personal information" to include biometric identifiers, device IDs, persistent cookies, precise geolocation, and inferred behavioral profiles.
+
+**CRITICAL:** The FTC did NOT codify the school authorization exception in the 2025 final rule. The rulemaking deferred this to potential FERPA amendments from the Department of Education. The exception still exists as longstanding FTC guidance and is actively enforced by the FTC, but it is not written into the formal rule text. This creates some legal ambiguity — the exception is valid and used daily by thousands of edtech companies, but its legal footing is guidance-based rather than regulatory.
+
+**School authorization exception (still valid):** Schools can consent on behalf of parents IF: (1) the information is used for a school-authorized educational purpose and NO other commercial purpose, and (2) the edtech service provides the school with COPPA-required notice of data collection and use practices. The school reviews and authorizes — not individual classroom teachers. A school principal, district IT administrator, or district privacy officer is the appropriate authorizer.
+
+### FERPA (Family Educational Rights and Privacy Act)
+
+FERPA primarily regulates schools and school districts, not edtech vendors directly. However, student answer data linked to student names constitutes "education records" under FERPA, and schools must maintain control over education records shared with third-party services. We operate under the "school official" exception — providing a service the school has authorized for educational purposes. This exception requires a written agreement between the school and the service provider specifying the legitimate educational interest, the data to be disclosed, and the security measures in place.
+
+### Texas Student Privacy Act (Education Code §32.151, SB 1792)
+
+This act directly targets third-party edtech vendors (not just schools), which makes it directly applicable to this project regardless of COPPA/FERPA status.
+
+**Prohibits:** Targeted advertising using student data, selling student data, creating commercial profiles for non-educational purposes.
+
+**Requires:** Reasonable security measures, data minimization (collect only what is adequate, relevant, and reasonably necessary for the educational purpose), and clear privacy notices.
+
+**Key detail:** ALL data from users under 13 is classified as "sensitive" in Texas, triggering heightened protections beyond the baseline requirements.
+
+### Compliance by Phase
+
+**Phase 5A (Anonymous):** No COPPA trigger (no personal information collected), no FERPA trigger (no education records created), no Texas Student Privacy Act trigger (no covered information). The system collects only aggregate anonymous data: "Room X, Question Y: Z chose A." No IP addresses are logged, no cookies are set, no device fingerprints are collected. This is functionally equivalent to "raise your hand if you think B" — a pedagogical technique that predates the internet and triggers no privacy law. Phase 5A can be deployed in classrooms immediately.
+
+**Phase 5B (Tracked):** Full compliance required. Student first name + class period + answer history constitutes personal information (COPPA), education records (FERPA), and covered information (Texas Student Privacy Act). All three regulatory frameworks apply.
+
+### Three-Stage Testing Pathway
+
+**Stage 1 — Synthetic data (zero compliance):** Build the entire tracked system using 25 fake students (Test Student A through Y). Simulate answer patterns covering edge cases (all correct, all wrong, partial mastery, team competition). Verify data flows, analytics calculations, and teacher reporting dashboards. This tests 90% of Phase 5B functionality without any real child data.
+
+**Stage 2 — Adult volunteers (zero COPPA compliance — adults consent for themselves):** Fellow teachers, grad school classmates, and other adults act as "students" on their own devices. Tests real-time multi-device WebSocket experience, poll aggregation latency, dashboard responsiveness. COPPA only applies to children under 13, so adult testers require no regulatory compliance.
+
+**Stage 3 — Formal pilot with real students (full compliance):** Write a plain-language privacy policy covering the requirements below. Present it to the school principal or district IT/privacy officer. The school reviews and authorizes under the COPPA school consent exception. The school handles parent notification via its existing annual technology consent forms (most Texas districts already have these for tools like Google Classroom, Kahoot, and IXL). Run the pilot under that authorization.
+
+### Privacy Policy Requirements for Phase 5B Deployment
+
+The privacy policy document must address five areas: (a) **What data is collected:** student first name or alias, answer selections per question, TEKS performance scores over time. (b) **What is done with it:** teacher assessment reports, problem difficulty adjustment via the dual-input flywheel. (c) **What is NOT done:** no advertising, no selling to third parties, no third-party data sharing, no commercial use beyond educational assessment. (d) **Retention:** data is deleted at the end of the school year or upon request, whichever comes first. (e) **Deletion mechanism:** the teacher or school administrator can request complete data deletion at any time via a clearly documented process.
+
+### Legal Disclaimer
+
+This documentation represents good-faith research by the development team. It is NOT legal advice. Before deploying Phase 5B with real students at scale, consult an attorney specializing in edtech privacy law. The regulatory landscape (especially around the 2025 COPPA amendments and the school authorization exception) may evolve between the time of this writing and actual deployment.
+
+---
+
+## 22. Patent & IP Strategy [NEW v4.0]
+
+This section documents the intellectual property strategy for the core technology described in this brief. The generation pipeline — not the Iron Man mission theme — is the patentable innovation.
+
+### Three Independent Patent Claims
+
+The claims are written at three scope levels to provide layered protection. Each claim is independently defensible.
+
+**Claim 1 — Integrated System (broad):** A system for generating curriculum-aligned educational content comprising: a large language model prompted with curriculum standards and few-shot exemplars, a multi-layer deterministic validation pipeline with hard gates for structural integrity, mathematical correctness, content policy, and curriculum-standard alignment, a teacher review interface with per-item feedback controls that feed approved content back as exemplars, whereby content quality improves over time through teacher usage without model fine-tuning.
+
+**Claim 2 — Flywheel Mechanism (specific):** A method for iteratively improving LLM-generated educational content quality comprising: teacher evaluation of generated content, optional qualitative annotation of approved content (the `whyThisIsGood` field — see §7 and §9), storage of annotated content as exemplars, dynamic retrieval and injection of relevant exemplars during subsequent generation, whereby system quality improves as a byproduct of normal teacher usage without model fine-tuning. In an enhanced embodiment, the flywheel receives a second input stream from student performance data (Phase 5B — see §7 "Dual-Input Flywheel"), with per-problem accuracy and distractor-selection frequency enriching exemplar metadata.
+
+**Claim 3 — Validation Pipeline with Override (specific):** A multi-layer validation method for LLM-generated educational content comprising: deterministic structural verification (hard gate — Layer 1), deterministic mathematical evaluation (hard gate — Layer 2), semantic content analysis (hard gate — Layer 3), curriculum-standard alignment checking against a machine-readable standard database (hard gate or advisory depending on context — Layer 4, see §10 "Two-Tier Validation Context"), with a per-item teacher override mechanism (see §9 "Per-Problem TEKS Override Toggle") that switches curriculum alignment from enforcement to advisory mode for teacher-initiated modifications while maintaining hard gates on mathematical correctness.
+
+### Filing Strategy
+
+File ONE provisional patent application with multiple claims at the scope levels above. File as micro entity ($65 USPTO fee). File as individual inventor (can assign to LLC later if commercializing). The provisional provides a 12-month non-extendable pendency period from the filing date. Under the first-to-file system, the filing date IS the priority date — no grace period needed, no "date of invention" arguments.
+
+**Critical:** Describe ALL planned features in the provisional, including unbuilt ones like the student response system, team competition, second flywheel input stream, adaptive difficulty, and multiple delivery surfaces. This locks in the priority date for the full vision. Features described in the provisional but not yet implemented still receive the provisional's priority date as long as the description is enabling (i.e., a person skilled in the art could build it from the description).
+
+The non-provisional application (filed within 12 months of the provisional) includes implementation details, screenshots, and any new innovations discovered during development. Material described in the provisional keeps the original priority date; genuinely new material gets the non-provisional filing date.
+
+### Prior Art Landscape (Research Conducted February 2025)
+
+No existing system was found that combines: LLM generation + multi-layer validation with deterministic hard gates + teacher annotation flywheel + curriculum-standard alignment checking against machine-readable standards. Individual components exist in isolation — few-shot prompting is well-known, self-consistency voting is published research, teacher feedback loops exist in various edtech products — but the integrated pipeline as described in this brief is novel.
+
+Specific systems examined: Khan Academy Perseus (content authoring but no LLM generation or validation pipeline), IXL (adaptive but proprietary content, no teacher-driven flywheel), Photomath (solving not generating), DreamBox (adaptive but no teacher annotation loop), LearnLens (classroom analytics but no generation), FACET (feedback tools but no LLM pipeline). None implement the flywheel + validation combination.
+
+### Critical IP Notes
+
+**Marvel/Iron Man IP is NOT ours.** The mission theme uses Marvel characters. The patent makes ZERO reference to any Marvel IP. The patentable innovation is entirely in the generation pipeline, which is theme-agnostic. This is why the brief emphasizes generator-first architecture (Principle #7 in §1) — the core technology must be cleanly separable from the delivery surface.
+
+**Public disclosure risk:** The GitHub repo should be PRIVATE until the provisional is filed. Under US patent law, there is a 12-month grace period for the inventor's own disclosures, but international patent rights (PCT, EPO) evaporate immediately upon public disclosure. File the provisional BEFORE making the repo public.
+
+**Fair use note:** Use of Marvel characters in the classroom mission is for educational purposes in a non-commercial classroom setting. This is a separate legal question from the patent and does not affect patentability of the generation pipeline.
+
+---
+
+## 23. Platform Vision & Multiple Delivery Surfaces [NEW v4.0]
+
+This section documents the strategic vision for the core technology beyond the Iron Man mission. It supports Principle #7 (Generator-First Architecture) from §1 and informs the patent's broad claims in §22.
+
+### Core Principle
+
+The problem generation engine is delivery-surface agnostic. The Iron Man mission is surface #1. The same engine — same LLM pipeline, same validation, same exemplar bank, same flywheel — can power multiple surfaces without modification to the core. Each new surface is a thin UI layer that calls into the existing generation and validation infrastructure.
+
+**This isn't theoretical — it's how the system is already built.** The Iron Man theme is window dressing. The setup screen (grade/TEKS selection), the Groq generation call, the four-layer validation pipeline, the teacher review screen with per-problem feedback, the exemplar bank and flywheel — none of these reference firewalls, transitions, Jarvis, or any Marvel narrative. They are pure generator infrastructure. The mission narrative only begins AFTER the teacher clicks "Start Mission," which is the point where surface-specific code takes over. A Worksheet Generator surface would use the exact same setup → generate → validate → review → approve pipeline and then render to PDF instead of feeding into the mission flow. That's a thin output layer, not a rebuild. The beating heart of this project is the problem generator, not the Iron Man facade.
+
+### Identified Delivery Surfaces
+
+**Surface 1 — Iron Man STEM Mission (current, built).** Immersive classroom game with narrative, characters, sound design, and visual effects. Runs locally from file:// on teacher's Surface Laptop. The demo, proof of concept, and first delivery surface. Demonstrates the engine's capabilities in the most engaging possible format.
+
+**Surface 2 — Worksheet Generator (future).** Teacher picks grade + TEKS + count + format, clicks generate, gets a printable PDF of validated problems with answer key. The simplest possible surface — no game, no theme, just quality problems on paper. Lowest development effort of any new surface because the generation pipeline already exists; only the output rendering layer (HTML-to-PDF) is new.
+
+**Surface 3 — STAAR Test Prep (future).** Practice mode mimicking actual STAAR format and question types. Adaptive difficulty based on student performance via the dual-input flywheel (§7). Multiple choice with diagnostically-designed distractors. Particularly strong market fit given that the exemplar bank is already built from STAAR released tests.
+
+**Surface 4 — Tutoring System (future).** Integrated with the student device system (Phase 5). Individual student works through problems at their own pace on their own device. System adapts to their specific weaknesses via the dual-input flywheel — if a student keeps missing regrouping problems, the system generates more regrouping-focused content.
+
+**Surface 5 — District Assessment Tool (future).** School or district administrators generate benchmark assessments aligned to specific TEKS across grade levels. Standardized problem quality across classrooms because every problem goes through the same validation pipeline. Exportable in standardized assessment formats.
+
+**Surface 6 — Textbook Supplement / Curriculum Publisher API (future).** The engine exposed as a REST API that textbook publishers or curriculum companies can integrate into their existing products. They send TEKS codes and constraints, they receive validated problems. The generation pipeline becomes infrastructure rather than an end-user product.
+
+### Standards Portability
+
+**Current:** Texas TEKS (teks-rules.json, 217 entries covering grades 1-5 math). This is the data foundation the system is built on. Texas is home base — it's where the developer teaches, where the STAAR released tests provide exemplar content, and where classroom testing happens.
+
+**The architecture is standards-agnostic, not Texas-specific.** The validation pipeline reads constraint fields (maxOperandDigits, allowedDenominators, stepCount, etc.) from whichever rules file it's given. It does not hard-code any Texas-specific logic. The exemplar bank's 21-field annotation schema and selection function are also standards-agnostic — only the actual exemplar content changes per framework. To support a new state, you build two files: a rules file (equivalent to teks-rules.json) and an exemplar bank seeded from that state's released test items.
+
+**"Common Core" is not a single standard.** Roughly 40 states nominally adopted the Common Core State Standards, but most have since modified, renamed, or supplemented them with state-specific additions. Florida has B.E.S.T. Standards, New York has Next Generation Learning Standards, California layers its own framework on top of CCSS. Simply building one "ccss-rules.json" would not actually serve any of these states well — each state's tweaks affect what's tested, how it's tested, and what constraints apply at each grade level. The real expansion strategy is per-state, driven by market demand: pick a target state, extract its standards into a rules file, seed an exemplar bank from its released tests, and the existing pipeline handles the rest.
+
+**Political reality matters for marketing.** Texas, Virginia, Alaska, Nebraska, Indiana, South Carolina, and Oklahoma never adopted Common Core. Several others have since repealed it. Leading with "we support Common Core" would be counterproductive in many of the largest education markets. Leading with "we support YOUR state's standards" — and backing that with exemplars pulled from YOUR state's actual tests — is a much stronger value proposition.
+
+**Expansion is data work, not engineering work.** Supporting a new state means weeks of extraction, annotation, and audit for that state's standards and released tests. The pipeline architecture doesn't change. This is a scaling challenge with a clear, repeatable process — the same methodology used for Texas TEKS Grade 3 applies identically to any other framework.
+
+### Grade Coverage Expansion
+
+**Why Grade 3 first:** Grade 3 was chosen as the starting point because it's the first STAAR-tested grade in Texas (the richest source of released test items for exemplar extraction), it sits at a complexity sweet spot for working out the generation pipeline (harder than K-2 counting but simpler than Grade 5 multi-step word problems), and it's the grade level the developer has the deepest classroom experience with. Every architectural decision — the annotation schema, the validation layers, the extraction conventions, the audit process — was battle-tested on Grade 3 specifically so it would generalize cleanly to other grades.
+
+**Current exemplar bank:** 135 items covering all 46 Grade 3 Math TEKS, extracted from 6 years of STAAR released tests (2019-2025) plus 3 synthetic items for never-tested TEKS.
+
+**Full coverage target:** Approximately 170 additional TEKS across grades 1-2 and 4-5, requiring similar extraction and annotation work for each grade level's released STAAR tests. This is the same repeatable process used for Grade 3 — not new engineering, just more data work.
+
+**Expansion strategy:** Systematic extraction from official STAAR released tests for each grade level, using the same 21-field annotation schema, the same extraction conventions (F/G/H/J normalization, interactive item adaptation, canonical TEKS format), and the same multi-pass audit process documented in §7. Grade 3 proved the process works end-to-end; grades 1-2 and 4-5 follow the same playbook.
+
+---
+
 ## Important Reminders
 
 1. **Questions generated at session start** -- All 10 math + 3 science problems are created BEFORE mission begins
@@ -3367,58 +4053,67 @@ These are already implemented in `mission-integration.js`:
 4. **Black Widow logic is in flux** -- Current implementation may change based on classroom testing
 5. **Voice consistency is critical** -- All Jarvis audio must use the cloned voice
 6. **Entertainment first, education second** -- This should feel like a Marvel movie
-7. **Single screen only** -- Optimize for laptop display to TV via HDMI (1920x1080)
+7. **Single screen primary (base mode)** -- Teacher display optimized for laptop to TV via HDMI (1920x1080). When Student Devices are enabled (§15), student screens are minimal HTML/JS served from the Cloudflare Worker — not a second app to maintain.
 8. **Pre-record everything possible** -- Minimize real-time API calls
-9. **Teacher controls everything** -- Students don't interact directly with the system
+9. **Teacher controls everything (base mode)** -- In default mode, students don't interact directly with the system. When Student Devices are enabled (§15), students interact through a constrained interface while the teacher retains override authority.
 10. **School appropriate always** -- All content must be safe for elementary students
-11. **ALL 8 transitions are RANDOM** including Access Granted. Correct/incorrect answers trigger response bank lines, NOT transitions. Transitions play between firewalls.
+11. **ALL 5 transitions are RANDOM** including Access Granted. Correct/incorrect answers trigger response bank lines, NOT transitions. Transitions play between firewalls. (Glitch Burst is Widow-exclusive via `_buildWidowGlitch()`, NOT in the random pool.)
 12. **App runs locally from file://** on Surface Laptop via HDMI to classroom TV. NOT Replit.
 13. **Groq via Cloudflare Worker** -- API key never in client-side code. Worker handles CORS for file:// origins.
 14. **Process standards (X.1A-X.1G) are system-prompt defaults** -- Not selectable on setup screen. Addressed implicitly like STAAR treats them.
 15. **Teacher reviews EVERY problem** -- Validation pipeline flags issues, teacher makes final call. Students never see an unapproved problem.
 16. **LLM generates TEXT, JavaScript calculates ANSWER** -- Never trust the LLM to do arithmetic.
 17. **SVG diagrams are deterministic** -- Template library renders from structured descriptors. LLM never generates raw SVG.
-18. **TEKS not Common Core** -- All standards references are Texas TEKS. The system is built for Texas classrooms.
+18. **Currently built for Texas TEKS** -- All standards references use Texas TEKS. The architecture is standards-agnostic (see §23), but the current rules file and exemplar bank are Texas-specific. Don't reference Common Core or other frameworks in generated code.
 
 ---
 
 ## Files Reference
 
 **In Project Folder:**
-- `response_bank.md` -- Complete pre-scripted dialogue (750+ lines)
+- `response_bank.md` -- Complete pre-scripted dialogue (~750 lines)
 - `grade_1_sciencemath_teks.txt` through `Grade_5_sciencemath_teks.txt` -- TEKS standards
 - `Ironman_STEM_Script.pdf` -- Original mission script
 - `Batch_1_readiness_standards_exemplars.js` -- [DONE] 65 STAAR-extracted exemplars, 13 Readiness TEKS, audited clean
 - `Batch_2_supporting_standards_exemplars__1_.js` -- [DONE] 67 STAAR-extracted exemplars, 30 Supporting TEKS, audited clean (5 passes). PRODUCTION file (the non-suffixed version is superseded)
 - `Batch_3_missing_teks_exemplars.js` -- [DONE] 3 synthetic exemplars for never-tested TEKS (3.3A, 3.9C, 3.9F), teacher-approved
+- `distractor-patterns.js` -- [DONE] COMPLETE (Tier 1) -- 1,586 lines, 97 worked examples, 27 patterns, 5 TEKS (3.4A/F/J/D/K). All examples traced to TEA STAAR rationale documents 2019-2025. 4-part audit verified. Exports: DISTRACTOR_PATTERNS, UNIVERSAL_DISTRACTOR_RULES, DISTRACTOR_RULES_REMINDER, selectDistractorPatterns(), toDistractorInjectionFormat(). Browser + Node compatible.
 - Various `.jpg`, `.png`, `.webp` -- Reference images
 
 **Complete JavaScript Modules (uploaded separately):**
 - `pattern-detector.js` -- [DONE] COMPLETE (~1,100 lines) -- Error pattern detection with 24 patterns
 - `mission-integration.js` -- [DONE] COMPLETE (~1,580 lines) -- Mission state and flow management
 - `sound-manager.js` -- [DONE] COMPLETE (~500 lines) -- Audio pooling system for sound effects
-- `firewall-sequence.js` -- [DONE] COMPLETE -- Transition engine with 6 randomized transitions, GSAP timeline orchestration, PixiJS integration hooks
+- `firewall-sequence.js` -- [DONE] COMPLETE -- Transition engine with 5 randomized math transitions (Fury science animation and Black Widow appearances are separate events), GSAP timeline orchestration, PixiJS integration hooks
 - `pixi-effect-manager.js` -- [DONE] COMPLETE -- PixiJS singleton manager (single PIXI.Application, GSAP ticker sync, stage reset between transitions)
 - `hud-config.js` -- [DONE] COMPLETE -- Central `window.HUD_CONFIG` configuration object (colors, timing, easing, transition pool, mission structure)
 - `im-animations.css` -- [DONE] COMPLETE -- Namespaced CSS foundation (`.im-reactor-*`, `.im-panel-*`, `.im-glitch-*`, `.im-transition-*` class families, `--im-*` custom properties)
 - `config.js` -- [DONE] COMPLETE (Phase 4 P1) -- Groq Worker URL, model name, retry settings
-- `cerebras-api.js` -- [DONE] Phase 4 P1 complete (API wrapper). Prompt 2 will MODIFY this file to combine 3 exemplar arrays into ALL_EXEMPLARS, call selectExemplars(selectedTeks, ALL_EXEMPLARS), and inject exemplars into system prompt. Requires exemplar `<script>` tags loaded first (see Script Load Order slots 13.51-13.53).
+- `cerebras-api.js` -- [DONE] COMPLETE (Phase 4 P1 + MC pipeline v4.1) -- API wrapper with generateMission(), calculateAnswer(), computeDistractorValues(), selectExemplars() (5 per TEKS cap), distractor pattern injection via selectDistractorPatterns(), rationale label generation returning {value, rationale, tag} triples, distractorReasoning→distractorRationales bridge, MC mix ratio logic. Requires config.js + exemplar files + distractor-patterns.js loaded first (see Script Load Order).
 
-**Phase 4 Files (planned):**
-- `validator.js` -- Five-layer validation pipeline
-- `confidence.js` -- Composite scoring and category assignment
-- `teks-rules.json` -- Static TEKS validation constraints (~150 entries)
-- `diagramRenderer.js` -- SVG diagram registry with 8+ renderers
-- `diagramAnimations.js` -- GSAP DrawSVGPlugin animations for diagrams
-- `diagram-hud.css` -- CSS custom properties and SVG filter definitions for HUD-themed diagrams
+**Phase 4 Files (status updated v4.1):**
+- `validation-engine.js` -- [DONE] COMPLETE. Layers 1-4 validation within validateProblem() + MC extension (duplicate detection, rationale-value cross-check, consecutive integer detection, wide-spread check). Originally planned as `validator.js`; actual implementation created under this name by Prompt 3.
+- `teks-rules-data.js` -- [DONE] COMPLETE. `window.TEKS_RULES_DATA` — 217 math TEKS entries with description fields. Browser-loadable runtime version of teks-rules.json. Used by teacher-review.js for TEKS tooltip hover.
+- `teacher-review.js` -- [DONE] COMPLETE. Teacher Review Screen UI — split-panel layout, all quick-action chips, free-text feedback, TEKS override toggle, ★ Favorite annotation, approval workflow, back button. The most heavily modified file in the project (15 bugfix rounds + MC bugfix v1).
+- `validator.js` -- SUPERSEDED. Was the originally planned five-layer validation pipeline name. Never created — Prompt 3 built sync validation into `validation-engine.js` instead.
+- `confidence.js` -- ABANDONED. Built and tested for Layer 5 async validation. Permanently abandoned after testing showed zero incremental value over Layers 1-4, counterproductive science scoring, and two implementation bugs (see §10 postmortem). The teacher review screen is the quality gate. File deleted from codebase.
+- `teks-rules.json` -- [DONE] COMPLETE. Static TEKS validation constraints populated from TEA data.
+- `diagramRenderer.js` -- NOT STARTED. SVG diagram registry with 8+ renderers (see §11).
+- `diagramAnimations.js` -- NOT STARTED. GSAP DrawSVGPlugin animations for diagrams.
+- `diagram-hud.css` -- NOT STARTED. CSS custom properties and SVG filter definitions for HUD-themed diagrams.
 
 **Research Reports (in Claude.ai project files):**
 - `Building_a_Multi-Layer_Confidence_System_for_LLM-Generated_Math_Problems__Validation_Pipeline_and_TEKS_Alignment.md` -- Validation pipeline research
 - `SVG_Math_Diagrams_for_a_TEKS-Aligned_Iron_Man_Learning_App__Template_Architecture_and_LLM_Integration_Strategy.md` -- SVG diagram generation research
 - `Few-Shot_Prompting_for_STAAR-Quality_Educational_Content_with_Llama_3_3__Optimal_Exemplar_Selection__Formatting__and_Dynamic_Retrieval_Strategies.md` -- Few-shot exemplar selection, formatting, and dynamic retrieval strategies [NEW v3.9]
 - `claude_code_prompting_report.md` -- CC prompting best practices
+- `ChatGPT_Claude_Code_prompt_research.pdf` -- CC prompt research (ChatGPT-sourced)
+- `ChatGPT_Debugging_research.pdf` -- CC debugging research (ChatGPT-sourced)
 - `Building_Vanilla_JS_Features_with_Claude_Code_Web__Prompting_Strategies_and_Architectural_Patterns.md` -- Vanilla JS architecture patterns
+- `Prompting_Claude_Code_for_Sound_Integration_Without_Breaking_Things.md` -- Sound integration prompting patterns
 - `deep-research-report.md` -- Groq/Llama 3.3 70B selection research
+- `claude_PixiJS_markdown_file.md` -- PixiJS integration research
+- `ChatGPT_PixiJS_report.pdf` -- PixiJS research (ChatGPT-sourced)
 
 **Still Needed:**
 - All dialogue audio files (via Cartesia voice synthesis from response bank)
@@ -3434,9 +4129,9 @@ These are already implemented in `mission-integration.js`:
 
 ---
 
-## Known Issues / In Progress
+## Known Issues / In Progress [UPDATED v4.1]
 
-> * **Transition Engine** -- `FirewallSequence` class is BUILT and working. 6 randomized transitions play between firewalls. PixiJS foundation integrated. Currently rewriting individual transitions to use GPU-accelerated PixiJS effects (starting with Access Granted).
+> * **Transition Engine** -- `FirewallSequence` class is BUILT and working. 5 randomized transitions play between firewalls (+ Widow glitch exclusive). PixiJS foundation integrated. Currently rewriting individual transitions to use GPU-accelerated PixiJS effects (starting with Access Granted).
 
 > x **PixiJS Transition Rewrites** -- Access Granted is the first transition being upgraded from CSS/GSAP-only to CSS+GSAP+PixiJS hybrid (DOM text on top, GPU effects canvas underneath). Remaining transitions will follow the same pattern.
 
@@ -3444,11 +4139,23 @@ These are already implemented in `mission-integration.js`:
 
 > x **CDN Dependencies** -- PixiJS libraries currently load from jsdelivr CDN. This works because the app runs on the teacher's laptop (not student Chromebooks), but should eventually be bundled locally for zero-CDN reliability in schools with strict content filters.
 
-> x **Phase 4 In Progress** -- Prompt 1 (API module + Cloudflare Worker) COMPLETE. Prompts 2-6 pending. Few-Shot Exemplar Bank (prerequisite for Prompt 2 system prompt) is now COMPLETE -- 135 items, 46 TEKS, 100% coverage. See Phase 4 build checklist in Section 18 for detailed status.
+> x **Content Filter: "battle" → YELLOW** -- The content filter currently flags "battle" as RED (blocked), preventing Marvel-themed word problems that use combat vocabulary. Should be YELLOW (warning but allowed). Small fix, not yet committed.
 
-> x **teks-rules.json Not Yet Built** -- Static TEKS validation constraints file needs to be populated from TEA Machine-Readable TEKS data. Required for validation pipeline Layers 3-4.
+> x **Fraction TEKS Not Supported** -- The app currently supports arithmetic TEKS (3.4x: ADD, SUBTRACT, MULTIPLY, DIVIDE) only. Fraction TEKS (3.3x), geometry (3.6x), measurement (3.7x), data analysis (3.8x), and financial literacy (3.9x) all need their own operand generation, problem structure, and distractor patterns. Testing with 3.3A or 3.3F causes all 10 problems to fail Layer 4 TEKS validation. This is a known architectural limitation, not a bug — the setup screen does not yet indicate which TEKS are supported.
 
-> [DONE] **Few-Shot Exemplar Bank COMPLETE (v3.9)** -- 135 STAAR-extracted + synthetic exemplars covering all 46 Grade 3 Math TEKS. Three batch files ready for integration into Prompt 2 system prompt. Five-pass audit verified zero critical errors. See Section 7 "Few-Shot Exemplar Bank" for architecture and file references.
+> x **Tier 2+ Distractor Patterns Not Built** -- distractor-patterns.js covers 5 Tier 1 TEKS (3.4A, 3.4F, 3.4J, 3.4D, 3.4K). Seven Tier 2 TEKS (3.4H, 3.4E, 3.5A, 3.5B, 3.4B, 3.4G, 3.6C) need entries. The pre-compute function still generates valid distractor values for unsupported arithmetic TEKS — they just lack STAAR-specific error taxonomy guidance.
+
+> x **Layer 5 Async Validation ABANDONED** -- Self-consistency voting and blind review were built, tested, and permanently abandoned. Testing showed zero incremental value: every math problem scored pass (5/5 self-consistency agreement), science question scoring was counterproductive (blind reviewer applied math TEKS to science questions, producing 0.44-0.52 scores), and the feature cost 78 extra API calls per mission. Two implementation bugs also surfaced (crash on regeneration during async check, regen mode misinterpretation). The teacher review screen is the quality gate. See §10 postmortem.
+
+> x **SVG Diagrams Not Started** -- DiagramRegistry (Section 11) is still TODO. Required for data analysis, geometry, and fraction representation TEKS.
+
+> x **PDF Upload Not Started** -- Teacher PDF upload and parsing (Section 12) is still TODO.
+
+> [DONE] **Phase 4 Prompts 1-3 COMPLETE (v4.1)** -- API module, problem generation pipeline with exemplar injection, Teacher Review Screen with 15 bugfix rounds. All sync validation (Layers 1-4) working.
+
+> [DONE] **MC Distractor Pipeline COMPLETE (v4.1)** -- End-to-end: pattern bank → pre-computed values → rationale labels → LLM paraphrase → validation (hardgate duplicate + rationale-value checks). 100% rationale accuracy across all tested Tier 1 TEKS. MC gameplay HUD with A/B/C/D holographic buttons and keyboard input.
+
+> [DONE] **Few-Shot Exemplar Bank COMPLETE (v3.9)** -- 135 STAAR-extracted + synthetic exemplars covering all 46 Grade 3 Math TEKS. Three batch files ready for integration. Five-pass audit verified zero critical errors. selectExemplars cap fixed to 5 per TEKS (was 10 total).
 
 ---
 

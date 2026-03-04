@@ -1132,7 +1132,7 @@ const TeacherReview = (() => {
             _options.grade,
             p.teks,
             p.operation || '',
-            `Previous problem failed: ${failureDetail}. Generate a replacement that avoids these issues.`,
+            `VALIDATION FAILURE: ${failureDetail}. Generate a replacement that strictly avoids these issues.`,
             {
               format: _options.format || 'mix',
               crossCurricular: hasCross,

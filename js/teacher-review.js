@@ -1113,6 +1113,12 @@ const TeacherReview = (() => {
       const v = _validation[p.id];
       if (!v || v.category !== 'red') continue;
 
+      // Build specific failure feedback from validation flags
+      const violations = (v.flags || []).filter(f => f.includes('VIOLATION'));
+      const failureDetail = violations.length > 0
+        ? violations.join(' | ')
+        : 'Unknown validation failure';
+
       // Hard gate failure detected — auto-regenerate
       console.log(`[AutoRegen] Problem ${i + 1} failed hard gate — auto-regenerating (TEKS: ${p.teks})`);
       p.status = 'regenerating';
@@ -1126,7 +1132,7 @@ const TeacherReview = (() => {
             _options.grade,
             p.teks,
             p.operation || '',
-            'Previous problem failed validation. Generate a new problem that strictly follows TEKS constraints.',
+            `Previous problem failed: ${failureDetail}. Generate a replacement that avoids these issues.`,
             {
               format: _options.format || 'mix',
               crossCurricular: hasCross,

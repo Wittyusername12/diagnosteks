@@ -916,7 +916,7 @@ function renderArray(svg, params) {
   if (showColLabels) {
     for (var cl = 0; cl < columns; cl++) {
       var colLabel = svgEl('text', {
-        x: padLeft + cl * DOT_SPACING, y: padTop - 15,
+        x: padLeft + cl * DOT_SPACING, y: padTop - 25,
         class: 'im-diagram-array-label'
       });
       colLabel.textContent = String(cl + 1);
@@ -928,7 +928,7 @@ function renderArray(svg, params) {
   if (showRowLabels) {
     for (var rl = 0; rl < rows; rl++) {
       var rowLabel = svgEl('text', {
-        x: padLeft - 20, y: padTop + rl * DOT_SPACING + 5,
+        x: padLeft - 30, y: padTop + rl * DOT_SPACING + 5,
         class: 'im-diagram-array-label'
       });
       rowLabel.textContent = String(rl + 1);
@@ -1108,7 +1108,7 @@ function renderStripDiagram(svg, params) {
     var lSec = sections[li];
     var lW = sectionWidths[li];
     var sLabel = svgEl('text', {
-      x: labelX + lW / 2, y: BAR_TOP + BAR_HEIGHT / 2 + 5,
+      x: labelX + lW / 2, y: BAR_TOP + BAR_HEIGHT / 2,
       class: 'im-diagram-strip-label'
     });
     // Unknown labels get gold color
@@ -1147,6 +1147,313 @@ function renderStripDiagram(svg, params) {
 
 DiagramRegistry.register('stripDiagram', renderStripDiagram);
 
+// ============================================================
+// AREA MODEL RENDERER
+// ============================================================
+
+function decompose(n) {
+  if (n <= 0) return [n];
+  var parts = [];
+  var str = String(Math.floor(Math.abs(n)));
+  for (var i = 0; i < str.length; i++) {
+    var digit = parseInt(str[i]);
+    if (digit > 0) {
+      parts.push(digit * Math.pow(10, str.length - 1 - i));
+    }
+  }
+  return parts.length > 0 ? parts : [0];
+}
+
+function renderAreaModel(svg, params) {
+  var factors = params.factors || [];
+  var dec = params.decomposition || null;
+  var title = params.title || null;
+  var showPartialProducts = params.showPartialProducts !== false;
+  var showTotal = params.showTotal === true;
+  var highlightCell = params.highlightCell || null;
+
+  // --- Validation ---
+  if (!factors || factors.length !== 2) {
+    console.warn('[DiagramRenderer] areaModel: factors must be an array of exactly 2 numbers');
+    return;
+  }
+  for (var fi = 0; fi < 2; fi++) {
+    if (factors[fi] < 1) { factors[fi] = 1; }
+    if (factors[fi] > 999) { console.warn('[DiagramRenderer] areaModel: factor clamped to 999'); factors[fi] = 999; }
+  }
+
+  // Auto-decompose if not provided
+  var topParts, leftParts;
+  if (dec && dec.length === 2) {
+    topParts = dec[0];
+    leftParts = dec[1];
+  } else {
+    topParts = decompose(factors[0]);
+    leftParts = decompose(factors[1]);
+  }
+
+  svg.setAttribute('viewBox', '0 0 800 400');
+
+  // --- Layout constants ---
+  var MODEL_LEFT = 120;
+  var MODEL_TOP = 80;
+  var MODEL_RIGHT = 740;
+  var MODEL_BOTTOM = 340;
+  var MODEL_WIDTH = MODEL_RIGHT - MODEL_LEFT;
+  var MODEL_HEIGHT = MODEL_BOTTOM - MODEL_TOP;
+
+  var topTotal = 0;
+  for (var ti = 0; ti < topParts.length; ti++) topTotal += topParts[ti];
+  var leftTotal = 0;
+  for (var li = 0; li < leftParts.length; li++) leftTotal += leftParts[li];
+
+  // Pre-calculate column widths (last absorbs rounding)
+  var colWidths = [];
+  var usedW = 0;
+  for (var ci = 0; ci < topParts.length; ci++) {
+    if (ci === topParts.length - 1) {
+      colWidths.push(MODEL_WIDTH - usedW);
+    } else {
+      var cw = (topParts[ci] / topTotal) * MODEL_WIDTH;
+      colWidths.push(cw);
+      usedW += cw;
+    }
+  }
+
+  // Pre-calculate row heights (last absorbs rounding)
+  var rowHeights = [];
+  var usedH = 0;
+  for (var ri = 0; ri < leftParts.length; ri++) {
+    if (ri === leftParts.length - 1) {
+      rowHeights.push(MODEL_HEIGHT - usedH);
+    } else {
+      var rh = (leftParts[ri] / leftTotal) * MODEL_HEIGHT;
+      rowHeights.push(rh);
+      usedH += rh;
+    }
+  }
+
+  // --- 1. Title ---
+  if (title && typeof title === 'string') {
+    var titleEl = svgEl('text', { x: 400, y: 30, class: 'im-diagram-title' });
+    titleEl.textContent = title;
+    svg.appendChild(titleEl);
+  }
+
+  // --- 2. Cell rectangles + 3. Partial products ---
+  var cellY = MODEL_TOP;
+  for (var r = 0; r < leftParts.length; r++) {
+    var cellX = MODEL_LEFT;
+    for (var c = 0; c < topParts.length; c++) {
+      var cW = colWidths[c];
+      var cH = rowHeights[r];
+      var cellCls = 'im-diagram-area-cell';
+      if (highlightCell && highlightCell[0] === r && highlightCell[1] === c) {
+        cellCls = 'im-diagram-area-cell-highlight';
+      }
+
+      svg.appendChild(svgEl('rect', {
+        x: cellX, y: cellY, width: cW, height: cH,
+        class: cellCls
+      }));
+
+      // Partial product label
+      if (showPartialProducts) {
+        var prodLabel = svgEl('text', {
+          x: cellX + cW / 2, y: cellY + cH / 2,
+          class: 'im-diagram-area-product'
+        });
+        prodLabel.textContent = String(topParts[c] * leftParts[r]);
+        svg.appendChild(prodLabel);
+      }
+
+      cellX += cW;
+    }
+    cellY += cH;
+  }
+
+  // --- 4. Top-edge factor labels ---
+  var topLabelX = MODEL_LEFT;
+  for (var tc = 0; tc < topParts.length; tc++) {
+    var factLabel = svgEl('text', {
+      x: topLabelX + colWidths[tc] / 2, y: MODEL_TOP - 15,
+      class: 'im-diagram-area-factor'
+    });
+    factLabel.textContent = String(topParts[tc]);
+    svg.appendChild(factLabel);
+    topLabelX += colWidths[tc];
+  }
+
+  // --- 5. Left-edge factor labels ---
+  var leftLabelY = MODEL_TOP;
+  for (var lr = 0; lr < leftParts.length; lr++) {
+    var leftLabel = svgEl('text', {
+      x: MODEL_LEFT - 15, y: leftLabelY + rowHeights[lr] / 2,
+      class: 'im-diagram-area-factor',
+      'text-anchor': 'end'
+    });
+    leftLabel.textContent = String(leftParts[lr]);
+    svg.appendChild(leftLabel);
+    leftLabelY += rowHeights[lr];
+  }
+
+  // --- 6. Outer border ---
+  svg.appendChild(svgEl('rect', {
+    x: MODEL_LEFT, y: MODEL_TOP, width: MODEL_WIDTH, height: MODEL_HEIGHT,
+    class: 'im-diagram-fraction-border'
+  }));
+
+  // --- 7. Internal grid lines ---
+  var gridX = MODEL_LEFT;
+  for (var gc = 0; gc < topParts.length - 1; gc++) {
+    gridX += colWidths[gc];
+    svg.appendChild(svgEl('line', {
+      x1: gridX, y1: MODEL_TOP, x2: gridX, y2: MODEL_BOTTOM,
+      class: 'im-diagram-area-grid'
+    }));
+  }
+  var gridY = MODEL_TOP;
+  for (var gr = 0; gr < leftParts.length - 1; gr++) {
+    gridY += rowHeights[gr];
+    svg.appendChild(svgEl('line', {
+      x1: MODEL_LEFT, y1: gridY, x2: MODEL_RIGHT, y2: gridY,
+      class: 'im-diagram-area-grid'
+    }));
+  }
+
+  // --- 8. Total label ---
+  if (showTotal) {
+    var totalEl = svgEl('text', {
+      x: 400, y: MODEL_BOTTOM + 30,
+      class: 'im-diagram-array-total'
+    });
+    totalEl.textContent = '= ' + (factors[0] * factors[1]);
+    svg.appendChild(totalEl);
+  }
+}
+
+DiagramRegistry.register('areaModel', renderAreaModel);
+
+// ============================================================
+// DOT PLOT RENDERER
+// ============================================================
+
+function renderDotPlot(svg, params) {
+  var data = params.data || [];
+  var min = params.min;
+  var max = params.max;
+  var step = params.step || 1;
+  var title = params.title || null;
+  var xAxisLabel = params.xAxisLabel || null;
+  var highlightValue = params.highlightValue != null ? params.highlightValue : null;
+  var dotRadius = params.dotRadius || 8;
+
+  // --- Validation ---
+  if (!data.length) {
+    console.warn('[DiagramRenderer] dotPlot: data array is required');
+    return;
+  }
+  if (step <= 0) { step = 1; }
+  if (dotRadius < 3) { dotRadius = 3; }
+  if (dotRadius > 15) { dotRadius = 15; }
+
+  // Auto-calculate min/max
+  var dataMin = Math.min.apply(null, data);
+  var dataMax = Math.max.apply(null, data);
+  if (min == null) { min = Math.min(0, dataMin); }
+  if (max == null) { max = dataMax + step; }
+
+  // Floating-point fix
+  var decimals = 0;
+  var stepStr = String(step);
+  if (stepStr.indexOf('.') !== -1) {
+    decimals = stepStr.split('.')[1].length;
+  }
+
+  svg.setAttribute('viewBox', '0 0 800 300');
+
+  // --- Layout constants ---
+  var AXIS_LEFT = 60;
+  var AXIS_RIGHT = 740;
+  var AXIS_Y = 220;
+  var AXIS_WIDTH = AXIS_RIGHT - AXIS_LEFT;
+  var DOT_SPACING_Y = 22;
+
+  function valueToX(value) {
+    return AXIS_LEFT + ((value - min) / (max - min)) * AXIS_WIDTH;
+  }
+
+  // Count occurrences
+  var counts = {};
+  for (var di = 0; di < data.length; di++) {
+    var dv = data[di];
+    counts[dv] = (counts[dv] || 0) + 1;
+  }
+
+  // --- 1. Title ---
+  if (title && typeof title === 'string') {
+    var titleEl = svgEl('text', { x: 400, y: 25, class: 'im-diagram-title' });
+    titleEl.textContent = title;
+    svg.appendChild(titleEl);
+  }
+
+  // --- 2. Axis line ---
+  var axisGroup = svgEl('g', { class: 'im-diagram-axis' });
+  axisGroup.appendChild(svgEl('line', {
+    x1: AXIS_LEFT, y1: AXIS_Y, x2: AXIS_RIGHT, y2: AXIS_Y
+  }));
+  svg.appendChild(axisGroup);
+
+  // --- 3. Tick marks and labels ---
+  var firstTick = Math.ceil(min / step) * step;
+  for (var tv = firstTick; tv <= max; tv += step) {
+    var tx = valueToX(tv);
+    var tickGroup = svgEl('g', { class: 'im-diagram-tick' });
+    tickGroup.appendChild(svgEl('line', {
+      x1: tx, y1: AXIS_Y, x2: tx, y2: AXIS_Y + 8
+    }));
+    svg.appendChild(tickGroup);
+
+    var tickLabel = svgEl('text', {
+      x: tx, y: AXIS_Y + 22,
+      class: 'im-diagram-tick-label'
+    });
+    tickLabel.textContent = String(parseFloat(tv.toFixed(decimals)));
+    svg.appendChild(tickLabel);
+  }
+
+  // --- 4. Stacked dots ---
+  var values = Object.keys(counts);
+  for (var vi = 0; vi < values.length; vi++) {
+    var val = parseFloat(values[vi]);
+    var count = counts[val];
+    var dx = valueToX(val);
+    var isHighlight = (highlightValue !== null && val === highlightValue);
+
+    for (var dotIdx = 0; dotIdx < count; dotIdx++) {
+      var dy = AXIS_Y - 15 - (dotIdx * DOT_SPACING_Y);
+      var dotCls = isHighlight ? 'im-diagram-dot-highlight' : 'im-diagram-dot';
+
+      svg.appendChild(svgEl('circle', {
+        cx: dx, cy: dy, r: dotRadius,
+        class: dotCls
+      }));
+    }
+  }
+
+  // --- 5. X-axis label ---
+  if (xAxisLabel) {
+    var xLabel = svgEl('text', {
+      x: 400, y: 270,
+      class: 'im-diagram-axis-title'
+    });
+    xLabel.textContent = xAxisLabel;
+    svg.appendChild(xLabel);
+  }
+}
+
+DiagramRegistry.register('dotPlot', renderDotPlot);
+
 // Global export
 window.DiagramRegistry = DiagramRegistry;
 
@@ -1159,11 +1466,13 @@ window.testDiagram = function(containerId, descriptor) {
   return DiagramRegistry.render(container, descriptor);
 };
 
-console.log('[DiagramRenderer] Module loaded. Available: numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram');
+console.log('[DiagramRenderer] Module loaded. Available: numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram, areaModel, dotPlot');
 console.log('  testDiagram("id", {type: "numberLine", params: {min: 0, max: 20, markers: [14]}})');
 console.log('  testDiagram("id", {type: "barGraph", params: {categories: ["A","B","C"], values: [5,8,3]}})');
 console.log('  testDiagram("id", {type: "fractionBar", params: {numerator: 3, denominator: 4}})');
 console.log('  testDiagram("id", {type: "fractionCircle", params: {numerator: 3, denominator: 4}})');
 console.log('  testDiagram("id", {type: "array", params: {rows: 3, columns: 4, showTotal: true}})');
 console.log('  testDiagram("id", {type: "stripDiagram", params: {sections: [{value:45,label:"45"},{value:null,label:"?"}], total:{value:78,label:"78"}}})');
+console.log('  testDiagram("id", {type: "areaModel", params: {factors: [23, 15], showTotal: true}})');
+console.log('  testDiagram("id", {type: "dotPlot", params: {data: [0,2,2,5,8], title: "Miles Ran"}})');
 

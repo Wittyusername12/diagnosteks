@@ -528,7 +528,8 @@ REQUIRED JSON STRUCTURE:
     "diagnosticFor": [],
     "answerType": "integer",
     "scienceTeksConnection": null,
-    "scienceLabel": null
+    "scienceLabel": null,
+    "diagram": null
   }
 ]}
 
@@ -581,7 +582,62 @@ BAD: "Tony has 4 times 9 power cells. 4 × 9 = ?"
 GOOD: "Tony Stark is upgrading 4 suits of armor in his lab. Each suit needs 9 new power cells installed. How many power cells does Tony need to order in total?"
 
 DIAGNOSTIC PROBLEMS:
-Design at least 2 problems to reveal common student errors. Examples: carrying/borrowing across zeros, reversible digit answers, fraction misconceptions. Set "diagnosticFor" to an array describing the misconception (e.g., ["borrowing-across-zero"]).`;
+Design at least 2 problems to reveal common student errors. Examples: carrying/borrowing across zeros, reversible digit answers, fraction misconceptions. Set "diagnosticFor" to an array describing the misconception (e.g., ["borrowing-across-zero"]).
+
+DIAGRAM FIELD:
+Every problem MUST include a "diagram" field. Set it to null for problems that don't benefit from visual representation (most arithmetic, pure computation). Include a diagram object ONLY when a visual model would significantly help students understand the problem.
+
+WHEN TO INCLUDE A DIAGRAM:
+- Word problems about equal groups, rows/columns, or arrays → use "array"
+- Problems comparing quantities across named categories → use "barGraph"
+- Problems about fractions (representing, comparing, equivalent) → use "fractionBar" or "fractionCircle"
+- Multi-step word problems with part-whole relationships → use "stripDiagram"
+- Multi-digit multiplication problems → use "areaModel"
+- Data reading problems with frequency counts → use "dotPlot"
+- Problems about placing values on a line, rounding, or ordering → use "numberLine"
+- Simple computation without context (e.g., "7 × 8 = ?") → null
+- DEFAULT: When in doubt, set diagram to null. Only include a diagram when it genuinely helps.
+
+DIAGRAM TYPES (use ONLY these exact type strings and parameter names):
+
+"numberLine": Number line with markers.
+  params: { min: number, max: number, step: number, markers: [number], title: string|null }
+  Example: { "type": "numberLine", "params": { "min": 0, "max": 100, "step": 10, "markers": [37], "title": "Round to the Nearest 10" } }
+
+"barGraph": Vertical bar chart comparing categories.
+  params: { categories: [string], values: [number], title: string|null, xAxisLabel: string|null, yAxisLabel: string|null, showValues: true }
+  RULE: categories.length MUST equal values.length. Max 8 categories.
+  Example: { "type": "barGraph", "params": { "categories": ["Apples","Oranges","Bananas"], "values": [12,8,15], "title": "Fruit Sold", "showValues": true } }
+
+"fractionBar": Horizontal bar divided into equal parts with some shaded.
+  params: { numerator: number, denominator: number, title: string|null, showLabel: true }
+  RULE: denominator must be 2, 3, 4, 6, or 8 for Grade 3. numerator must be 0 to denominator.
+  Example: { "type": "fractionBar", "params": { "numerator": 3, "denominator": 4, "title": "Three Fourths", "showLabel": true } }
+
+"fractionCircle": Circle divided into equal sectors with some filled.
+  params: { numerator: number, denominator: number, title: string|null, showLabel: true }
+  RULE: Same constraints as fractionBar.
+  Example: { "type": "fractionCircle", "params": { "numerator": 2, "denominator": 3, "showLabel": true } }
+
+"array": Grid of dots in rows × columns for multiplication.
+  params: { rows: number, columns: number, title: string|null, showTotal: true }
+  RULE: rows and columns must be 1-10.
+  Example: { "type": "array", "params": { "rows": 3, "columns": 4, "title": "3 × 4", "showTotal": true } }
+
+"stripDiagram": Labeled sections showing part-whole relationships.
+  params: { sections: [{value: number|null, label: string}], total: {value: number, label: string}|null, title: string|null, equalSections: boolean, highlightIndex: number|null }
+  RULE: At least one section must have a non-null value. Use null value for the unknown quantity.
+  Example: { "type": "stripDiagram", "params": { "sections": [{"value":45,"label":"45"},{"value":null,"label":"?"}], "total": {"value":78,"label":"78"}, "title": "45 + ? = 78", "highlightIndex": 1 } }
+
+"areaModel": Rectangle partitioned into sub-rectangles showing partial products.
+  params: { factors: [number, number], title: string|null, showPartialProducts: true, showTotal: true }
+  RULE: Both factors must be positive integers.
+  Example: { "type": "areaModel", "params": { "factors": [23, 15], "title": "23 × 15", "showPartialProducts": true, "showTotal": true } }
+
+"dotPlot": Number line with stacked dots above data values.
+  params: { data: [number], title: string|null, xAxisLabel: string|null }
+  RULE: data must have at least 3 values. Values should be whole numbers for K-5.
+  Example: { "type": "dotPlot", "params": { "data": [2,3,3,4,4,4,5,5,6], "title": "Test Scores", "xAxisLabel": "Score" } }`;
 
     // === BLOCK 1B: UNIVERSAL DISTRACTOR RULES (primacy zone — only when MC active) ===
     if ((answerFormat === 'mc' || answerFormat === 'mix') && typeof UNIVERSAL_DISTRACTOR_RULES !== 'undefined') {
@@ -936,7 +992,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
             diagnosticFor: p.diagnosticFor || [],
             answerType,
             scienceTeksConnection: p.scienceTeksConnection || null,
-            scienceLabel: p.scienceLabel || null
+            scienceLabel: p.scienceLabel || null,
+            diagram: this._validateDiagram(p.diagram)
           };
         }
         // Non-computation MC (IDENTIFY, CONCEPTUAL): trust LLM's answer
@@ -957,7 +1014,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
           diagnosticFor: p.diagnosticFor || [],
           answerType,
           scienceTeksConnection: p.scienceTeksConnection || null,
-          scienceLabel: p.scienceLabel || null
+          scienceLabel: p.scienceLabel || null,
+          diagram: this._validateDiagram(p.diagram)
         };
       }
 
@@ -979,7 +1037,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
           diagnosticFor: p.diagnosticFor || [],
           answerType,
           scienceTeksConnection: p.scienceTeksConnection || null,
-          scienceLabel: p.scienceLabel || null
+          scienceLabel: p.scienceLabel || null,
+          diagram: this._validateDiagram(p.diagram)
         };
       }
 
@@ -1002,7 +1061,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
           diagnosticFor: p.diagnosticFor || [],
           answerType: 'fraction',
           scienceTeksConnection: p.scienceTeksConnection || null,
-          scienceLabel: p.scienceLabel || null
+          scienceLabel: p.scienceLabel || null,
+          diagram: this._validateDiagram(p.diagram)
         };
       }
 
@@ -1025,7 +1085,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
         diagnosticFor: p.diagnosticFor || [],
         answerType,
         scienceTeksConnection: p.scienceTeksConnection || null,
-        scienceLabel: p.scienceLabel || null
+        scienceLabel: p.scienceLabel || null,
+        diagram: this._validateDiagram(p.diagram)
       };
     });
   }
@@ -1051,7 +1112,8 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
         question: q.question || 'Science question unavailable.',
         options,
         correctAnswer,
-        teks: q.teks || ''
+        teks: q.teks || '',
+        diagram: null
       };
     });
   }
@@ -1158,6 +1220,84 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
       return upper;
     }
     return options[0].letter;
+  }
+
+  _validateDiagram(descriptor) {
+    // Layer 1: Null/absent check
+    if (!descriptor || typeof descriptor !== 'object') return null;
+    if (!descriptor.type || descriptor.type === 'none') return null;
+
+    // Layer 2: Type must be one of our registered types
+    var validTypes = ['numberLine', 'barGraph', 'fractionBar', 'fractionCircle', 'array', 'stripDiagram', 'areaModel', 'dotPlot'];
+    if (validTypes.indexOf(descriptor.type) === -1) {
+      console.warn('[CerebrasAPI] Invalid diagram type:', descriptor.type);
+      return null;
+    }
+
+    // Layer 3: Params must exist and be an object
+    if (!descriptor.params || typeof descriptor.params !== 'object') {
+      console.warn('[CerebrasAPI] Diagram missing params:', descriptor.type);
+      return null;
+    }
+
+    var p = descriptor.params;
+    var type = descriptor.type;
+
+    // Layer 4: Type-specific validation
+    try {
+      if (type === 'numberLine') {
+        if (typeof p.min !== 'number' || typeof p.max !== 'number') return null;
+        if (!isFinite(p.min) || !isFinite(p.max)) return null;
+        if (p.min >= p.max) return null;
+        if (!Array.isArray(p.markers)) p.markers = [];
+        if (p.step !== undefined && (typeof p.step !== 'number' || !isFinite(p.step) || p.step <= 0)) p.step = undefined;
+      }
+      else if (type === 'barGraph') {
+        if (!Array.isArray(p.categories) || !Array.isArray(p.values)) return null;
+        if (p.categories.length !== p.values.length) return null;
+        if (p.categories.length === 0 || p.categories.length > 8) return null;
+        for (var i = 0; i < p.values.length; i++) {
+          if (typeof p.values[i] !== 'number' || !isFinite(p.values[i])) return null;
+        }
+      }
+      else if (type === 'fractionBar' || type === 'fractionCircle') {
+        if (typeof p.numerator !== 'number' || typeof p.denominator !== 'number') return null;
+        if (!isFinite(p.numerator) || !isFinite(p.denominator)) return null;
+        if (p.denominator < 1 || p.denominator > 12) return null;
+        if (p.numerator < 0 || p.numerator > p.denominator) return null;
+      }
+      else if (type === 'array') {
+        if (typeof p.rows !== 'number' || typeof p.columns !== 'number') return null;
+        if (!isFinite(p.rows) || !isFinite(p.columns)) return null;
+        if (p.rows < 1 || p.rows > 10 || p.columns < 1 || p.columns > 10) return null;
+      }
+      else if (type === 'stripDiagram') {
+        if (!Array.isArray(p.sections) || p.sections.length === 0) return null;
+        var hasValue = false;
+        for (var k = 0; k < p.sections.length; k++) {
+          if (p.sections[k] && typeof p.sections[k].value === 'number' && isFinite(p.sections[k].value)) hasValue = true;
+        }
+        if (!hasValue) return null;
+      }
+      else if (type === 'areaModel') {
+        if (!Array.isArray(p.factors) || p.factors.length !== 2) return null;
+        if (typeof p.factors[0] !== 'number' || typeof p.factors[1] !== 'number') return null;
+        if (!isFinite(p.factors[0]) || !isFinite(p.factors[1])) return null;
+        if (p.factors[0] <= 0 || p.factors[1] <= 0) return null;
+      }
+      else if (type === 'dotPlot') {
+        if (!Array.isArray(p.data) || p.data.length < 3) return null;
+        for (var j = 0; j < p.data.length; j++) {
+          if (typeof p.data[j] !== 'number' || !isFinite(p.data[j])) return null;
+        }
+      }
+    } catch (e) {
+      console.warn('[CerebrasAPI] Diagram validation error:', e);
+      return null;
+    }
+
+    console.log('[CerebrasAPI] Valid diagram:', type);
+    return { type: type, params: p };
   }
 
   /* =========================================
@@ -1350,7 +1490,9 @@ TARGET TEKS: ${teksDesc}
 GRADE: ${gradeLevel}
 
 REQUIRED JSON FIELDS per problem:
-narrative (string, 30-80 word Iron Man themed word problem), operation (string), operands (array of numbers), teks (string), primaryType (string), difficulty (string), diagnosticFor (array), answerType (string), scienceTeksConnection (string or null), scienceLabel (string or null — short 2-5 word description of science concept if cross-curricular)
+narrative (string, 30-80 word Iron Man themed word problem), operation (string), operands (array of numbers), teks (string), primaryType (string), difficulty (string), diagnosticFor (array), answerType (string), scienceTeksConnection (string or null), scienceLabel (string or null — short 2-5 word description of science concept if cross-curricular), diagram (object or null)
+
+DIAGRAM FIELD: Include a "diagram" field in your response. Set to null unless the problem benefits from a visual model. Valid types: "numberLine", "barGraph", "fractionBar", "fractionCircle", "array", "stripDiagram", "areaModel", "dotPlot". If including a diagram, use the EXACT same parameter format as shown in the main prompt. When in doubt, set diagram to null.
 
 RULES:
 1. Do NOT include correctAnswer — JavaScript computes it.

@@ -530,6 +530,19 @@ REQUIRED JSON STRUCTURE:
     "scienceTeksConnection": null,
     "scienceLabel": null,
     "diagram": null
+  },
+  {
+    "narrative": "Jarvis arranged Iron Man's spare arc reactors in 3 rows with 4 in each row on a display shelf. How many arc reactors are on the display shelf in total?",
+    "operation": "MULTIPLY",
+    "operands": [3, 4],
+    "teks": "3.4D",
+    "primaryType": "computation",
+    "difficulty": "easy",
+    "diagnosticFor": [],
+    "answerType": "integer",
+    "scienceTeksConnection": null,
+    "scienceLabel": null,
+    "diagram": {"type": "array", "params": {"rows": 3, "columns": 4, "title": "3 × 4", "showTotal": true}}
   }
 ]}
 

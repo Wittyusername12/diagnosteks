@@ -104,3 +104,61 @@
   fill: var(--diagram-fill);
   opacity: 0.3;
 }
+
+/* --- Bar Graph: gridlines --- */
+.im-diagram-gridline line {
+  stroke: var(--diagram-stroke);
+  stroke-width: 0.5;
+  opacity: 0.2;
+  stroke-dasharray: 4 4;
+}
+
+/* --- Bar Graph: bars --- */
+.im-diagram-bar rect {
+  fill: rgba(0, 212, 255, 0.45);
+  stroke: var(--diagram-stroke);
+  stroke-width: 1;
+  transition: opacity 0.2s;
+}
+
+/* --- Bar Graph: highlighted bar (gold) --- */
+.im-diagram-bar-highlight rect {
+  fill: var(--diagram-marker);
+  stroke: var(--diagram-marker);
+  opacity: 0.85;
+}
+
+/* --- Bar Graph: value labels above bars --- */
+.im-diagram-bar-value {
+  fill: var(--diagram-text);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  text-anchor: middle;
+}
+
+/* --- Bar Graph: category labels below bars --- */
+.im-diagram-category-label {
+  fill: var(--diagram-text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  text-anchor: middle;
+}
+
+/* --- Bar Graph: axis number labels --- */
+.im-diagram-axis-label {
+  fill: var(--diagram-text);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* --- Bar Graph: axis titles --- */
+.im-diagram-axis-title {
+  fill: var(--diagram-text);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  text-anchor: middle;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}

@@ -94,6 +94,13 @@ function renderNumberLine(svg, params) {
     else step = 100;
   }
 
+  // Floating-point fix: determine decimal places from step
+  var decimals = 0;
+  var stepStr = String(step);
+  if (stepStr.indexOf('.') !== -1) {
+    decimals = stepStr.split('.')[1].length;
+  }
+
   // --- Layout constants ---
   var leftPad = 60;
   var rightPad = 60;
@@ -183,7 +190,7 @@ function renderNumberLine(svg, params) {
         y: midY + tickHalf + 20,
         class: 'im-diagram-tick-label'
       });
-      label.textContent = String(v);
+      label.textContent = String(parseFloat(v.toFixed(decimals)));
       svg.appendChild(label);
     }
   }
@@ -210,7 +217,7 @@ function renderNumberLine(svg, params) {
           y: midY + tickHalf + 20,
           class: 'im-diagram-tick-label'
         });
-        eLabel.textContent = String(ev);
+        eLabel.textContent = String(parseFloat(ev.toFixed(decimals)));
         svg.appendChild(eLabel);
       }
     }
@@ -299,6 +306,296 @@ function renderNumberLine(svg, params) {
 // Register the number line renderer
 DiagramRegistry.register('numberLine', renderNumberLine);
 
+// ============================================================
+// BAR GRAPH RENDERER
+// ============================================================
+
+function renderBarGraph(svg, params) {
+  var categories = params.categories || [];
+  var values = params.values || [];
+  var title = params.title || null;
+  var yAxisLabel = params.yAxisLabel || null;
+  var xAxisLabel = params.xAxisLabel || null;
+  var yMax = params.yMax || null;
+  var yStep = params.yStep || null;
+  var orientation = params.orientation || 'vertical';
+  var highlightIndex = params.highlightIndex != null ? params.highlightIndex : null;
+  var showValues = params.showValues === true;
+
+  // --- Validation ---
+  if (!categories.length || !values.length) {
+    console.warn('[DiagramRenderer] barGraph: categories and values are required');
+    return;
+  }
+  if (categories.length !== values.length) {
+    console.warn('[DiagramRenderer] barGraph: categories.length (' + categories.length + ') !== values.length (' + values.length + ')');
+    return;
+  }
+
+  // Override viewBox for bar graph (needs more vertical space)
+  svg.setAttribute('viewBox', '0 0 800 400');
+
+  // Clamp values to non-negative
+  for (var i = 0; i < values.length; i++) {
+    values[i] = Math.max(0, values[i]);
+  }
+
+  // Auto-calculate yStep if not provided
+  var maxVal = Math.max.apply(null, values);
+  if (!yStep || yStep <= 0) {
+    var raw = maxVal * 1.15;
+    if (raw <= 10) yStep = 1;
+    else if (raw <= 20) yStep = 2;
+    else if (raw <= 50) yStep = 5;
+    else if (raw <= 100) yStep = 10;
+    else if (raw <= 200) yStep = 20;
+    else if (raw <= 500) yStep = 50;
+    else yStep = 100;
+  }
+
+  // Auto-calculate yMax if not provided
+  if (!yMax || yMax <= 0) {
+    yMax = Math.ceil(maxVal * 1.15 / yStep) * yStep;
+    if (yMax < yStep) yMax = yStep;
+  }
+
+  // Floating-point fix for y-axis labels
+  var yDecimals = 0;
+  var yStepStr = String(yStep);
+  if (yStepStr.indexOf('.') !== -1) {
+    yDecimals = yStepStr.split('.')[1].length;
+  }
+
+  // --- Layout constants ---
+  var CHART_LEFT, CHART_RIGHT, CHART_TOP, CHART_BOTTOM;
+  var CHART_WIDTH, CHART_HEIGHT;
+
+  if (orientation === 'horizontal') {
+    CHART_LEFT = 120;
+    CHART_RIGHT = 740;
+    CHART_TOP = 50;
+    CHART_BOTTOM = 340;
+  } else {
+    CHART_LEFT = 80;
+    CHART_RIGHT = 740;
+    CHART_TOP = 50;
+    CHART_BOTTOM = 340;
+  }
+  CHART_WIDTH = CHART_RIGHT - CHART_LEFT;
+  CHART_HEIGHT = CHART_BOTTOM - CHART_TOP;
+  var BAR_GAP_RATIO = 0.3;
+
+  // --- 1. Title ---
+  if (title && typeof title === 'string') {
+    var titleEl = svgEl('text', { x: 400, y: 30, class: 'im-diagram-title' });
+    titleEl.textContent = title;
+    svg.appendChild(titleEl);
+  }
+
+  if (orientation === 'horizontal') {
+    // === HORIZONTAL ORIENTATION ===
+    var hSlotHeight = CHART_HEIGHT / categories.length;
+    var hBarHeight = hSlotHeight * (1 - BAR_GAP_RATIO);
+    var hGapHeight = hSlotHeight * BAR_GAP_RATIO;
+
+    // 2. Vertical gridlines
+    for (var gv = 0; gv <= yMax; gv += yStep) {
+      var gx = CHART_LEFT + (gv / yMax) * CHART_WIDTH;
+      var gridGroup = svgEl('g', { class: 'im-diagram-gridline' });
+      gridGroup.appendChild(svgEl('line', {
+        x1: gx, y1: CHART_TOP, x2: gx, y2: CHART_BOTTOM
+      }));
+      svg.appendChild(gridGroup);
+
+      // X-axis labels (values along bottom)
+      var xLabel = svgEl('text', {
+        x: gx, y: CHART_BOTTOM + 20,
+        class: 'im-diagram-axis-label',
+        'text-anchor': 'middle'
+      });
+      xLabel.textContent = String(parseFloat(gv.toFixed(yDecimals)));
+      svg.appendChild(xLabel);
+    }
+
+    // 3. Y-axis line (left)
+    var yAxisGroup = svgEl('g', { class: 'im-diagram-axis' });
+    yAxisGroup.appendChild(svgEl('line', {
+      x1: CHART_LEFT, y1: CHART_TOP, x2: CHART_LEFT, y2: CHART_BOTTOM
+    }));
+    svg.appendChild(yAxisGroup);
+
+    // 4. X-axis line (bottom)
+    var xAxisGroup = svgEl('g', { class: 'im-diagram-axis' });
+    xAxisGroup.appendChild(svgEl('line', {
+      x1: CHART_LEFT, y1: CHART_BOTTOM, x2: CHART_RIGHT, y2: CHART_BOTTOM
+    }));
+    svg.appendChild(xAxisGroup);
+
+    // 5. Bars (horizontal)
+    for (var hi = 0; hi < categories.length; hi++) {
+      var hBarY = CHART_TOP + (hi * hSlotHeight) + (hGapHeight / 2);
+      var hBarWidth = (values[hi] / yMax) * CHART_WIDTH;
+      var hBarClass = 'im-diagram-bar';
+      if (highlightIndex === hi) hBarClass += ' im-diagram-bar-highlight';
+
+      var hBarGroup = svgEl('g', { class: hBarClass });
+      hBarGroup.appendChild(svgEl('rect', {
+        x: CHART_LEFT,
+        y: hBarY,
+        width: hBarWidth,
+        height: hBarHeight,
+        rx: 2
+      }));
+      svg.appendChild(hBarGroup);
+
+      // Value labels
+      if (showValues) {
+        var hValLabel = svgEl('text', {
+          x: CHART_LEFT + hBarWidth + 8,
+          y: hBarY + hBarHeight / 2 + 4,
+          class: 'im-diagram-bar-value',
+          'text-anchor': 'start'
+        });
+        hValLabel.textContent = String(values[hi]);
+        svg.appendChild(hValLabel);
+      }
+
+      // Category labels (left of bars)
+      var hCatLabel = svgEl('text', {
+        x: CHART_LEFT - 10,
+        y: hBarY + hBarHeight / 2 + 4,
+        class: 'im-diagram-category-label',
+        'text-anchor': 'end'
+      });
+      hCatLabel.textContent = categories[hi];
+      svg.appendChild(hCatLabel);
+    }
+
+    // 6. Axis titles
+    if (xAxisLabel) {
+      var xTitleEl = svgEl('text', {
+        x: CHART_LEFT + CHART_WIDTH / 2, y: CHART_BOTTOM + 50,
+        class: 'im-diagram-axis-title'
+      });
+      xTitleEl.textContent = xAxisLabel;
+      svg.appendChild(xTitleEl);
+    }
+    if (yAxisLabel) {
+      var midY = CHART_TOP + CHART_HEIGHT / 2;
+      var yTitleEl = svgEl('text', {
+        x: 20, y: midY,
+        class: 'im-diagram-axis-title',
+        transform: 'rotate(-90, 20, ' + midY + ')'
+      });
+      yTitleEl.textContent = yAxisLabel;
+      svg.appendChild(yTitleEl);
+    }
+
+  } else {
+    // === VERTICAL ORIENTATION (default) ===
+    var slotWidth = CHART_WIDTH / categories.length;
+    var barWidth = slotWidth * (1 - BAR_GAP_RATIO);
+    var gapWidth = slotWidth * BAR_GAP_RATIO;
+
+    // 2. Y-axis gridlines (horizontal, behind bars)
+    for (var gy = 0; gy <= yMax; gy += yStep) {
+      var gyPos = CHART_BOTTOM - (gy / yMax) * CHART_HEIGHT;
+      var gridGrp = svgEl('g', { class: 'im-diagram-gridline' });
+      gridGrp.appendChild(svgEl('line', {
+        x1: CHART_LEFT, y1: gyPos, x2: CHART_RIGHT, y2: gyPos
+      }));
+      svg.appendChild(gridGrp);
+
+      // 3. Y-axis labels
+      var yLabel = svgEl('text', {
+        x: CHART_LEFT - 10, y: gyPos + 4,
+        class: 'im-diagram-axis-label',
+        'text-anchor': 'end'
+      });
+      yLabel.textContent = String(parseFloat(gy.toFixed(yDecimals)));
+      svg.appendChild(yLabel);
+    }
+
+    // 4. Y-axis line (left edge)
+    var vYAxisGroup = svgEl('g', { class: 'im-diagram-axis' });
+    vYAxisGroup.appendChild(svgEl('line', {
+      x1: CHART_LEFT, y1: CHART_TOP, x2: CHART_LEFT, y2: CHART_BOTTOM
+    }));
+    svg.appendChild(vYAxisGroup);
+
+    // 5. X-axis line (bottom edge)
+    var vXAxisGroup = svgEl('g', { class: 'im-diagram-axis' });
+    vXAxisGroup.appendChild(svgEl('line', {
+      x1: CHART_LEFT, y1: CHART_BOTTOM, x2: CHART_RIGHT, y2: CHART_BOTTOM
+    }));
+    svg.appendChild(vXAxisGroup);
+
+    // 6. Bars
+    for (var vi = 0; vi < categories.length; vi++) {
+      var barX = CHART_LEFT + (vi * slotWidth) + (gapWidth / 2);
+      var barHeight = (values[vi] / yMax) * CHART_HEIGHT;
+      var barY = CHART_BOTTOM - barHeight;
+      var barClass = 'im-diagram-bar';
+      if (highlightIndex === vi) barClass += ' im-diagram-bar-highlight';
+
+      var barGroup = svgEl('g', { class: barClass });
+      barGroup.appendChild(svgEl('rect', {
+        x: barX,
+        y: barY,
+        width: barWidth,
+        height: barHeight,
+        rx: 2
+      }));
+      svg.appendChild(barGroup);
+
+      // 7. Value labels above bars
+      if (showValues) {
+        var valLabel = svgEl('text', {
+          x: barX + barWidth / 2,
+          y: barY - 8,
+          class: 'im-diagram-bar-value'
+        });
+        valLabel.textContent = String(values[vi]);
+        svg.appendChild(valLabel);
+      }
+
+      // 8. Category labels below x-axis
+      var catLabel = svgEl('text', {
+        x: barX + barWidth / 2,
+        y: CHART_BOTTOM + 25,
+        class: 'im-diagram-category-label'
+      });
+      catLabel.textContent = categories[vi];
+      svg.appendChild(catLabel);
+    }
+
+    // 9. Y-axis title
+    if (yAxisLabel) {
+      var vMidY = CHART_TOP + CHART_HEIGHT / 2;
+      var vYTitle = svgEl('text', {
+        x: 20, y: vMidY,
+        class: 'im-diagram-axis-title',
+        transform: 'rotate(-90, 20, ' + vMidY + ')'
+      });
+      vYTitle.textContent = yAxisLabel;
+      svg.appendChild(vYTitle);
+    }
+
+    // 10. X-axis title
+    if (xAxisLabel) {
+      var vXTitle = svgEl('text', {
+        x: CHART_LEFT + CHART_WIDTH / 2, y: CHART_BOTTOM + 50,
+        class: 'im-diagram-axis-title'
+      });
+      vXTitle.textContent = xAxisLabel;
+      svg.appendChild(vXTitle);
+    }
+  }
+}
+
+// Register renderers
+DiagramRegistry.register('barGraph', renderBarGraph);
+
 // Global export
 window.DiagramRegistry = DiagramRegistry;
 
@@ -311,6 +608,7 @@ window.testDiagram = function(containerId, descriptor) {
   return DiagramRegistry.render(container, descriptor);
 };
 
-console.log('[DiagramRenderer] Module loaded. Test with:');
-console.log('  testDiagram("firewall-screen", {type: "numberLine", params: {min: 0, max: 20, step: 2, markers: [14]}})');
+console.log('[DiagramRenderer] Module loaded. Available: numberLine, barGraph');
+console.log('  testDiagram("id", {type: "numberLine", params: {min: 0, max: 20, markers: [14]}})');
+console.log('  testDiagram("id", {type: "barGraph", params: {categories: ["A","B","C"], values: [5,8,3]}})');
 

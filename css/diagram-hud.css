@@ -162,3 +162,48 @@
   text-transform: uppercase;
   opacity: 0.8;
 }
+
+/* --- Fraction Bar / Fraction Circle: border --- */
+.im-diagram-fraction-border {
+  fill: none;
+  stroke: var(--diagram-stroke);
+  stroke-width: 2;
+}
+
+/* --- Fraction Bar / Fraction Circle: filled parts --- */
+.im-diagram-fraction-filled {
+  fill: rgba(0, 212, 255, 0.4);
+  stroke: var(--diagram-stroke);
+  stroke-width: 1;
+}
+
+/* --- Fraction Bar / Fraction Circle: highlighted parts (gold) --- */
+.im-diagram-fraction-highlight {
+  fill: rgba(255, 149, 0, 0.6);
+  stroke: var(--diagram-marker);
+  stroke-width: 1.5;
+}
+
+/* --- Fraction Bar / Fraction Circle: divider lines --- */
+.im-diagram-fraction-divider line {
+  stroke: var(--diagram-stroke);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+/* --- Fraction Bar: part labels inside each part --- */
+.im-diagram-fraction-part-label {
+  fill: var(--diagram-text);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  opacity: 0.8;
+}
+
+/* --- Fraction Circle: outline --- */
+.im-diagram-fraction-circle-outline {
+  fill: none;
+  stroke: var(--diagram-stroke);
+  stroke-width: 2;
+}

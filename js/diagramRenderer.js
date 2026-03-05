@@ -19,6 +19,30 @@ function svgEl(tag, attrs) {
 }
 
 // ============================================================
+// ARC MATH HELPERS (used by fractionCircle and any future pie/arc renderers)
+// ============================================================
+
+function polarToCartesian(cx, cy, radius, angleDegrees) {
+  var angleRadians = (angleDegrees - 90) * Math.PI / 180; // -90 to start at 12 o'clock
+  return {
+    x: cx + radius * Math.cos(angleRadians),
+    y: cy + radius * Math.sin(angleRadians)
+  };
+}
+
+function describeArc(cx, cy, radius, startAngle, endAngle) {
+  var start = polarToCartesian(cx, cy, radius, endAngle);
+  var end = polarToCartesian(cx, cy, radius, startAngle);
+  var arcSweep = (endAngle - startAngle <= 180) ? '0' : '1';
+  return [
+    'M', cx, cy,
+    'L', start.x, start.y,
+    'A', radius, radius, 0, arcSweep, 0, end.x, end.y,
+    'Z'
+  ].join(' ');
+}
+
+// ============================================================
 // DIAGRAM REGISTRY
 // ============================================================
 
@@ -451,7 +475,7 @@ function renderBarGraph(svg, params) {
       // Value labels
       if (showValues) {
         var hValLabel = svgEl('text', {
-          x: CHART_LEFT + hBarWidth + 8,
+          x: CHART_LEFT + hBarWidth + 16,
           y: hBarY + hBarHeight / 2 + 4,
           class: 'im-diagram-bar-value',
           'text-anchor': 'start'
@@ -596,6 +620,247 @@ function renderBarGraph(svg, params) {
 // Register renderers
 DiagramRegistry.register('barGraph', renderBarGraph);
 
+// ============================================================
+// FRACTION BAR RENDERER
+// ============================================================
+
+function renderFractionBar(svg, params) {
+  var numerator = params.numerator != null ? params.numerator : 1;
+  var denominator = params.denominator != null ? params.denominator : 4;
+  var title = params.title || null;
+  var showLabel = params.showLabel !== false;
+  var highlightParts = params.highlightParts || [];
+  var showPartLabels = params.showPartLabels === true;
+  var comparison = params.comparison || null;
+
+  // --- Validation ---
+  if (denominator < 1) { console.warn('[DiagramRenderer] fractionBar: denominator clamped to 1'); denominator = 1; }
+  if (denominator > 12) { console.warn('[DiagramRenderer] fractionBar: denominator clamped to 12'); denominator = 12; }
+  if (numerator < 0) { numerator = 0; }
+  if (numerator > denominator) { numerator = denominator; }
+
+  var hasComparison = comparison && comparison.denominator != null;
+  if (hasComparison) {
+    if (comparison.denominator < 1) { comparison.denominator = 1; }
+    if (comparison.denominator > 12) { comparison.denominator = 12; }
+    if (comparison.numerator == null) { comparison.numerator = 0; }
+    if (comparison.numerator < 0) { comparison.numerator = 0; }
+    if (comparison.numerator > comparison.denominator) { comparison.numerator = comparison.denominator; }
+  }
+
+  // Override viewBox
+  if (hasComparison) {
+    svg.setAttribute('viewBox', '0 0 800 320');
+  } else {
+    svg.setAttribute('viewBox', '0 0 800 200');
+  }
+
+  // --- Layout constants ---
+  var BAR_LEFT = 60;
+  var BAR_RIGHT = 740;
+  var BAR_TOP = 50;
+  var BAR_HEIGHT = 60;
+  var BAR_WIDTH = BAR_RIGHT - BAR_LEFT;
+  var PART_WIDTH = BAR_WIDTH / denominator;
+  var LABEL_Y = BAR_TOP + BAR_HEIGHT + 30;
+
+  // --- 1. Title ---
+  if (title && typeof title === 'string') {
+    var titleEl = svgEl('text', { x: 400, y: 30, class: 'im-diagram-title' });
+    titleEl.textContent = title;
+    svg.appendChild(titleEl);
+  }
+
+  // --- Helper to render a single fraction bar ---
+  function drawBar(barTop, num, den, labelY, hParts) {
+    var partW = BAR_WIDTH / den;
+
+    // 2. Outer border
+    svg.appendChild(svgEl('rect', {
+      x: BAR_LEFT, y: barTop, width: BAR_WIDTH, height: BAR_HEIGHT,
+      class: 'im-diagram-fraction-border'
+    }));
+
+    // 3. Shaded parts
+    for (var i = 0; i < num; i++) {
+      var cls = 'im-diagram-fraction-filled';
+      if (hParts && hParts.indexOf(i) !== -1) {
+        cls = 'im-diagram-fraction-highlight';
+      }
+      svg.appendChild(svgEl('rect', {
+        x: BAR_LEFT + i * partW, y: barTop, width: partW, height: BAR_HEIGHT,
+        class: cls
+      }));
+    }
+
+    // 4. Divider lines
+    for (var j = 1; j < den; j++) {
+      var divGroup = svgEl('g', { class: 'im-diagram-fraction-divider' });
+      divGroup.appendChild(svgEl('line', {
+        x1: BAR_LEFT + j * partW, y1: barTop,
+        x2: BAR_LEFT + j * partW, y2: barTop + BAR_HEIGHT
+      }));
+      svg.appendChild(divGroup);
+    }
+
+    // 5. Part labels
+    if (showPartLabels) {
+      for (var k = 0; k < den; k++) {
+        var pLabel = svgEl('text', {
+          x: BAR_LEFT + (k + 0.5) * partW, y: barTop + BAR_HEIGHT / 2 + 5,
+          class: 'im-diagram-fraction-part-label'
+        });
+        pLabel.textContent = '1/' + den;
+        svg.appendChild(pLabel);
+      }
+    }
+
+    // 6. Fraction label
+    if (showLabel) {
+      var fLabel = svgEl('text', {
+        x: 400, y: labelY,
+        class: 'im-diagram-fraction-label'
+      });
+      fLabel.textContent = num + '/' + den;
+      svg.appendChild(fLabel);
+    }
+  }
+
+  // Draw primary bar
+  drawBar(BAR_TOP, numerator, denominator, LABEL_Y, highlightParts);
+
+  // 7. Comparison bar
+  if (hasComparison) {
+    var BAR2_TOP = BAR_TOP + BAR_HEIGHT + 50;
+    var LABEL2_Y = BAR2_TOP + BAR_HEIGHT + 30;
+    drawBar(BAR2_TOP, comparison.numerator, comparison.denominator, LABEL2_Y, []);
+  }
+}
+
+DiagramRegistry.register('fractionBar', renderFractionBar);
+
+// ============================================================
+// FRACTION CIRCLE RENDERER
+// ============================================================
+
+function renderFractionCircle(svg, params) {
+  var numerator = params.numerator != null ? params.numerator : 1;
+  var denominator = params.denominator != null ? params.denominator : 4;
+  var title = params.title || null;
+  var showLabel = params.showLabel !== false;
+  var highlightSectors = params.highlightSectors || [];
+  var radius = params.radius || 100;
+  var comparison = params.comparison || null;
+
+  // --- Validation ---
+  if (denominator < 1) { console.warn('[DiagramRenderer] fractionCircle: denominator clamped to 1'); denominator = 1; }
+  if (denominator > 12) { console.warn('[DiagramRenderer] fractionCircle: denominator clamped to 12'); denominator = 12; }
+  if (numerator < 0) { numerator = 0; }
+  if (numerator > denominator) { numerator = denominator; }
+  if (radius <= 0) { radius = 100; }
+  if (radius > 150) { radius = 150; }
+
+  var hasComparison = comparison && comparison.denominator != null;
+  if (hasComparison) {
+    if (comparison.denominator < 1) { comparison.denominator = 1; }
+    if (comparison.denominator > 12) { comparison.denominator = 12; }
+    if (comparison.numerator == null) { comparison.numerator = 0; }
+    if (comparison.numerator < 0) { comparison.numerator = 0; }
+    if (comparison.numerator > comparison.denominator) { comparison.numerator = comparison.denominator; }
+  }
+
+  // Override viewBox
+  svg.setAttribute('viewBox', '0 0 800 300');
+
+  // --- Center positions ---
+  var cx, cy;
+  if (hasComparison) {
+    cx = 250;
+    cy = 150;
+  } else {
+    cx = 400;
+    cy = 150;
+  }
+
+  // --- 1. Title ---
+  if (title && typeof title === 'string') {
+    var titleEl = svgEl('text', { x: 400, y: 20, class: 'im-diagram-title' });
+    titleEl.textContent = title;
+    svg.appendChild(titleEl);
+  }
+
+  // --- Helper to render a single fraction circle ---
+  function drawCircle(centerX, centerY, r, num, den, hSectors) {
+    // 2. Circle outline
+    svg.appendChild(svgEl('circle', {
+      cx: centerX, cy: centerY, r: r,
+      class: 'im-diagram-fraction-circle-outline'
+    }));
+
+    // 3. Filled sectors
+    if (num > 0) {
+      if (num === den) {
+        // FULL CIRCLE edge case — arc path collapses, use <circle> fill
+        var cls = 'im-diagram-fraction-filled';
+        // Check if all sectors are highlighted
+        var allHighlighted = true;
+        for (var h = 0; h < den; h++) {
+          if (hSectors.indexOf(h) === -1) { allHighlighted = false; break; }
+        }
+        if (allHighlighted && hSectors.length > 0) { cls = 'im-diagram-fraction-highlight'; }
+        svg.appendChild(svgEl('circle', {
+          cx: centerX, cy: centerY, r: r,
+          class: cls
+        }));
+      } else {
+        for (var i = 0; i < num; i++) {
+          var startAngle = i * (360 / den);
+          var endAngle = (i + 1) * (360 / den);
+          var sectorCls = 'im-diagram-fraction-filled';
+          if (hSectors.indexOf(i) !== -1) {
+            sectorCls = 'im-diagram-fraction-highlight';
+          }
+          svg.appendChild(svgEl('path', {
+            d: describeArc(centerX, centerY, r, startAngle, endAngle),
+            class: sectorCls
+          }));
+        }
+      }
+    }
+
+    // 4. Divider lines (radial lines from center to edge)
+    for (var j = 0; j < den; j++) {
+      var angle = j * (360 / den);
+      var pt = polarToCartesian(centerX, centerY, r, angle);
+      var divGroup = svgEl('g', { class: 'im-diagram-fraction-divider' });
+      divGroup.appendChild(svgEl('line', {
+        x1: centerX, y1: centerY, x2: pt.x, y2: pt.y
+      }));
+      svg.appendChild(divGroup);
+    }
+
+    // 5. Fraction label
+    if (showLabel) {
+      var fLabel = svgEl('text', {
+        x: centerX, y: centerY + r + 30,
+        class: 'im-diagram-fraction-label'
+      });
+      fLabel.textContent = num + '/' + den;
+      svg.appendChild(fLabel);
+    }
+  }
+
+  // Draw primary circle
+  drawCircle(cx, cy, radius, numerator, denominator, highlightSectors);
+
+  // 6. Comparison circle
+  if (hasComparison) {
+    drawCircle(550, cy, radius, comparison.numerator, comparison.denominator, []);
+  }
+}
+
+DiagramRegistry.register('fractionCircle', renderFractionCircle);
+
 // Global export
 window.DiagramRegistry = DiagramRegistry;
 
@@ -608,7 +873,9 @@ window.testDiagram = function(containerId, descriptor) {
   return DiagramRegistry.render(container, descriptor);
 };
 
-console.log('[DiagramRenderer] Module loaded. Available: numberLine, barGraph');
+console.log('[DiagramRenderer] Module loaded. Available: numberLine, barGraph, fractionBar, fractionCircle');
 console.log('  testDiagram("id", {type: "numberLine", params: {min: 0, max: 20, markers: [14]}})');
 console.log('  testDiagram("id", {type: "barGraph", params: {categories: ["A","B","C"], values: [5,8,3]}})');
+console.log('  testDiagram("id", {type: "fractionBar", params: {numerator: 3, denominator: 4}})');
+console.log('  testDiagram("id", {type: "fractionCircle", params: {numerator: 3, denominator: 4}})');
 

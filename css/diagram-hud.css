@@ -259,7 +259,7 @@
 .im-diagram-strip-label {
   fill: var(--diagram-text);
   font-family: 'Orbitron', sans-serif;
-  font-size: 16px;
+  font-size: 20px;
   text-anchor: middle;
   dominant-baseline: central;
 }
@@ -277,4 +277,53 @@
   font-size: 16px;
   font-weight: bold;
   text-anchor: middle;
+}
+
+/* --- Area Model: cells --- */
+.im-diagram-area-cell {
+  fill: rgba(0, 212, 255, 0.2);
+  stroke: var(--diagram-stroke);
+  stroke-width: 1;
+}
+
+.im-diagram-area-cell-highlight {
+  fill: rgba(255, 149, 0, 0.35);
+  stroke: var(--diagram-marker);
+  stroke-width: 2;
+}
+
+.im-diagram-area-product {
+  fill: var(--diagram-text);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.im-diagram-area-factor {
+  fill: var(--diagram-marker);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.im-diagram-area-grid {
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 2;
+}
+
+/* --- Dot Plot: dots --- */
+.im-diagram-dot {
+  fill: rgba(0, 212, 255, 0.7);
+  stroke: var(--diagram-stroke);
+  stroke-width: 1.5;
+}
+
+.im-diagram-dot-highlight {
+  fill: var(--diagram-marker);
+  stroke: var(--diagram-marker);
+  stroke-width: 2;
 }

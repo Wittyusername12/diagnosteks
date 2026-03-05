@@ -2772,7 +2772,8 @@ function toInjectionFormat(exemplar) {
     options: exemplar.options,
     distractorRationales: exemplar.distractorRationales,
     correctAnswer: exemplar.correctAnswer,
-    whyThisIsGood: exemplar.whyThisIsGood
+    whyThisIsGood: exemplar.whyThisIsGood,
+    diagram: null
   };
 }
 
@@ -2784,8 +2785,10 @@ function toInjectionFormat(exemplar) {
 function selectExemplars(selectedTeks, exemplarBank = PROBLEM_EXEMPLARS) {
   const numTeks = selectedTeks.length;
 
-  // Always 5 exemplars per TEKS (or as many as exist if fewer than 5)
-  const perTeks = 5;
+  // Budget: scale down per-TEKS count as more TEKS are selected
+  // 1 TEKS -> 4-5 exemplars, 2 -> 3 each, 3 -> 2 each, 4+ -> 1-2 each
+  const perTeks = Math.max(1, Math.min(5, Math.floor(10 / numTeks)));
+  const maxTotal = 10;
 
   let selected = [];
 
@@ -2801,7 +2804,8 @@ function selectExemplars(selectedTeks, exemplarBank = PROBLEM_EXEMPLARS) {
     selected.push(...picked);
   }
 
-  return selected.map(toInjectionFormat);
+  // Cap total
+  return selected.slice(0, maxTotal).map(toInjectionFormat);
 }
 
 // ============================================================

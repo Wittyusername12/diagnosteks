@@ -1,0 +1,79 @@
+/* ============================================================
+   DIAGRAM HUD THEMING — Iron Man HUD aesthetic for SVG diagrams
+   Cyan strokes, gold markers, Orbitron font, glow effects.
+   All class names use diagram-* namespace.
+   ============================================================ */
+
+/* --- Custom Properties --- */
+.hud-diagram {
+  --diagram-stroke: #00d4ff;
+  --diagram-fill: rgba(0, 212, 255, 0.3);
+  --diagram-marker: #ff9500;
+  --diagram-text: #ffffff;
+  --diagram-bg: transparent;
+  --diagram-glow: drop-shadow(0 0 3px #00d4ff) drop-shadow(0 0 8px #00d4ff);
+}
+
+/* --- Base SVG container --- */
+.hud-diagram {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  display: block;
+  filter: var(--diagram-glow);
+  overflow: visible;
+  background: var(--diagram-bg);
+}
+
+/* --- All text inside diagrams uses Orbitron --- */
+.hud-diagram text {
+  font-family: 'Orbitron', monospace;
+}
+
+/* --- Number Line: axis --- */
+.diagram-axis line {
+  stroke: var(--diagram-stroke);
+  stroke-width: 2;
+}
+
+.diagram-axis polygon {
+  fill: var(--diagram-stroke);
+}
+
+/* --- Number Line: ticks --- */
+.diagram-tick line {
+  stroke: var(--diagram-stroke);
+  stroke-width: 1.5;
+  opacity: 0.7;
+}
+
+/* --- Number Line: tick labels --- */
+.diagram-tick-label {
+  fill: var(--diagram-text);
+  font-size: 14px;
+  text-anchor: middle;
+}
+
+/* --- Number Line: markers (gold) --- */
+.diagram-marker circle {
+  fill: var(--diagram-marker);
+  stroke: var(--diagram-marker);
+}
+
+.diagram-marker polygon {
+  fill: var(--diagram-marker);
+  stroke: var(--diagram-marker);
+}
+
+.diagram-marker text {
+  fill: var(--diagram-marker);
+  font-size: 16px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+/* --- Number Line: highlight range --- */
+.diagram-highlight-range rect {
+  fill: var(--diagram-fill);
+  opacity: 0.3;
+}

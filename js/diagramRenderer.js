@@ -30,6 +30,10 @@ const DiagramRegistry = {
   },
 
   render(container, descriptor) {
+    if (!container) {
+      console.warn('[DiagramRenderer] Container is null — cannot render');
+      return null;
+    }
     if (!descriptor || descriptor.type === 'none' || !descriptor.type) return null;
 
     const renderer = this.renderers[descriptor.type];
@@ -40,7 +44,7 @@ const DiagramRegistry = {
 
     const svg = svgEl('svg', {
       viewBox: '0 0 800 300',
-      class: 'hud-diagram',
+      class: 'im-diagram-svg',
       'aria-label': 'Math diagram'
     });
     container.appendChild(svg);
@@ -107,7 +111,7 @@ function renderNumberLine(svg, params) {
     var hrFrom = Math.max(min, Math.min(max, highlightRange.from));
     var hrTo = Math.max(min, Math.min(max, highlightRange.to));
     if (hrTo > hrFrom) {
-      var hrGroup = svgEl('g', { class: 'diagram-highlight-range' });
+      var hrGroup = svgEl('g', { class: 'im-diagram-highlight-range' });
       hrGroup.appendChild(svgEl('rect', {
         x: valToX(hrFrom),
         y: midY - 40,
@@ -119,8 +123,19 @@ function renderNumberLine(svg, params) {
     }
   }
 
+  // --- Title text (centered above number line) ---
+  if (params.title && typeof params.title === 'string') {
+    var titleEl = svgEl('text', {
+      x: 400,
+      y: 30,
+      class: 'im-diagram-title'
+    });
+    titleEl.textContent = params.title;
+    svg.appendChild(titleEl);
+  }
+
   // --- Main axis line ---
-  var axisGroup = svgEl('g', { class: 'diagram-axis' });
+  var axisGroup = svgEl('g', { class: 'im-diagram-axis' });
 
   axisGroup.appendChild(svgEl('line', {
     x1: leftPad,
@@ -153,7 +168,7 @@ function renderNumberLine(svg, params) {
 
   for (var v = firstTick; v <= max; v += step) {
     var x = valToX(v);
-    var tickGroup = svgEl('g', { class: 'diagram-tick' });
+    var tickGroup = svgEl('g', { class: 'im-diagram-tick' });
     tickGroup.appendChild(svgEl('line', {
       x1: x,
       y1: midY - tickHalf,
@@ -166,7 +181,7 @@ function renderNumberLine(svg, params) {
       var label = svgEl('text', {
         x: x,
         y: midY + tickHalf + 20,
-        class: 'diagram-tick-label'
+        class: 'im-diagram-tick-label'
       });
       label.textContent = String(v);
       svg.appendChild(label);
@@ -180,7 +195,7 @@ function renderNumberLine(svg, params) {
     // Check if this endpoint already has a tick (is aligned to step)
     if ((ev - firstTick) % step !== 0) {
       var ex = valToX(ev);
-      var eTick = svgEl('g', { class: 'diagram-tick' });
+      var eTick = svgEl('g', { class: 'im-diagram-tick' });
       eTick.appendChild(svgEl('line', {
         x1: ex,
         y1: midY - tickHalf,
@@ -193,11 +208,37 @@ function renderNumberLine(svg, params) {
         var eLabel = svgEl('text', {
           x: ex,
           y: midY + tickHalf + 20,
-          class: 'diagram-tick-label'
+          class: 'im-diagram-tick-label'
         });
         eLabel.textContent = String(ev);
         svg.appendChild(eLabel);
       }
+    }
+  }
+
+  // --- Fraction ticks and labels ---
+  var showFractions = params.showFractions === true;
+  var fracDenom = params.fractionDenominator;
+  if (showFractions && fracDenom && fracDenom > 0 && Number.isInteger(fracDenom)) {
+    for (var fi = 1; fi < fracDenom; fi++) {
+      var fracVal = min + (fi / fracDenom) * (max - min);
+      var fracX = valToX(fracVal);
+      var fracTickGroup = svgEl('g', { class: 'im-diagram-fraction-tick' });
+      fracTickGroup.appendChild(svgEl('line', {
+        x1: fracX,
+        y1: midY - 5,
+        x2: fracX,
+        y2: midY + 5
+      }));
+      svg.appendChild(fracTickGroup);
+
+      var fracLabel = svgEl('text', {
+        x: fracX,
+        y: midY + tickHalf + 35,
+        class: 'im-diagram-fraction-label'
+      });
+      fracLabel.textContent = fi + '/' + fracDenom;
+      svg.appendChild(fracLabel);
     }
   }
 
@@ -210,7 +251,7 @@ function renderNumberLine(svg, params) {
     }
 
     var mx = valToX(mv);
-    var markerGroup = svgEl('g', { class: 'diagram-marker' });
+    var markerGroup = svgEl('g', { class: 'im-diagram-marker' });
 
     // Dot above axis
     markerGroup.appendChild(svgEl('circle', {
@@ -236,12 +277,19 @@ function renderNumberLine(svg, params) {
       'stroke-width': 2
     }));
 
-    // Value label above dot
+    // Value label above dot (convert to fraction if applicable)
     var mLabel = svgEl('text', {
       x: mx,
       y: midY - 45
     });
-    mLabel.textContent = String(mv);
+    var mLabelText = String(mv);
+    if (showFractions && fracDenom && fracDenom > 0) {
+      var numerator = Math.round(mv * fracDenom);
+      if (Math.abs(numerator / fracDenom - mv) < 0.001) {
+        mLabelText = numerator + '/' + fracDenom;
+      }
+    }
+    mLabel.textContent = mLabelText;
     markerGroup.appendChild(mLabel);
 
     svg.appendChild(markerGroup);
@@ -254,4 +302,15 @@ DiagramRegistry.register('numberLine', renderNumberLine);
 // Global export
 window.DiagramRegistry = DiagramRegistry;
 
-console.log('[DiagramRenderer] Module loaded — test with: DiagramRegistry.render(document.body, {type: "numberLine", params: {min: 0, max: 20, markers: [14]}})');
+window.testDiagram = function(containerId, descriptor) {
+  var container = document.getElementById(containerId);
+  if (!container) {
+    console.warn('[DiagramRenderer] Container "' + containerId + '" not found, using document.body');
+    container = document.body;
+  }
+  return DiagramRegistry.render(container, descriptor);
+};
+
+console.log('[DiagramRenderer] Module loaded. Test with:');
+console.log('  testDiagram("firewall-screen", {type: "numberLine", params: {min: 0, max: 20, step: 2, markers: [14]}})');
+

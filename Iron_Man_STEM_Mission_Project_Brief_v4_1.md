@@ -2,9 +2,9 @@
 
 **Version:** 4.1  
 **Last Updated:** March 4, 2026  
-**Status:** Active Development -- Phase 3 COMPLETE, Phase 4 IN PROGRESS (Teacher Review built + 15 bugfix rounds, MC mode FUNCTIONAL for Tier 1 arithmetic TEKS with pre-computed STAAR-quality distractors, Layer 5 async validation ATTEMPTED AND ABANDONED — see §10), Exemplar Bank COMPLETE, Distractor Pattern Bank COMPLETE (Tier 1), Student Response System PLANNED (Phase 5A/5B)
+**Status:** Active Development -- Phase 3 COMPLETE, Phase 4 IN PROGRESS (Teacher Review built + 15 bugfix rounds, MC mode FUNCTIONAL for Tier 1 arithmetic TEKS with pre-computed STAAR-quality distractors, Layer 5 async validation ATTEMPTED AND ABANDONED — see §10), Exemplar Bank COMPLETE, Distractor Pattern Bank COMPLETE (Tier 1), SVG Diagram Renderer COMPLETE (Tier 1, 8 types — not yet wired into LLM pipeline), Student Response System PLANNED (Phase 5A/5B)
 
-**v4.1 Changes:** MC Distractor Pipeline — complete end-to-end architecture for STAAR-quality multiple choice distractors. Added Distractor Pattern Bank (`distractor-patterns.js`) with 97 worked examples across 27 patterns for 5 Tier 1 TEKS (3.4A, 3.4F, 3.4J, 3.4D, 3.4K), all extracted from official TEA STAAR rationale documents 2019-2025 (Section 7). Added pre-computed distractor value architecture: JavaScript `computeDistractorValues()` function in `cerebras-api.js` calculates distractor values using deterministic digit-by-digit algorithms (direction-reversal, borrow-error, regroup-fail, wrong-operation) instead of relying on LLM arithmetic — LLM receives pre-computed values and writes rationales for them (Section 7). Added rationale label injection: `computeDistractorValues()` returns `{value, rationale, tag}` triples so the LLM paraphrases pre-built rationale strings instead of inventing its own (Section 7). Fixed `selectExemplars` 10-total cap → 5 per TEKS (Section 7). Added MC-specific validation checks to pipeline: duplicate value detection (HARD GATE), rationale-value cross-check (HARD GATE), consecutive integer detection, wide-spread check (Section 10). Promoted MC duplicate check and rationale-value cross-check from WARNING to HARD GATE after discovering LLM fabricates distractor arithmetic (Section 10). Layer 5 async validation (self-consistency voting + blind review) built, tested, and ABANDONED — zero incremental value over Layers 1-4, see §10 postmortem. Added MC gameplay HUD with holographic A/B/C/D buttons and keyboard input (Section 18). Fixed science question skipping bug (Fury interruptions now fire correctly at firewalls 3/6/9). Fixed `distractorReasoning` → `distractorRationales` field bridge in `cerebras-api.js`. Documented 15 bugfix rounds (v4–v15) covering Teacher Review Screen features, validation edge cases, and MC integration (Section 18). Added `distractor-patterns.js` and `validation-engine.js` to Implementation Files (Section 17). Updated Phase 4 build checklist with completed items. Updated Known Issues with current state. Added distractor pipeline research reports to file references.
+**v4.1 Changes:** MC Distractor Pipeline — complete end-to-end architecture for STAAR-quality multiple choice distractors. Added Distractor Pattern Bank (`distractor-patterns.js`) with 97 worked examples across 27 patterns for 5 Tier 1 TEKS (3.4A, 3.4F, 3.4J, 3.4D, 3.4K), all extracted from official TEA STAAR rationale documents 2019-2025 (Section 7). Added pre-computed distractor value architecture: JavaScript `computeDistractorValues()` function in `cerebras-api.js` calculates distractor values using deterministic digit-by-digit algorithms (direction-reversal, borrow-error, regroup-fail, wrong-operation) instead of relying on LLM arithmetic — LLM receives pre-computed values and writes rationales for them (Section 7). Added rationale label injection: `computeDistractorValues()` returns `{value, rationale, tag}` triples so the LLM paraphrases pre-built rationale strings instead of inventing its own (Section 7). Fixed `selectExemplars` 10-total cap → 5 per TEKS (Section 7). Added MC-specific validation checks to pipeline: duplicate value detection (HARD GATE), rationale-value cross-check (HARD GATE), consecutive integer detection, wide-spread check (Section 10). Promoted MC duplicate check and rationale-value cross-check from WARNING to HARD GATE after discovering LLM fabricates distractor arithmetic (Section 10). Layer 5 async validation (self-consistency voting + blind review) built, tested, and ABANDONED — zero incremental value over Layers 1-4, see §10 postmortem. Added MC gameplay HUD with holographic A/B/C/D buttons and keyboard input (Section 18). Fixed science question skipping bug (Fury interruptions now fire correctly at firewalls 3/6/9). Fixed `distractorReasoning` → `distractorRationales` field bridge in `cerebras-api.js`. Documented 15 bugfix rounds (v4–v15) covering Teacher Review Screen features, validation edge cases, and MC integration (Section 18). Added `distractor-patterns.js` and `validation-engine.js` to Implementation Files (Section 17). Updated Phase 4 build checklist with completed items. Updated Known Issues with current state. Added distractor pipeline research reports to file references. SVG Diagram Renderer — Tier 1 COMPLETE with all 8 diagram types implemented in `js/diagramRenderer.js` (~1,470 lines): numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram, areaModel, dotPlot (Section 11). DiagramRegistry pattern with `svgEl()` helper (createElementNS), `polarToCartesian()`/`describeArc()` arc math helpers, per-renderer viewBox, parameter validation with defaults/clamping, `testDiagram()` console helper, null container safety. Iron Man HUD theming in `css/diagram-hud.css` with `.im-diagram-*` namespace, 6 CSS custom properties, cyan-on-dark aesthetic with glow filter, Orbitron/Rajdhani fonts. Tested across ~58 test cases including edge cases and cross-renderer regression. Added `diagramRenderer.js` and `diagram-hud.css` to index.html (positions 14 and 2.5 respectively) and to Implementation Files (Section 17). NOT YET WIRED into LLM generation pipeline — diagram field in problem schema still null. GSAP DrawSVGPlugin animation layer (`diagramAnimations.js`) NOT YET BUILT.
 
 **v4.0 Changes:** Strategic reframing — generator identified as core technology, Iron Man mission as first delivery surface (Section 1). Added Student Response System Architecture with Cloudflare Durable Object/WebSocket infrastructure, two-phase deployment (5A anonymous, 5B tracked), retroactive upgrade architecture, and team competition (Section 2). Added Multiple Choice mode with distractor generation, Mix format ratio enforcement with explicit integer counts, ★ Favorite `whyThisIsGood` annotation field for flywheel quality signal, and dual-input flywheel (teacher annotation + student performance data) (Section 7). Added POLLING conditional state to mission state machine for student device answer collection (Section 8). Added five Teacher Review Screen features: per-problem TEKS override toggle, TEKS description tooltips, cross-curricular badge label fix, ★ Favorite annotation field, post-mission analytics dashboard for Phase 5B (Section 9). Added two-tier validation context (Tier 1 hard gate for initial generation, Tier 2 advisory with override for regeneration) (Section 10). Added three new setup screen controls: Answer Format selector (orthogonal to Problem Format), Student Devices toggle (OFF/ANONYMOUS/TRACKED), Competition Mode selector (Section 15). Added Student Response System configuration constants (Section 16). Major build phase restructure: MC mode added to Phase 4, new Phase 5 (5A anonymous + 5B tracked student response), old Phase 5 → Phase 6 (Response Intelligence), old Phase 6 → Phase 7 (Voice Integration) (Section 18). Three new sections: Privacy & Compliance with COPPA/FERPA/Texas Student Privacy Act analysis (Section 21), Patent & IP Strategy with three independent claims and filing strategy (Section 22), Platform Vision with six delivery surfaces and standards portability roadmap (Section 23). Updated Core Design Principles: Principle #2 updated for Base Mode with student device exception, Principle #7 added (Generator-First Architecture). Added Pre-Generation Paradigm clarifying note (answer collection ≠ problem generation). All §X cross-references updated for new section numbering.
 
@@ -54,7 +54,7 @@
    - [POLLING State (Student Device Mode)](#polling-state-student-device-mode) [NEW v4.0]
 9. [Teacher Review Screen](#9-teacher-review-screen) [NEW v3.8, UPDATED v4.0]
 10. [Multi-Layer Validation Pipeline](#10-multi-layer-validation-pipeline) [NEW v3.8, UPDATED v4.1]
-11. [SVG Diagram Generator](#11-svg-diagram-generator) [NEW v3.8]
+11. [SVG Diagram Generator](#11-svg-diagram-generator) [NEW v3.8, TIER 1 IMPLEMENTED v4.1]
 12. [PDF Upload Architecture](#12-pdf-upload-architecture) [NEW v3.8]
 13. [Response Bank Reference](#13-response-bank-reference)
 14. [Audio Architecture](#14-audio-architecture)
@@ -2123,7 +2123,7 @@ When an administrator asks "how do you know AI-generated problems are correct?" 
 
 ---
 
-## 11. SVG Diagram Generator [NEW v3.8]
+## 11. SVG Diagram Generator [NEW v3.8, TIER 1 IMPLEMENTED v4.1]
 
 ### Architecture: Hybrid Template Library
 
@@ -2147,7 +2147,9 @@ The diagram field in the problem schema (Section 7) uses this format:
 
 If no diagram is appropriate, the field is null. The LLM decides WHAT to draw (it understands which diagram fits which math concept), and deterministic code handles HOW to draw it (with mathematical precision).
 
-### Diagram Type Registry (Tier 1 -- Build First)
+### Diagram Type Registry (Tier 1 -- COMPLETE)
+
+All 8 Tier 1 renderers are implemented in `js/diagramRenderer.js`, tested across ~58 test cases including edge cases and regression. Each renderer validates parameters with sensible defaults and range clamping, uses the `svgEl()` helper with `createElementNS()` for all SVG elements, and follows the `.im-diagram-*` CSS namespace. Iron Man HUD theming applied via CSS custom properties in `css/diagram-hud.css`.
 
 These 8 types cover the most common K-5 TEKS visual requirements (used in 3+ grades each):
 
@@ -2157,7 +2159,7 @@ These 8 types cover the most common K-5 TEKS visual requirements (used in 3+ gra
 | `fractionBar` | Horizontal bar divided into equal parts, some shaded | Grades 3-5 -- fraction representation, comparison |
 | `fractionCircle` | Circle divided into equal sectors, some filled | Grades 3-5 -- fraction identification |
 | `array` | Grid of circles/dots in rows x columns | Grades 3-4 -- multiplication facts, equal groups |
-| `stripDiagram` | Labeled sections showing part-whole relationships | Grades 3-5 -- Texas's signature model (TEKS equivalent of tape diagrams) |
+| `stripDiagram` | Labeled sections showing part-whole relationships | Grades 3-4 explicitly (3.3A, 3.5B, 4.5A); Grade 5 implicitly via generic "pictorial models" |
 | `areaModel` | Rectangle partitioned into sub-rectangles with product labels | Grades 3-5 -- multi-digit multiplication, decimal operations |
 | `barGraph` | Vertical/horizontal bars with labeled axes and data values | Grades 1-5 -- data representation and interpretation |
 | `dotPlot` | Number line with stacked dots above values | Grades 3-5 -- frequency data display |
@@ -2170,24 +2172,39 @@ pictographs, equal-sized groups, stem-and-leaf plots, unit square grids, input-o
 
 coordinate planes (grade 5), scatterplots (grade 5), angle/circle models (grade 4), ten frames (grade 1)
 
-### Implementation: Vanilla JavaScript + SVG
+### Implementation: Vanilla JavaScript + SVG [IMPLEMENTED v4.1]
 
-No SVG library required. Thin helper layer of ~50-100 lines vanilla JavaScript. Every SVG element created with document.createElementNS() (using createElement() produces DOM nodes that exist but never render). viewBox attribute for responsive scaling: set viewBox="0 0 800 400" for internal coordinate system that scales to any container.
+No SVG library required. `js/diagramRenderer.js` (~1,470 lines) contains the DiagramRegistry pattern, shared helpers (`svgEl`, `polarToCartesian`, `describeArc`), all 8 Tier 1 renderers, and a `testDiagram()` console helper. Every SVG element created with `document.createElementNS()` (using `createElement()` produces DOM nodes that exist but never render). Each renderer sets its own `viewBox` dimensions appropriate to its layout (numberLine: 800×300, barGraph: 800×400, fractionBar: 800×200, etc.).
 
-**DiagramRegistry pattern:**
+**DiagramRegistry pattern (actual implementation):**
 ```javascript
 const DiagramRegistry = {
   renderers: {},
   register(type, renderFn) { this.renderers[type] = renderFn; },
-  render(descriptor, container) {
+  render(container, descriptor) {
+    if (!container) { console.warn('[DiagramRenderer] Container is null'); return null; }
+    if (!descriptor || !descriptor.type || descriptor.type === 'none') return null;
     const fn = this.renderers[descriptor.type];
-    if (!fn) return null;  // Unknown type -- silently skip
-    return fn(descriptor.params, container);
+    if (!fn) { console.warn('[DiagramRenderer] Unknown type:', descriptor.type); return null; }
+    const svg = svgEl('svg', { viewBox: '0 0 800 300', class: 'im-diagram-svg', 'aria-label': 'Math diagram' });
+    container.appendChild(svg);
+    fn(svg, descriptor.params || {});
+    return svg;
   }
+};
+window.DiagramRegistry = DiagramRegistry;
+```
+
+**Console test helper:**
+```javascript
+window.testDiagram = function(containerId, descriptor) {
+  var container = document.getElementById(containerId);
+  if (!container) { container = document.body; }
+  return DiagramRegistry.render(container, descriptor);
 };
 ```
 
-Each renderer validates parameters with sensible defaults and range clamping. If max <= min on number line, silently refuses to render rather than showing broken output.
+Each renderer validates parameters with sensible defaults and range clamping. If `max <= min` on a number line, it logs a warning and refuses to render rather than showing broken output. All CSS classes use the `.im-diagram-*` namespace exclusively.
 
 ### Iron Man HUD Theming
 
@@ -2195,7 +2212,7 @@ Each renderer validates parameters with sensible defaults and range clamping. If
 - Filled shapes in translucent cyan (rgba(0, 212, 255, 0.3))
 - Warm gold (#ff9500) for highlights and emphasis
 - White text labels
-- CSS custom properties for theming: --diagram-stroke, --diagram-fill, --diagram-text
+- CSS custom properties for theming: --diagram-stroke, --diagram-fill, --diagram-marker, --diagram-text, --diagram-bg, --diagram-glow
 - SVG glow effect: CSS drop-shadow(0 0 3px #00d4ff) drop-shadow(0 0 8px #00d4ff) -- GPU-accelerated
 - Orbitron font for numbers/headers, Rajdhani for longer labels (better readability for elementary students)
 
@@ -2214,9 +2231,9 @@ Load from CDN (works from file://):
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13/dist/DrawSVGPlugin.min.js"></script>
 ```
 
-### Integration with Problem Generation
+### Integration with Problem Generation [NOT YET IMPLEMENTED]
 
-Diagram generation happens at problem-generation time (same API call), not render time. LLM has full problem context when choosing diagram type. Single round-trip minimizes latency. System prompt includes exact JSON schema and available diagram types so LLM does not request something the generator cannot render.
+Diagram generation will happen at problem-generation time (same API call), not render time. LLM will have full problem context when choosing diagram type. Single round-trip minimizes latency. System prompt will include exact JSON schema and available diagram types so LLM does not request something the generator cannot render. **Status:** The rendering side (DiagramRegistry + 8 renderers) is complete. The LLM integration side (system prompt additions, response parsing, diagram field population) is the next step — see unchecked items in Phase 4 SVG Diagram checklist.
 
 ---
 
@@ -2665,9 +2682,9 @@ These files are created during Phase 4 prompts:
 | `teacher-review.js` | `js/teacher-review.js` | ✓ Complete (Prompt 3 + 15 bugfix rounds + MC bugfix v1) | Teacher Review Screen — split-panel layout, all quick-action chips (difficulty, format, science, MC/Open Response), free-text feedback, TEKS override toggle with retry-exhausted banner, ★ Favorite annotation, approval workflow, back button to setup screen, validation display with traffic light badges. The most heavily modified file in the project. |
 | `validator.js` | `js/validator.js` | SUPERSEDED | Originally planned as the five-layer validation pipeline. Never created — the Prompt 3 implementation put sync validation into `validation-engine.js` instead. This name appears in older brief sections as the planned target; the actual file is `validation-engine.js`. |
 | `confidence.js` | `js/confidence.js` | ABANDONED | Composite scoring and category assignment — built, tested, permanently abandoned. Zero incremental value over Layers 1-4 in testing; teacher review screen is the quality gate. See §10 postmortem. |
-| `diagramRenderer.js` | `js/diagramRenderer.js` | TODO (Prompt 5) | DiagramRegistry pattern, SVG renderers for 8 diagram types |
+| `diagramRenderer.js` | `js/diagramRenderer.js` | ✓ Complete (Tier 1) | DiagramRegistry pattern + 8 Tier 1 SVG renderers (numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram, areaModel, dotPlot). ~1,470 lines. Shared helpers: svgEl(), polarToCartesian(), describeArc(). Console test helper: testDiagram(). Exposed as window.DiagramRegistry. All renderers validate params with defaults/clamping. CSS classes use `.im-diagram-*` namespace. Not yet wired into LLM generation pipeline — renderers work but `diagram` field in problem schema is still null. |
 | `diagramAnimations.js` | `js/diagramAnimations.js` | TODO (Prompt 5) | GSAP DrawSVGPlugin "power-on" animation for diagrams |
-| `diagram-hud.css` | `css/diagram-hud.css` | TODO (Prompt 5) | CSS custom properties for diagram theming, SVG filter definitions |
+| `diagram-hud.css` | `css/diagram-hud.css` | ✓ Complete | Iron Man HUD theming for SVG diagrams. CSS custom properties (--diagram-stroke, --diagram-fill, --diagram-marker, --diagram-text, --diagram-bg, --diagram-glow). Classes for all 8 Tier 1 diagram types using `.im-diagram-*` namespace. Cyan-on-dark aesthetic with glow filter, Orbitron/Rajdhani fonts. |
 
 ### Script & CSS Load Order [v3.5, UPDATED v3.8]
 
@@ -2677,12 +2694,12 @@ This is the complete dependency chain for `index.html`. Files MUST load in this 
 |---|------|------|-------------------|
 | 1 | `augmented-ui` CSS (CDN) | `<link>` | External dependency -- base UI framework |
 | 2 | `css/im-animations.css` | `<link>` | Namespaced animation CSS -- loads AFTER augmented-ui so it can extend, BEFORE styles.css so styles.css can override |
-| 2.5 | `css/diagram-hud.css` | `<link>` | Diagram theming CSS -- loads with animation CSS [v3.8] |
+| 2.5 | `css/diagram-hud.css` | `<link>` | Diagram theming CSS — Iron Man HUD aesthetic for all 8 Tier 1 SVG diagram types. `.im-diagram-*` namespace. Loads with animation CSS. [v3.8 planned, IMPLEMENTED v4.1] |
 | 3 | `css/styles.css` | `<link>` | Main stylesheet -- last CSS file, can override anything above |
 | 4 | PixiJS 7.4.2 (CDN) | `<script>` | GPU rendering engine -- must load before anything that uses PIXI |
 | 5 | pixi-filters 5.3.0 (CDN) | `<script>` | 45 GPU filter effects -- requires PixiJS loaded first |
 | 6 | `node_modules/gsap/dist/gsap.min.js` | `<script>` | Animation engine -- must load before PixiPlugin and any GSAP users |
-| 6.5 | GSAP DrawSVGPlugin (CDN) | `<script>` | SVG stroke animation -- requires GSAP loaded [v3.8] |
+| 6.5 | GSAP DrawSVGPlugin (CDN) | `<script>` | [UNVERIFIED — may not be in index.html yet] SVG stroke animation -- requires GSAP loaded. First CC prompt requested this be added but verification did not confirm. Check index.html before building animation layer. [v3.8] |
 | 7 | `node_modules/gsap/dist/PixiPlugin.min.js` | `<script>` | GSAP+PixiJS bridge -- requires both GSAP and PixiJS loaded |
 | 8 | `js/hud-config.js` | `<script>` | `window.HUD_CONFIG` -- read by nearly everything, load early |
 | 9 | `js/pixi-effect-manager.js` | `<script>` | `window.pixiEffectManager` -- requires PixiJS + GSAP, read by firewall-sequence |
@@ -2701,8 +2718,8 @@ This is the complete dependency chain for `index.html`. Files MUST load in this 
 | 13.85 | `js/validation-engine.js` | `<script>` | Layers 1-4 validation + MC extension — requires math.js + config. Originally planned as `validator.js` in the brief; actual implementation created under this name by Prompt 3. [v3.8, UPDATED v4.1] |
 | 13.9 | `js/confidence.js` | `<script>` | ABANDONED — was composite scoring for Layer 5. File deleted from codebase. Not in current `<script>` tags. [v3.8, ABANDONED v4.1] |
 | 13.95 | `js/teacher-review.js` | `<script>` | Teacher Review Screen UI — split-panel layout, quick-action chips, per-problem feedback, TEKS override toggle, ★ Favorite annotation, approval workflow, back button navigation. Most heavily modified file in the project (15 bugfix rounds + MC bugfix v1). Requires cerebras-api.js + validation-engine.js + teks-rules-data.js. [v3.8, UPDATED v4.1] |
-| 14 | `js/diagramRenderer.js` | `<script>` | SVG diagram registry [v3.8] |
-| 14.5 | `js/diagramAnimations.js` | `<script>` | Diagram GSAP animations -- requires GSAP + diagramRenderer [v3.8] |
+| 14 | `js/diagramRenderer.js` | `<script>` | SVG diagram registry — DiagramRegistry pattern + 8 Tier 1 renderers (numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram, areaModel, dotPlot). Exposed as window.DiagramRegistry. Independent of other scripts (no dependencies). [v3.8 planned, IMPLEMENTED v4.1] |
+| 14.5 | `js/diagramAnimations.js` | `<script>` | [PLANNED — NOT YET IN index.html] Diagram GSAP animations -- requires GSAP + diagramRenderer. Will be added when animation layer is built. [v3.8] |
 | 15 | `js/app.js` | `<script>` | Entry point -- last, wires everything together |
 
 ### pattern-detector.js
@@ -3041,7 +3058,7 @@ At the start of each transition, `playTransition()` calls `pixiEffectManager.ini
 | Groq API Integration (via Cloudflare Worker) | [DONE] COMPLETE — API module + Worker deployed, CORS tested, exemplar injection working, distractor pattern injection working |
 | Teacher Review Screen | [DONE] COMPLETE — Option C split panel built, 15 bugfix rounds (v4-v15), TEKS override toggle, tooltips, cross-curricular badge, ★ Favorite annotation |
 | Multi-Layer Validation Pipeline | [DONE] Layers 1-4 COMPLETE (sync, instant). Layer 5 (async LLM review) built, tested, ABANDONED — zero incremental value. MC validation extension COMPLETE (duplicate detection, rationale-value cross-check, consecutive integer detection, wide-spread check). |
-| SVG Diagram Generator | [TODO] NOT STARTED (Prompt 5) |
+| SVG Diagram Generator | [DONE] Tier 1 COMPLETE v4.1 -- 8 renderers (numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram, areaModel, dotPlot) implemented in diagramRenderer.js (~1,470 lines), HUD theming in diagram-hud.css. Tested across ~58 test cases including edge cases and regression. NOT YET WIRED into LLM generation pipeline (diagram field still null in problem schema). GSAP animation layer (diagramAnimations.js) NOT YET BUILT. |
 | PDF Upload System | [TODO] NOT STARTED (Prompt 6) |
 | teks-rules.json | [DONE] COMPLETE — 217 entries, 132 with quantifiable rules |
 | Few-Shot Exemplar Bank (135 items, 46 TEKS) | [DONE] COMPLETE v3.9 -- Batches 1-3 extracted, audited (5 passes), 100% Grade 3 Math TEKS coverage |
@@ -3283,13 +3300,13 @@ const TEST_PROBLEMS = {
 - [ ] ~~Composite confidence scoring~~ — ABANDONED. Two bugs surfaced during testing: (A) regeneration during async Layer 5 caused crashes, (B) regen mode-selection misinterpreted feedback as difficulty shifts. More fundamentally, Layer 5 added zero incremental value — see §10 postmortem.
 - **Decision:** Layer 5 permanently abandoned. Layers 1-4 (sync, instant) provide sufficient validation. MC distractor pre-compute prevents most quality issues at generation time rather than catching them after. The teacher review screen is the quality gate.
 
-**Prompt 5: SVG Diagram Generator**
-- [ ] DiagramRegistry with 6-8 Tier 1 diagram types (Section 11)
-- [ ] Vanilla JavaScript SVG renderers (no library dependency)
-- [ ] Iron Man HUD theming with CSS custom properties
-- [ ] GSAP DrawSVGPlugin "power-on" animation
-- [ ] Integration with problem generation (diagram field in JSON response)
-- [ ] Testable: Each diagram type renders correctly with hardcoded test data at 1920x1080
+**Prompt 5: SVG Diagram Generator [TIER 1 RENDERERS COMPLETE v4.1]**
+- [x] DiagramRegistry with 8 Tier 1 diagram types (Section 11) — numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram, areaModel, dotPlot. ~1,470 lines in diagramRenderer.js.
+- [x] Vanilla JavaScript SVG renderers (no library dependency) — svgEl() helper with createElementNS, per-renderer viewBox, parameter validation with defaults/clamping
+- [x] Iron Man HUD theming with CSS custom properties — diagram-hud.css with `.im-diagram-*` namespace, cyan-on-dark aesthetic, glow filter
+- [x] Testable: All 8 diagram types render correctly with hardcoded test data at 1920×1080. ~58 test cases including edge cases and cross-renderer regression. Zero crashes.
+- [ ] GSAP DrawSVGPlugin "power-on" animation — `diagramAnimations.js` NOT YET BUILT
+- [ ] Integration with problem generation (diagram field in JSON response) — NOT YET WIRED into LLM pipeline
 
 **Prompt 6: PDF Upload**
 - [ ] File picker accepting .pdf files
@@ -3331,6 +3348,25 @@ const TEST_PROBLEMS = {
 - [x] Science question skipping bug fixed (Fury interruptions now fire correctly at firewalls 3/6/9)
 - [ ] Tier 2+ distractor pattern entries (3.4H, 3.4E, 3.5A, 3.5B, 3.4B, 3.4G, 3.6C) — NOT YET BUILT
 - [ ] Content filter update: "battle" → YELLOW not RED — NOT YET DONE
+
+**Phase 4 Feature Add: SVG Diagram Renderer [TIER 1 COMPLETE v4.1]**
+- [x] DiagramRegistry architecture — registry pattern, svgEl() helper with createElementNS, testDiagram() console helper, null container safety, window.DiagramRegistry global. ~1,470 lines in `js/diagramRenderer.js`.
+- [x] Iron Man HUD theming — `css/diagram-hud.css` with CSS custom properties (--diagram-stroke, --diagram-fill, --diagram-marker, --diagram-text, --diagram-bg, --diagram-glow), `.im-diagram-*` namespace, cyan-on-dark aesthetic with glow filter, Orbitron/Rajdhani fonts.
+- [x] numberLine renderer — whole numbers, decimals (with toFixed floating-point fix), fractions (showFractions + fractionDenominator with label conversion), multiple markers, highlightRange for rounding, titles. Tested: 9 scenarios.
+- [x] barGraph renderer — vertical and horizontal orientation, yMax/yStep auto-calculation, highlightIndex for gold bar, showValues labels, axis labels and titles, gridlines. Tested: 5 scenarios.
+- [x] fractionBar renderer — equal-part division, shading, showPartLabels (unit fraction inside each part), highlightParts for gold segments, comparison mode (two bars stacked for visual fraction comparison). Tested: 4 scenarios.
+- [x] fractionCircle renderer — SVG arc path math with polarToCartesian/describeArc helpers, full-circle edge case (<circle> fallback when numerator=denominator), empty circle edge case, highlightSectors for gold slices, comparison mode (two circles side-by-side). Tested: 6 scenarios.
+- [x] array renderer — nested loop circle grid, dynamic viewBox sizing, showRowLabels/showColLabels, highlightRow, highlightCount (reading-order gold circles), showTotal. Tested: 4 scenarios + 10×10 max and 1×1 min edge cases.
+- [x] stripDiagram renderer — variable-width proportional sections, equalSections mode, unknown sections (dashed border, lighter fill), bracket above/below with total label, highlightIndex for gold section. Last-section-as-remainder prevents floating point gaps. Tested: 4 scenarios + single-section and extreme-ratio edge cases.
+- [x] areaModel renderer — auto-decomposition by place value (decompose() function handles internal zeros), proportional column widths and row heights, partial product labels centered in cells, explicit decomposition override, highlightCell, showTotal. Tested: 5 scenarios + 302×15 internal-zero edge case.
+- [x] dotPlot renderer — number line axis (reuses valueToX pattern), stacked dots above data values with count preprocessing, highlightValue for gold dots at specific value, toFixed decimal fix for tick labels. Tested: 3 scenarios + all-same-value and single-point edge cases.
+- [x] Cross-renderer regression — 13 edge cases across all 8 types (endpoint markers, zero-value bars, 8 categories, zero numerator, whole 1/1 fractionBar, denominator=1 fractionCircle, 10×10 array, 1×1 array, single section strip, extreme ratio strip, internal-zero area model, all-same-value dots, single-point dots). Zero crashes, zero console errors.
+- [x] Fraction divider visibility fix — `.im-diagram-fraction-divider` changed to white stroke-width 2, opacity 0.9 (was thin cyan, nearly invisible against cyan fill)
+- [x] index.html updated — `<link>` for diagram-hud.css at position 2.5, `<script>` for diagramRenderer.js at position 14
+- [ ] Wire diagram descriptors into LLM generation pipeline — system prompt additions + response parsing in cerebras-api.js
+- [ ] Diagram rendering on Teacher Review Screen — render non-null diagram field below problem text in right panel
+- [ ] Diagram rendering on gameplay HUD — display diagram alongside problem text during mission
+- [ ] GSAP DrawSVGPlugin animation layer (`diagramAnimations.js`) — "HUD power-on" effect for diagram appearance
 
 **Phase 4 Test Criteria (overall):**
 - [ ] Generate a full mission, review all problems on Review Screen
@@ -4098,9 +4134,9 @@ The problem generation engine is delivery-surface agnostic. The Iron Man mission
 - `validator.js` -- SUPERSEDED. Was the originally planned five-layer validation pipeline name. Never created — Prompt 3 built sync validation into `validation-engine.js` instead.
 - `confidence.js` -- ABANDONED. Built and tested for Layer 5 async validation. Permanently abandoned after testing showed zero incremental value over Layers 1-4, counterproductive science scoring, and two implementation bugs (see §10 postmortem). The teacher review screen is the quality gate. File deleted from codebase.
 - `teks-rules.json` -- [DONE] COMPLETE. Static TEKS validation constraints populated from TEA data.
-- `diagramRenderer.js` -- NOT STARTED. SVG diagram registry with 8+ renderers (see §11).
+- `diagramRenderer.js` -- [DONE] COMPLETE (Tier 1) -- ~1,470 lines, DiagramRegistry pattern + 8 Tier 1 SVG renderers (numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram, areaModel, dotPlot). Shared helpers: svgEl(), polarToCartesian(), describeArc(), testDiagram(). All renderers validate params with defaults/clamping. CSS classes use `.im-diagram-*` namespace. Exposed as window.DiagramRegistry. Tested across ~58 test cases. Not yet wired into LLM pipeline.
 - `diagramAnimations.js` -- NOT STARTED. GSAP DrawSVGPlugin animations for diagrams.
-- `diagram-hud.css` -- NOT STARTED. CSS custom properties and SVG filter definitions for HUD-themed diagrams.
+- `diagram-hud.css` -- [DONE] COMPLETE -- Iron Man HUD theming for all 8 Tier 1 SVG diagram types. CSS custom properties (--diagram-stroke, --diagram-fill, --diagram-marker, --diagram-text, --diagram-bg, --diagram-glow), `.im-diagram-*` namespace, cyan-on-dark aesthetic with glow filter, Orbitron/Rajdhani fonts.
 
 **Research Reports (in Claude.ai project files):**
 - `Building_a_Multi-Layer_Confidence_System_for_LLM-Generated_Math_Problems__Validation_Pipeline_and_TEKS_Alignment.md` -- Validation pipeline research
@@ -4147,7 +4183,7 @@ The problem generation engine is delivery-surface agnostic. The Iron Man mission
 
 > x **Layer 5 Async Validation ABANDONED** -- Self-consistency voting and blind review were built, tested, and permanently abandoned. Testing showed zero incremental value: every math problem scored pass (5/5 self-consistency agreement), science question scoring was counterproductive (blind reviewer applied math TEKS to science questions, producing 0.44-0.52 scores), and the feature cost 78 extra API calls per mission. Two implementation bugs also surfaced (crash on regeneration during async check, regen mode misinterpretation). The teacher review screen is the quality gate. See §10 postmortem.
 
-> x **SVG Diagrams Not Started** -- DiagramRegistry (Section 11) is still TODO. Required for data analysis, geometry, and fraction representation TEKS.
+> [DONE] **SVG Diagram Renderer Tier 1 COMPLETE (v4.1)** -- DiagramRegistry with 8 renderers (numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram, areaModel, dotPlot) implemented in `diagramRenderer.js` (~1,470 lines) with HUD theming in `diagram-hud.css`. Tested across ~58 test cases including edge cases and cross-renderer regression. Two remaining steps: (1) wire into LLM generation pipeline so `diagram` field is populated in problem schema, (2) build GSAP DrawSVGPlugin "power-on" animation layer (`diagramAnimations.js`). Known cosmetic limitations: extreme-ratio proportional sections (e.g., 5 vs 500) render labels illegibly in narrow segments; array column labels overlap title when both are present on large grids; area model left-side factor labels crowd the model edge on certain decompositions (e.g., 34×27); fractionCircle with denominator=1 renders an unnecessary single radial divider line. None affect real classroom use cases.
 
 > x **PDF Upload Not Started** -- Teacher PDF upload and parsing (Section 12) is still TODO.
 

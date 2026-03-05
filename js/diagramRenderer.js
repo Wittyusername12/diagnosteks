@@ -861,6 +861,292 @@ function renderFractionCircle(svg, params) {
 
 DiagramRegistry.register('fractionCircle', renderFractionCircle);
 
+// ============================================================
+// ARRAY RENDERER
+// ============================================================
+
+function renderArray(svg, params) {
+  var rows = params.rows != null ? params.rows : 3;
+  var columns = params.columns != null ? params.columns : 4;
+  var title = params.title || null;
+  var showTotal = params.showTotal === true;
+  var highlightRow = params.highlightRow != null ? params.highlightRow : null;
+  var highlightCol = params.highlightCol != null ? params.highlightCol : null;
+  var highlightCount = params.highlightCount != null ? params.highlightCount : null;
+  var showRowLabels = params.showRowLabels === true;
+  var showColLabels = params.showColLabels === true;
+
+  // --- Validation ---
+  if (rows < 1) { console.warn('[DiagramRenderer] array: rows clamped to 1'); rows = 1; }
+  if (rows > 10) { console.warn('[DiagramRenderer] array: rows clamped to 10'); rows = 10; }
+  if (columns < 1) { console.warn('[DiagramRenderer] array: columns clamped to 1'); columns = 1; }
+  if (columns > 10) { console.warn('[DiagramRenderer] array: columns clamped to 10'); columns = 10; }
+  if (highlightRow !== null && (highlightRow < 0 || highlightRow >= rows)) { highlightRow = null; }
+  if (highlightCol !== null && (highlightCol < 0 || highlightCol >= columns)) { highlightCol = null; }
+  if (highlightCount !== null) {
+    if (highlightCount < 0) { highlightCount = 0; }
+    if (highlightCount > rows * columns) { highlightCount = rows * columns; }
+  }
+
+  // --- Layout ---
+  var DOT_RADIUS = 14;
+  var DOT_SPACING = 38;
+  var padLeft = 60;
+  var padTop = 50;
+  var padRight = 40;
+  var padBottom = 60;
+
+  var gridWidth = (columns - 1) * DOT_SPACING;
+  var gridHeight = (rows - 1) * DOT_SPACING;
+  var svgWidth = padLeft + gridWidth + padRight;
+  var svgHeight = padTop + gridHeight + padBottom;
+  svgWidth = Math.max(svgWidth, 300);
+  svgHeight = Math.max(svgHeight, 200);
+
+  svg.setAttribute('viewBox', '0 0 ' + svgWidth + ' ' + svgHeight);
+
+  // --- 1. Title ---
+  if (title && typeof title === 'string') {
+    var titleEl = svgEl('text', { x: svgWidth / 2, y: 25, class: 'im-diagram-title' });
+    titleEl.textContent = title;
+    svg.appendChild(titleEl);
+  }
+
+  // --- 2. Column labels ---
+  if (showColLabels) {
+    for (var cl = 0; cl < columns; cl++) {
+      var colLabel = svgEl('text', {
+        x: padLeft + cl * DOT_SPACING, y: padTop - 15,
+        class: 'im-diagram-array-label'
+      });
+      colLabel.textContent = String(cl + 1);
+      svg.appendChild(colLabel);
+    }
+  }
+
+  // --- 3. Row labels ---
+  if (showRowLabels) {
+    for (var rl = 0; rl < rows; rl++) {
+      var rowLabel = svgEl('text', {
+        x: padLeft - 20, y: padTop + rl * DOT_SPACING + 5,
+        class: 'im-diagram-array-label'
+      });
+      rowLabel.textContent = String(rl + 1);
+      svg.appendChild(rowLabel);
+    }
+  }
+
+  // --- 4. Circles ---
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < columns; c++) {
+      var dotCx = padLeft + c * DOT_SPACING;
+      var dotCy = padTop + r * DOT_SPACING;
+
+      var isHighlight = false;
+      if (highlightRow !== null && r === highlightRow) { isHighlight = true; }
+      if (highlightCol !== null && c === highlightCol) { isHighlight = true; }
+      if (highlightCount !== null && (r * columns + c) < highlightCount) { isHighlight = true; }
+
+      var dotClass = isHighlight ? 'im-diagram-array-dot-highlight' : 'im-diagram-array-dot';
+
+      svg.appendChild(svgEl('circle', {
+        cx: dotCx, cy: dotCy, r: DOT_RADIUS,
+        class: dotClass
+      }));
+    }
+  }
+
+  // --- 5. Total label ---
+  if (showTotal) {
+    var totalEl = svgEl('text', {
+      x: padLeft + gridWidth / 2, y: padTop + gridHeight + 35,
+      class: 'im-diagram-array-total'
+    });
+    totalEl.textContent = '= ' + (rows * columns);
+    svg.appendChild(totalEl);
+  }
+}
+
+DiagramRegistry.register('array', renderArray);
+
+// ============================================================
+// STRIP DIAGRAM RENDERER
+// ============================================================
+
+function renderStripDiagram(svg, params) {
+  var sections = params.sections || [];
+  var total = params.total || null;
+  var title = params.title || null;
+  var equalSections = params.equalSections === true;
+  var showBracket = params.showBracket !== false;
+  var bracketPosition = params.bracketPosition || 'below';
+  var highlightIndex = params.highlightIndex != null ? params.highlightIndex : null;
+
+  // --- Validation ---
+  if (!sections.length) {
+    console.warn('[DiagramRenderer] stripDiagram: sections array is required');
+    return;
+  }
+  var hasKnownValue = false;
+  for (var sv = 0; sv < sections.length; sv++) {
+    if (sections[sv].value !== null && sections[sv].value > 0) { hasKnownValue = true; break; }
+  }
+  if (!hasKnownValue) {
+    console.warn('[DiagramRenderer] stripDiagram: at least one section must have a non-null value');
+    return;
+  }
+
+  // --- ViewBox ---
+  var viewHeight = showBracket ? 250 : 200;
+  svg.setAttribute('viewBox', '0 0 800 ' + viewHeight);
+
+  // --- Layout constants ---
+  var BAR_LEFT = 60;
+  var BAR_RIGHT = 740;
+  var BAR_HEIGHT = 60;
+  var BAR_WIDTH = BAR_RIGHT - BAR_LEFT;
+  var BAR_TOP = 50;
+
+  // Adjust BAR_TOP if bracket is above
+  if (showBracket && bracketPosition === 'above') {
+    BAR_TOP = 90;
+  }
+
+  // --- 1. Title ---
+  if (title && typeof title === 'string') {
+    var titleY = (showBracket && bracketPosition === 'above') ? 25 : 25;
+    var titleEl = svgEl('text', { x: 400, y: titleY, class: 'im-diagram-title' });
+    titleEl.textContent = title;
+    svg.appendChild(titleEl);
+  }
+
+  // --- Section width calculation ---
+  var sectionWidths = [];
+  if (equalSections) {
+    var eqWidth = BAR_WIDTH / sections.length;
+    for (var ew = 0; ew < sections.length; ew++) {
+      sectionWidths.push(eqWidth);
+    }
+  } else {
+    // Proportional sizing
+    var knownTotal = 0;
+    var unknownCount = 0;
+    for (var si = 0; si < sections.length; si++) {
+      if (sections[si].value !== null && sections[si].value > 0) {
+        knownTotal += sections[si].value;
+      } else {
+        unknownCount++;
+      }
+    }
+    var unknownValue = (total && total.value) ? total.value - knownTotal : knownTotal * 0.3;
+    if (unknownValue <= 0) { unknownValue = knownTotal * 0.3; }
+    var totalValue = knownTotal + (unknownValue * unknownCount);
+
+    var usedWidth = 0;
+    for (var sw = 0; sw < sections.length; sw++) {
+      if (sw === sections.length - 1) {
+        // Last section absorbs rounding drift
+        sectionWidths.push(BAR_WIDTH - usedWidth);
+      } else {
+        var val = (sections[sw].value !== null && sections[sw].value > 0) ? sections[sw].value : unknownValue;
+        var w = (val / totalValue) * BAR_WIDTH;
+        sectionWidths.push(w);
+        usedWidth += w;
+      }
+    }
+  }
+
+  // --- 2. Top bracket ---
+  if (showBracket && bracketPosition === 'above') {
+    var bY = BAR_TOP - 15;
+    var bracketGrp = svgEl('g', { class: 'im-diagram-strip-bracket' });
+    bracketGrp.appendChild(svgEl('line', { x1: BAR_LEFT, y1: bY, x2: BAR_RIGHT, y2: bY }));
+    bracketGrp.appendChild(svgEl('line', { x1: BAR_LEFT, y1: bY, x2: BAR_LEFT, y2: bY + 5 }));
+    bracketGrp.appendChild(svgEl('line', { x1: BAR_RIGHT, y1: bY, x2: BAR_RIGHT, y2: bY + 5 }));
+    svg.appendChild(bracketGrp);
+
+    var topTotalLabel = svgEl('text', {
+      x: 400, y: bY - 8,
+      class: 'im-diagram-strip-total'
+    });
+    topTotalLabel.textContent = (total && total.label) ? total.label : '';
+    svg.appendChild(topTotalLabel);
+  }
+
+  // --- 3. Section rectangles ---
+  var curX = BAR_LEFT;
+  for (var si2 = 0; si2 < sections.length; si2++) {
+    var sec = sections[si2];
+    var secW = sectionWidths[si2];
+    var isUnknown = (sec.value === null || sec.value === undefined);
+    var rectClass = isUnknown ? 'im-diagram-strip-unknown' : 'im-diagram-strip-section';
+    if (highlightIndex === si2) {
+      rectClass = 'im-diagram-fraction-highlight';
+    }
+
+    svg.appendChild(svgEl('rect', {
+      x: curX, y: BAR_TOP, width: secW, height: BAR_HEIGHT,
+      class: rectClass
+    }));
+
+    curX += secW;
+  }
+
+  // --- 4. Section divider lines ---
+  var divX = BAR_LEFT;
+  for (var di = 0; di < sections.length - 1; di++) {
+    divX += sectionWidths[di];
+    svg.appendChild(svgEl('line', {
+      x1: divX, y1: BAR_TOP, x2: divX, y2: BAR_TOP + BAR_HEIGHT,
+      class: 'im-diagram-strip-divider'
+    }));
+  }
+
+  // --- 5. Section labels ---
+  var labelX = BAR_LEFT;
+  for (var li = 0; li < sections.length; li++) {
+    var lSec = sections[li];
+    var lW = sectionWidths[li];
+    var sLabel = svgEl('text', {
+      x: labelX + lW / 2, y: BAR_TOP + BAR_HEIGHT / 2 + 5,
+      class: 'im-diagram-strip-label'
+    });
+    // Unknown labels get gold color
+    if (lSec.value === null || lSec.value === undefined) {
+      sLabel.setAttribute('fill', '#ff9500');
+      sLabel.setAttribute('font-size', '20');
+    }
+    sLabel.textContent = lSec.label || '';
+    svg.appendChild(sLabel);
+    labelX += lW;
+  }
+
+  // --- 6. Outer border ---
+  svg.appendChild(svgEl('rect', {
+    x: BAR_LEFT, y: BAR_TOP, width: BAR_WIDTH, height: BAR_HEIGHT,
+    class: 'im-diagram-fraction-border'
+  }));
+
+  // --- 7. Bottom bracket ---
+  if (showBracket && bracketPosition === 'below') {
+    var bbY = BAR_TOP + BAR_HEIGHT + 15;
+    var bbGrp = svgEl('g', { class: 'im-diagram-strip-bracket' });
+    bbGrp.appendChild(svgEl('line', { x1: BAR_LEFT, y1: bbY, x2: BAR_RIGHT, y2: bbY }));
+    bbGrp.appendChild(svgEl('line', { x1: BAR_LEFT, y1: bbY, x2: BAR_LEFT, y2: bbY - 5 }));
+    bbGrp.appendChild(svgEl('line', { x1: BAR_RIGHT, y1: bbY, x2: BAR_RIGHT, y2: bbY - 5 }));
+    svg.appendChild(bbGrp);
+
+    var btmTotalLabel = svgEl('text', {
+      x: 400, y: bbY + 20,
+      class: 'im-diagram-strip-total'
+    });
+    btmTotalLabel.textContent = (total && total.label) ? total.label : '';
+    svg.appendChild(btmTotalLabel);
+  }
+}
+
+DiagramRegistry.register('stripDiagram', renderStripDiagram);
+
 // Global export
 window.DiagramRegistry = DiagramRegistry;
 
@@ -873,9 +1159,11 @@ window.testDiagram = function(containerId, descriptor) {
   return DiagramRegistry.render(container, descriptor);
 };
 
-console.log('[DiagramRenderer] Module loaded. Available: numberLine, barGraph, fractionBar, fractionCircle');
+console.log('[DiagramRenderer] Module loaded. Available: numberLine, barGraph, fractionBar, fractionCircle, array, stripDiagram');
 console.log('  testDiagram("id", {type: "numberLine", params: {min: 0, max: 20, markers: [14]}})');
 console.log('  testDiagram("id", {type: "barGraph", params: {categories: ["A","B","C"], values: [5,8,3]}})');
 console.log('  testDiagram("id", {type: "fractionBar", params: {numerator: 3, denominator: 4}})');
 console.log('  testDiagram("id", {type: "fractionCircle", params: {numerator: 3, denominator: 4}})');
+console.log('  testDiagram("id", {type: "array", params: {rows: 3, columns: 4, showTotal: true}})');
+console.log('  testDiagram("id", {type: "stripDiagram", params: {sections: [{value:45,label:"45"},{value:null,label:"?"}], total:{value:78,label:"78"}}})');
 

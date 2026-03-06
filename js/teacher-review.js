@@ -291,7 +291,14 @@ const TeacherReview = (() => {
     if (!container) return;
     if (typeof window.DiagramRegistry !== 'undefined' && window.DiagramRegistry.render) {
       try {
-        window.DiagramRegistry.render(container, p.diagram);
+        var svg = window.DiagramRegistry.render(container, p.diagram);
+        if (svg) {
+          // Make SVG size to content and center via text-align on parent
+          svg.style.display = 'inline-block';
+          svg.style.width = 'auto';
+          svg.style.maxWidth = '100%';
+          svg.style.maxHeight = '400px';
+        }
       } catch (e) {
         console.warn('[Review] Diagram render failed:', e);
         container.style.display = 'none';
@@ -430,7 +437,7 @@ const TeacherReview = (() => {
     }
     // Diagram visualization (math word problems only)
     if (p.diagram && !isScience) {
-      html += `<div id="im-review-diagram" style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(0,212,255,0.15);"></div>`;
+      html += `<div id="im-review-diagram" style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(0,212,255,0.15); text-align:center;"></div>`;
     }
     html += `</div>`;
 

@@ -53,6 +53,8 @@ function generateOperandsForTeks(teks, problemIndex) {
       // 3.4D: "determine the total number of objects when equally-sized groups
       // are combined or arranged in arrays up to 10 by 10" — MULTIPLY ONLY.
       // Both factors 1-10. teks-rules.json: operations: ["MULTIPLY"]
+      // STAAR pattern: diagram shows ONE GROUP, narrative states NUMBER OF GROUPS,
+      // student counts items in diagram to find group size, then multiplies.
       let a, b;
       if (tier === 'easy') {
         a = randomInt(2, 5);
@@ -64,7 +66,8 @@ function generateOperandsForTeks(teks, problemIndex) {
         a = randomInt(6, 10);
         b = randomInt(6, 10);
       }
-      return { operation: 'MULTIPLY', operands: [a, b], teks };
+      // a = numGroups (stated in text), b = groupSize (shown in diagram)
+      return { operation: 'MULTIPLY', operands: [a, b], teks, staarPattern: 'diagram-group', numGroups: a, diagramGroupSize: b };
     }
 
     case '3.4F': {
@@ -196,7 +199,21 @@ function generateMissionOperands(mathTeks, numProblems) {
       result = generateOperandsForTeks(teksForThisProblem, i);
       attempt++;
       if (result) {
-        const comboKey = `${result.operands.join(',')}`;
+        // Deduplicate by fact family, not just raw operands.
+        // For MULTIPLY [3,5] and [5,3]: same fact → sorted key "3,5"
+        // For DIVIDE [30,5] (=6) and [30,6] (=5): same fact → sorted factors "5,6"
+        let comboKey;
+        if (result.operation === 'MULTIPLY') {
+          const sorted = [result.operands[0], result.operands[1]].sort((a, b) => a - b);
+          comboKey = `MUL:${sorted.join(',')}`;
+        } else if (result.operation === 'DIVIDE' && result.operands[1] !== 0) {
+          const divisor = result.operands[1];
+          const quotient = Math.round(result.operands[0] / divisor);
+          const sorted = [divisor, quotient].sort((a, b) => a - b);
+          comboKey = `MUL:${sorted.join(',')}`; // Same namespace as MULTIPLY — they share fact families
+        } else {
+          comboKey = `${result.operation}:${result.operands.join(',')}`;
+        }
         if (!usedCombos.has(comboKey)) {
           usedCombos.add(comboKey);
           break;
@@ -696,6 +713,17 @@ Study these examples carefully. They show the quality standard you must match \u
 ${JSON.stringify(exemplars, null, 2)}`;
     }
 
+    // === BLOCK 2B: TEKS-SPECIFIC STAAR PATTERNS ===
+    if (teksCodes && teksCodes.includes('3.4K')) {
+      prompt += `
+
+STAAR 3.4K TWO-STEP NARRATIVE PATTERN:
+TEKS 3.4K tests "one-step AND two-step problems." For 3.4K WORD PROBLEMS (not bare math), create TWO-STEP scenarios where one operand is the result of combining smaller quantities in the story:
+- For MULTIPLY [a, b]: Decompose one factor into a sum within the narrative. Example for operands [6, 8]: "Tony bought 4 boxes of red repulsor crystals and 2 boxes of blue. Each box has 8 crystals. How many crystals did Tony buy in total?" (Student adds 4+2=6, then multiplies 6×8=48). The JSON operands stay [6, 8].
+- For DIVIDE [dividend, divisor]: Present the dividend as the result of combining groups. Example for operands [30, 6]: "The Avengers have 3 teams with 10 agents each. They need to split all agents into 6 equal squads. How many agents per squad?" (Student multiplies 3×10=30, then divides 30÷6=5). The JSON operands stay [30, 6].
+The two-step complexity is in the NARRATIVE only — JSON operands and operation are unchanged. Do NOT create two-step narratives for bare math problems.`;
+    }
+
     // === BLOCK 3: CROSS-CURRICULAR + FINAL INSTRUCTIONS ===
     if (crossCurricular && scienceTeksDescriptions) {
       prompt += `
@@ -809,7 +837,15 @@ Use these patterns as models. For each MC problem, identify which pattern applie
       const lines = operandAssignments.map((a, i) => {
         const diff = i < 3 ? 'easy' : i < 7 ? 'medium' : 'hard';
         let line;
-        if (a.operation) {
+        if (a.staarPattern === 'diagram-group') {
+          // STAAR 3.4D pattern: diagram shows ONE group, narrative states number of groups
+          line = `Problem ${i + 1}: MULTIPLY, TEKS ${a.teks}, ${diff}
+  STAAR DIAGRAM PATTERN: A diagram below the problem shows ONE row/group of ${a.diagramGroupSize} items.
+  IF WORD PROBLEM: The student must count items in the diagram to find the group size. State ONLY the number of groups (${a.numGroups}) in the narrative. Do NOT mention the number ${a.diagramGroupSize} anywhere in the narrative. Reference the diagram: "The figure below shows one row..." or "One shelf is shown below."
+  Pattern: "[Character] has ${a.numGroups} identical [rows/shelves/groups]. One [row/shelf/group] is shown below. How many [items] are there in total?"
+  IF BARE MATH: Just use "Solve: ${a.numGroups} × ${a.diagramGroupSize}"
+  JSON operands MUST be [${a.numGroups}, ${a.diagramGroupSize}], operation MUST be "MULTIPLY".`;
+        } else if (a.operation) {
           line = `Problem ${i + 1}: ${a.operation} ${a.operands[0]} ${opSymbols[a.operation] || '?'} ${a.operands[1]}, TEKS ${a.teks}, ${diff}`;
         } else {
           line = `Problem ${i + 1}: (your choice of operation and numbers), TEKS ${a.teks}, ${diff}`;
@@ -1363,8 +1399,16 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
     var a = operands[0];
     var b = operands[1];
 
-    // MULTIPLY: array (both ≤ 10) or areaModel (either > 10)
+    // MULTIPLY: check for 3.4D STAAR pattern first (single-row diagram)
     if (operation === 'MULTIPLY') {
+      // 3.4D: show ONE ROW of b items — student counts to discover group size
+      if (teks === '3.4D' && b >= 1 && b <= 10) {
+        return this._validateDiagram({
+          type: 'array',
+          params: { rows: 1, columns: b, showTotal: false, title: null }
+        });
+      }
+      // General: full array (both ≤ 10) or areaModel (either > 10)
       if (a <= 10 && b <= 10 && a >= 1 && b >= 1) {
         return this._validateDiagram({
           type: 'array',

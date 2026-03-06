@@ -903,6 +903,10 @@ function renderArray(svg, params) {
   svgWidth = Math.max(svgWidth, 300);
   svgHeight = Math.max(svgHeight, 200);
 
+  // Center grid horizontally in viewBox (original padLeft=60, padRight=40 was asymmetric;
+  // the 300px minimum clamp made narrow grids visibly left-shifted)
+  padLeft = (svgWidth - gridWidth) / 2;
+
   svg.setAttribute('viewBox', '0 0 ' + svgWidth + ' ' + svgHeight);
 
   // --- 1. Title ---

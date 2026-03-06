@@ -428,7 +428,17 @@ class CerebrasAPI {
     ];
 
     const raw = await this._callWorker(messages, 0.7);
-    return this._parseMathResponse(raw, operandAssignments);
+    const problems = this._parseMathResponse(raw, operandAssignments);
+
+    // Deterministic diagram assignment — JS computes, same as operands and distractors
+    problems.forEach((p) => {
+      var computed = this._computeDiagram(p.teks, p.operation, p.operands, p.answerType, p.narrative);
+      if (computed) {
+        p.diagram = computed;
+      }
+    });
+
+    return problems;
   }
 
   /**
@@ -1313,6 +1323,102 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
     return { type: type, params: p };
   }
 
+  // ============================================================
+  // DETERMINISTIC DIAGRAM COMPUTATION — JavaScript picks the
+  // diagram type and params, same as operands and distractors.
+  // Every result is piped through _validateDiagram() for safety.
+  // ============================================================
+
+  _computeDiagram(teks, operation, operands, answerType, narrative) {
+    // Bare math gets no diagram — check if narrative starts with "Solve:"
+    if (!narrative || narrative.trim().indexOf('Solve:') === 0) return null;
+
+    // MC conceptual/identification questions — no diagram
+    if (answerType === 'multipleChoice' && (operation === 'IDENTIFY' || operation === 'CONCEPTUAL')) return null;
+
+    // Comparison problems — no diagram (renderer doesn't support comparison visuals)
+    if (answerType === 'comparison') return null;
+
+    // Need valid operands for all diagram types below
+    if (!Array.isArray(operands) || operands.length < 2) return null;
+    var a = operands[0];
+    var b = operands[1];
+
+    // MULTIPLY: array (both ≤ 10) or areaModel (either > 10)
+    if (operation === 'MULTIPLY') {
+      if (a <= 10 && b <= 10 && a >= 1 && b >= 1) {
+        return this._validateDiagram({
+          type: 'array',
+          params: { rows: a, columns: b, title: a + ' × ' + b, showTotal: true }
+        });
+      }
+      if (a > 0 && b > 0) {
+        return this._validateDiagram({
+          type: 'areaModel',
+          params: { factors: [a, b], title: a + ' × ' + b, showPartialProducts: true, showTotal: true }
+        });
+      }
+    }
+
+    // DIVIDE: array (if quotient and divisor both ≤ 10)
+    if (operation === 'DIVIDE') {
+      var quotient = (b !== 0) ? Math.round(a / b) : 0;
+      if (quotient >= 1 && quotient <= 10 && b >= 1 && b <= 10) {
+        return this._validateDiagram({
+          type: 'array',
+          params: { rows: quotient, columns: b, title: a + ' ÷ ' + b, showTotal: true }
+        });
+      }
+    }
+
+    // ADD: strip diagram showing parts combining to total
+    if (operation === 'ADD') {
+      var sum = a + b;
+      return this._validateDiagram({
+        type: 'stripDiagram',
+        params: {
+          sections: [
+            { value: a, label: String(a) },
+            { value: b, label: String(b) }
+          ],
+          total: { value: sum, label: String(sum) },
+          title: a + ' + ' + b + ' = ' + sum
+        }
+      });
+    }
+
+    // SUBTRACT: strip diagram showing whole minus known part = unknown
+    if (operation === 'SUBTRACT') {
+      var difference = a - b;
+      return this._validateDiagram({
+        type: 'stripDiagram',
+        params: {
+          sections: [
+            { value: b, label: String(b) },
+            { value: difference, label: '?' }
+          ],
+          total: { value: a, label: String(a) },
+          title: a + ' − ' + b + ' = ?',
+          highlightIndex: 1
+        }
+      });
+    }
+
+    // FRACTION operations: fractionBar
+    if (operation === 'FRACTION_ADD' || operation === 'FRACTION_SUBTRACT' || operation === 'FRACTION_MULTIPLY') {
+      // Fraction operands are objects {numerator, denominator}
+      if (a && typeof a === 'object' && typeof a.numerator === 'number' && typeof a.denominator === 'number') {
+        return this._validateDiagram({
+          type: 'fractionBar',
+          params: { numerator: a.numerator, denominator: a.denominator, showLabel: true }
+        });
+      }
+    }
+
+    // Default: no diagram
+    return null;
+  }
+
   /* =========================================
      COMPUTATION — JS does the math,
      never trust the LLM for arithmetic
@@ -1634,6 +1740,13 @@ TEACHER REQUEST: Generate a problem with ${dir} numbers than the original.
         const opSym = { ADD: '+', SUBTRACT: '-', MULTIPLY: '×', DIVIDE: '÷' }[mc.operation] || '+';
         p.expression = `${mc.operands[0]} ${opSym} ${mc.operands[1]}`;
       }
+
+      // Deterministic diagram for regenerated problem
+      var computedDiagram = this._computeDiagram(problems[0].teks, problems[0].operation, problems[0].operands, problems[0].answerType, problems[0].narrative);
+      if (computedDiagram) {
+        problems[0].diagram = computedDiagram;
+      }
+
       return problems[0];
     }
     throw new Error('Regeneration returned no problems');

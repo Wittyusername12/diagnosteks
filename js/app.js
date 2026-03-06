@@ -967,11 +967,13 @@ const App = {
 
         var svg = window.DiagramRegistry.render(container, safeDescriptor);
         if (svg) {
-          // Constrain SVG to fit the container on a classroom TV
+          // Anchor height explicitly; width computes from viewBox aspect ratio.
+          // Narrow arrays (4×2) get narrow width, wide arrays (5×6) get wider.
+          // text-align:center on parent container centers the inline SVG.
           svg.style.maxWidth = '100%';
-          svg.style.maxHeight = '180px';
-          svg.style.width = '100%';
-          svg.style.height = 'auto';
+          svg.style.height = '180px';
+          svg.style.width = 'auto';
+          svg.style.display = 'inline-block';
         }
       } catch (e) {
         console.warn('[Gameplay] Diagram render failed:', e);

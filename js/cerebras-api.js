@@ -49,9 +49,28 @@ function generateOperandsForTeks(teks, problemIndex) {
       return { operation, operands: [a, b], teks };
     }
 
-    case '3.4F':
     case '3.4D': {
-      // Multiply/divide facts within 10×10
+      // 3.4D: "determine the total number of objects when equally-sized groups
+      // are combined or arranged in arrays up to 10 by 10" — MULTIPLY ONLY.
+      // Both factors 1-10. teks-rules.json: operations: ["MULTIPLY"]
+      let a, b;
+      if (tier === 'easy') {
+        a = randomInt(2, 5);
+        b = randomInt(2, 5);
+      } else if (tier === 'medium') {
+        a = randomInt(3, 8);
+        b = randomInt(3, 8);
+      } else {
+        a = randomInt(6, 10);
+        b = randomInt(6, 10);
+      }
+      return { operation: 'MULTIPLY', operands: [a, b], teks };
+    }
+
+    case '3.4F': {
+      // 3.4F: "recall facts to multiply up to 10 by 10 with automaticity
+      // and recall the corresponding division facts" — MULTIPLY and DIVIDE.
+      // Both factors 1-10. teks-rules.json: operations: ["MULTIPLY", "DIVIDE"]
       const operation = Math.random() < 0.5 ? 'MULTIPLY' : 'DIVIDE';
       let a, b;
       if (tier === 'easy') {

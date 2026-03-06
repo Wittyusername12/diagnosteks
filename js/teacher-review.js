@@ -125,6 +125,7 @@ const TeacherReview = (() => {
         gradeLevel: gradeLevel,
         flagged: p.flagged || false,
         flagReason: p.flagReason || null,
+        diagram: p.diagram || null,
         // Review state
         status: 'pending',
         feedback: '',
@@ -228,6 +229,7 @@ const TeacherReview = (() => {
     `;
 
     _bindEvents();
+    _renderDiagram();
   }
 
   function _renderLeftRow(prob, idx) {
@@ -280,6 +282,21 @@ const TeacherReview = (() => {
     const displayLabel = status === 'override' ? `${label}: OVERRIDE` : label;
     const cls = `im-review-chip im-review-chip-${status || 'pending'}`;
     return `<span class="${cls}">${icon} ${_esc(displayLabel)}${status === 'pending' ? ': Pending' : ''}</span>`;
+  }
+
+  function _renderDiagram() {
+    var p = _problems[_selectedIdx];
+    if (!p || !p.diagram || p.type === 'science') return;
+    var container = _container.querySelector('#im-review-diagram');
+    if (!container) return;
+    if (typeof window.DiagramRegistry !== 'undefined' && window.DiagramRegistry.render) {
+      try {
+        window.DiagramRegistry.render(container, p.diagram);
+      } catch (e) {
+        console.warn('[Review] Diagram render failed:', e);
+        container.style.display = 'none';
+      }
+    }
   }
 
   function _renderRightPanel(p, v, isScience) {
@@ -410,6 +427,10 @@ const TeacherReview = (() => {
           </details>`;
         }
       }
+    }
+    // Diagram visualization (math word problems only)
+    if (p.diagram && !isScience) {
+      html += `<div id="im-review-diagram" style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(0,212,255,0.15);"></div>`;
     }
     html += `</div>`;
 
@@ -1279,7 +1300,8 @@ const TeacherReview = (() => {
           difficulty: p.difficulty,
           diagnosticFor: p._original ? p._original.diagnosticFor : [],
           answerType: p.answerType || 'integer',
-          scienceTeksConnection: p.crossCurricular ? p.crossCurricular.scienceTeks : null
+          scienceTeksConnection: p.crossCurricular ? p.crossCurricular.scienceTeks : null,
+          diagram: p.diagram || null
         };
 
         // MC-specific fields — required for gameplay A/B/C/D buttons + answer checking

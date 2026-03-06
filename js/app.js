@@ -957,7 +957,15 @@ const App = {
     // Render the SVG diagram
     if (typeof window.DiagramRegistry !== 'undefined' && window.DiagramRegistry.render) {
       try {
-        var svg = window.DiagramRegistry.render(container, problem.diagram);
+        // Create student-safe copy: strip answer-revealing params for gameplay.
+        // Teacher Review keeps showTotal/title (teacher sees the answer anyway).
+        // Gameplay MUST NOT show the answer or repeat the expression.
+        var safeParams = Object.assign({}, problem.diagram.params);
+        safeParams.showTotal = false;  // Removes "= 8" answer at bottom
+        safeParams.title = null;       // Removes "4 × 2" (already shown in expression)
+        var safeDescriptor = { type: problem.diagram.type, params: safeParams };
+
+        var svg = window.DiagramRegistry.render(container, safeDescriptor);
         if (svg) {
           // Constrain SVG to fit the container on a classroom TV
           svg.style.maxWidth = '100%';

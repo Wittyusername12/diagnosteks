@@ -949,7 +949,7 @@ const App = {
     // Create container with sizing constraints for 1920×1080 TV
     var container = document.createElement('div');
     container.id = 'im-gameplay-diagram';
-    container.style.cssText = 'max-width: 600px; max-height: 200px; margin: 12px auto; display: flex; justify-content: center; align-items: center; overflow: hidden;';
+    container.style.cssText = 'max-width: 600px; max-height: 200px; margin: 12px auto; text-align: center; overflow: hidden;';
 
     // Insert before the answer section
     answerSection.parentElement.insertBefore(container, answerSection);
@@ -962,7 +962,7 @@ const App = {
           // Constrain SVG to fit the container on a classroom TV
           svg.style.maxWidth = '100%';
           svg.style.maxHeight = '180px';
-          svg.style.width = 'auto';
+          svg.style.width = '100%';
           svg.style.height = 'auto';
         }
       } catch (e) {

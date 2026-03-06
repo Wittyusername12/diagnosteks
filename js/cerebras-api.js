@@ -1388,6 +1388,16 @@ Nick Fury is asking these questions as "agent verification protocol" or "SHIELD 
     // Bare math gets no diagram — check if narrative starts with "Solve:"
     if (!narrative || narrative.trim().indexOf('Solve:') === 0) return null;
 
+    // TEKS whitelist — only generate diagrams for TEKS where STAAR uses visual models.
+    // Verified against released STAAR tests 2019-2025:
+    //   3.4D: YES — visual model of ONE group, student counts to find group size (2019, 2021, 2024)
+    //   3.4A: NO — pure text add/subtract word problems (2019, 2021, 2022, 2023, 2024, 2025)
+    //   3.4F: NO — basic recall facts, griddable or MC, no diagrams (2019, 2021)
+    //   3.4J: NO — pure text division word problems (2022, 2023, 2025)
+    //   3.4K: NO — pure text multiply/divide word problems (2019, 2021, 2023, 2024, 2025)
+    var diagramTeks = ['3.4D'];
+    if (diagramTeks.indexOf(teks) === -1) return null;
+
     // MC conceptual/identification questions — no diagram
     if (answerType === 'multipleChoice' && (operation === 'IDENTIFY' || operation === 'CONCEPTUAL')) return null;
 

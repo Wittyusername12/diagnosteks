@@ -930,6 +930,49 @@ const App = {
   },
 
   /**
+   * Render an SVG diagram for the current math problem (word problems only).
+   * Inserts between .problem-container and .answer-section.
+   * Removes any previous diagram first to prevent stacking across firewalls.
+   */
+  _renderGameplayDiagram(problem) {
+    // Remove any existing diagram from the previous problem
+    var existing = document.getElementById('im-gameplay-diagram');
+    if (existing) existing.remove();
+
+    // No diagram for null/missing descriptor
+    if (!problem || !problem.diagram) return;
+
+    // Find insertion point: between .problem-container and .answer-section
+    var answerSection = this.elements.answerInput.parentElement;
+    if (!answerSection || !answerSection.parentElement) return;
+
+    // Create container with sizing constraints for 1920×1080 TV
+    var container = document.createElement('div');
+    container.id = 'im-gameplay-diagram';
+    container.style.cssText = 'max-width: 600px; max-height: 200px; margin: 12px auto; display: flex; justify-content: center; align-items: center; overflow: hidden;';
+
+    // Insert before the answer section
+    answerSection.parentElement.insertBefore(container, answerSection);
+
+    // Render the SVG diagram
+    if (typeof window.DiagramRegistry !== 'undefined' && window.DiagramRegistry.render) {
+      try {
+        var svg = window.DiagramRegistry.render(container, problem.diagram);
+        if (svg) {
+          // Constrain SVG to fit the container on a classroom TV
+          svg.style.maxWidth = '100%';
+          svg.style.maxHeight = '180px';
+          svg.style.width = 'auto';
+          svg.style.height = 'auto';
+        }
+      } catch (e) {
+        console.warn('[Gameplay] Diagram render failed:', e);
+        container.remove();
+      }
+    }
+  },
+
+  /**
    * Set up the answer input area based on the current problem's answerType.
    * For comparison: show >, <, = buttons. For multipleChoice: show A/B/C/D buttons.
    * For default (integer/decimal/fraction): show the standard text input + DECRYPT.
@@ -1401,6 +1444,8 @@ const App = {
     this.elements.answerInput.style.fontSize = '1.5rem';
     const decryptBtn = document.getElementById('btn-decrypt');
     if (decryptBtn) decryptBtn.style.fontSize = '1.2rem';
+
+    this._renderGameplayDiagram(problem);
 
     // Set up adaptive answer input based on problem's answerType
     this._setupAdaptiveInput(problem);

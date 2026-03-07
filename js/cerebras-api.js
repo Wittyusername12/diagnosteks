@@ -32,20 +32,50 @@ function generateOperandsForTeks(teks, problemIndex) {
   switch (teks) {
     case '3.4A':
     case '3.5A': {
-      // Add/subtract within 1,000
+      // Add/subtract within 1,000.
+      // CRITICAL: operands MUST require regrouping (carrying for ADD, borrowing
+      // for SUBTRACT) so the distractor algorithms produce meaningful errors.
+      // STAAR only tests 3.4A with regrouping-required numbers — every released
+      // item (2019-2025) involves at least one column that carries or borrows.
+      // Without regrouping, borrow-error and regroup-failure distractors are
+      // nonsensical (e.g., "forgot to reduce tens after borrowing" when there's
+      // no borrowing).
       const operation = Math.random() < 0.5 ? 'ADD' : 'SUBTRACT';
-      let a, b;
-      if (tier === 'easy') {
-        a = randomInt(20, 99);
-        b = randomInt(10, Math.min(99, operation === 'ADD' ? 200 - a : a - 1));
-      } else if (tier === 'medium') {
-        a = randomInt(200, 599);
-        b = randomInt(100, operation === 'ADD' ? Math.min(399, 999 - a) : a - 100);
-      } else {
-        a = randomInt(400, 950);
-        b = randomInt(150, operation === 'ADD' ? Math.min(550, 999 - a) : a - 100);
+
+      // Helper: does this pair require regrouping?
+      function needsRegrouping(op, x, y) {
+        if (op === 'ADD') {
+          // At least one column where digit sum >= 10 (carrying)
+          return (x % 10) + (y % 10) >= 10 ||
+                 (Math.floor(x / 10) % 10) + (Math.floor(y / 10) % 10) >= 10;
+        } else {
+          // At least one column where top digit < bottom digit (borrowing)
+          return (x % 10) < (y % 10) ||
+                 (Math.floor(x / 10) % 10) < (Math.floor(y / 10) % 10);
+        }
       }
-      if (operation === 'SUBTRACT' && b >= a) [a, b] = [b, a];
+
+      let a, b;
+      // Retry up to 20 times to find a pair that requires regrouping
+      for (var attempt = 0; attempt < 20; attempt++) {
+        if (tier === 'easy') {
+          a = randomInt(20, 99);
+          b = randomInt(10, Math.min(99, operation === 'ADD' ? 200 - a : a - 1));
+        } else if (tier === 'medium') {
+          a = randomInt(200, 599);
+          b = randomInt(100, operation === 'ADD' ? Math.min(399, 999 - a) : a - 100);
+        } else {
+          a = randomInt(400, 950);
+          b = randomInt(150, operation === 'ADD' ? Math.min(550, 999 - a) : a - 100);
+        }
+        if (operation === 'SUBTRACT' && b >= a) { var tmp = a; a = b; b = tmp; }
+        if (needsRegrouping(operation, a, b)) break;
+      }
+      // Safety: if loop exhausted (extremely unlikely), force regrouping-friendly pair
+      if (!needsRegrouping(operation, a, b)) {
+        if (operation === 'ADD') { a = 375; b = 83; }   // 2024 STAAR Item 1 pattern
+        else { a = 514; b = 379; }                        // 2021 STAAR Item 20 pattern
+      }
       return { operation, operands: [a, b], teks };
     }
 

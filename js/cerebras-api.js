@@ -278,6 +278,24 @@ function _directionReversalSub(a, b) {
   return result;
 }
 
+// Column-specific arithmetic error for ADD: student miscalculates the digit
+// sum by -1 in the first carrying column. Result = correct - placeValue.
+// Matches STAAR 2021 #3 Option D: "made an error when adding the digits
+// 3, 8, and 5 in the ones place"
+function _columnErrorAdd(a, b, correct) {
+  let tmpA = a, tmpB = b, place = 1;
+  while (tmpA > 0 || tmpB > 0) {
+    if ((tmpA % 10) + (tmpB % 10) >= 10) {
+      return correct - place;
+    }
+    tmpA = Math.floor(tmpA / 10);
+    tmpB = Math.floor(tmpB / 10);
+    place *= 10;
+  }
+  // No carrying column found — fallback (shouldn't happen with regrouping guarantee)
+  return correct - 1;
+}
+
 function computeDistractorValues(operation, op1, op2, correctAnswer) {
   const candidates = [];
 
@@ -294,8 +312,14 @@ function computeDistractorValues(operation, op1, op2, correctAnswer) {
       } else {
         candidates.push(correctAnswer - 1);
       }
-      // (c) Ones column error
-      candidates.push(correctAnswer + 1);
+      // (c) Column arithmetic error — student miscalculates digit sum by -1 in carrying column
+      //     Verified: 79+15→93 (ones: 9+5=13 instead of 14), matches STAAR 2021 #3 Option D
+      const colErr = _columnErrorAdd(op1, op2, correctAnswer);
+      if (colErr !== correctAnswer && colErr > 0 && colErr !== Math.abs(op1 - op2) && colErr !== noCarry) {
+        candidates.push(colErr);
+      } else {
+        candidates.push(correctAnswer + 2);
+      }
       break;
     }
     case 'SUBTRACT': {
@@ -365,8 +389,8 @@ function labelDistractorValues(operation, op1, op2, correctAnswer, values) {
           return { value: v, label: 'wrong-operation', hint: 'The student subtracted instead of adding.' };
         if (v === _regroupFailAdd(op1, op2) && v !== correctAnswer)
           return { value: v, label: 'regrouping-failure', hint: 'The student added each column without regrouping (carrying).' };
-        if (v === correctAnswer + 1 || v === correctAnswer - 1)
-          return { value: v, label: 'ones-error', hint: 'The student made an error in the ones column.' };
+        if (v === _columnErrorAdd(op1, op2, correctAnswer) && v !== correctAnswer)
+          return { value: v, label: 'column-error', hint: 'The student made an arithmetic error when adding digits in the carrying column.' };
         break;
       case 'SUBTRACT':
         if (v === op1 + op2)
